@@ -49,7 +49,7 @@ jobs:
           cache-to: type=gha,mode=max
       - name: Trigger Coolify redeploy
         run: |
-          curl -X POST "${{ secrets.COOLIFY_BACKEND_WEBHOOK }}" \
+          curl -X POST "http://91.99.194.248:8000/api/v1/deploy?uuid=${{ secrets.COOLIFY_BACKEND_UUID }}" \
             -H "Authorization: Bearer ${{ secrets.COOLIFY_API_TOKEN }}"
 
   frontend:
@@ -78,5 +78,5 @@ jobs:
           cache-to: type=gha,mode=max
       - name: Trigger Coolify redeploy
         run: |
-          curl -X POST "http://91.99.194.248:8000/api/v1/deploy?uuid=${{ secrets.COOLIFY_BACKEND_UUID }}" \
-            -H "Authorization: Bearer ${{ secrets.COOLIFY_API_TOKEN }}
+          curl -X POST "http://91.99.194.248:8000/api/v1/deploy?uuid=${{ secrets.COOLIFY_FRONTEND_UUID }}" \
+            -H "Authorization: Bearer ${{ secrets.COOLIFY_API_TOKEN }}"
