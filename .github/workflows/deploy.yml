@@ -47,6 +47,10 @@ jobs:
           tags: ghcr.io/${{ env.IMAGE_OWNER }}/backend:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+      - name: Trigger Coolify redeploy
+        run: |
+          curl -X POST "${{ secrets.COOLIFY_BACKEND_WEBHOOK }}" \
+            -H "Authorization: Bearer ${{ secrets.COOLIFY_API_TOKEN }}"
 
   frontend:
     needs: changes
@@ -72,3 +76,7 @@ jobs:
             NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+      - name: Trigger Coolify redeploy
+        run: |
+          curl -X POST "http://91.99.194.248:8000/api/v1/deploy?uuid=${{ secrets.COOLIFY_BACKEND_UUID }}" \
+            -H "Authorization: Bearer ${{ secrets.COOLIFY_API_TOKEN }}
