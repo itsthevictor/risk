@@ -1,0 +1,26 @@
+# ---- Python / uv ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+
+# ---- Node / Next.js ----
+node_modules/
+.next/
+out/
+next-env.d.ts
+.env*.local
+
+# ---- Docker ----
+*.log
+
+# ---- OS / Editor ----
+.DS_Store
+.vscode/
+.idea/
+
+# ---- Jupyter (placeholder, final version TBD) ----
+/backend/notebooks/*
+/backend/notebooks/.ipynb_checkpoints/
