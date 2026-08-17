@@ -20,8 +20,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'ONCA RISK',
-  description: 'Real time risk analysis',
+  title: 'Risk Analysis Portfolio - VA Demo',
+  description:
+    'Real time risk analysis tools portfolio - V.A. personal project',
 };
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {
