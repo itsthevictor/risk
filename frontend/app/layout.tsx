@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { cn } from '@/lib/utils';
 import 'katex/dist/katex.min.css';
+import QueryProvider from '@/providers/query-provider';
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
@@ -38,7 +39,9 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
         jetbrainsMono.variable,
       )}
     >
-      <body className='min-h-full flex flex-col'>{children}</body>
+      <body className='min-h-full flex flex-col'>
+        <QueryProvider>{children}</QueryProvider>
+      </body>
     </html>
   );
 }
