@@ -97,5 +97,12 @@
   "retail_sme_facility": 0.05,
   "corporate_facility": 0.10,
   "bank_fi_facility": 0.40
+},
+"inflow_rates": {
+  "secured_lending_l1_collateral": 0.0,
+  "secured_lending_l2a_collateral": 0.15,
+  "retail_sme_loan_repayment": 0.50,
+  "corporate_loan_repayment": 0.50,
+  "bank_fi_loan_repayment": 1.00
 }
 }
