@@ -40,10 +40,10 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
         jetbrainsMono.variable,
       )}
     >
-      <body className='min-h-full flex flex-col '>
+      <body className='min-h-full flex flex-col'>
         <Header />
         <QueryProvider>
-          <div className='p-4 min-h-full'>{children}</div>
+          <div className='flex flex-col flex-1'>{children}</div>
         </QueryProvider>
       </body>
     </html>
