@@ -9,6 +9,7 @@ import {
 } from '@/lib/definitions';
 import { useCalculateLCR } from '@/hooks/use-calculate-lcr';
 import { HqlaStep } from './hqla-step';
+import { RetailDepositsStep } from './retail-deposits-step';
 
 const STEPS = [
   'hqla',
@@ -99,6 +100,7 @@ export default function CalculateLcrForm() {
     <form onSubmit={form.handleSubmit(onSubmit)}>
       {/* step indicator */}
       <HqlaStep form={form} />
+      {currentStep === 1 && <RetailDepositsStep form={form} />}
       {/* render current step's fields based on currentStep, all reading/writing `form` */}
       {/* back/next buttons update currentStep */}
       {/* final step renders a "Calculate" submit button */}
