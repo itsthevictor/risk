@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import 'katex/dist/katex.min.css';
 import QueryProvider from '@/providers/query-provider';
 import Header from '@/components/header';
+import Footer from '@/components/footer';
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
@@ -45,6 +46,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
         <QueryProvider>
           <div className='flex flex-col flex-1'>{children}</div>
         </QueryProvider>
+        <Footer />
       </body>
     </html>
   );
