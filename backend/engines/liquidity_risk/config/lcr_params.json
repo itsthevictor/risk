@@ -86,5 +86,16 @@
     "L1": 0.0,
     "L2A": 0.15,
     "L2B": 0.25
-  }
+  },
+  "runoff_rates": {
+  "stable_retail": 0.05,
+  "less_stable_retail": 0.10,
+  "sme": 0.10,
+  "operational_deposit": 0.25,
+  "non_operational_corporate": 0.40,
+  "non_operational_financial_institution": 1.00,
+  "retail_sme_facility": 0.05,
+  "corporate_facility": 0.10,
+  "bank_fi_facility": 0.40
+}
 }

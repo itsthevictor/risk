@@ -14,10 +14,9 @@ CONFIG_PATH = Path(__file__).parent / "config" / "lcr_params.json"
 with open(CONFIG_PATH) as f:
     lcr_params = json.load(f)
 
-hqla_classification = lcr_params[
-    "hqla_classification"
-]  # this is the list you loop over
+hqla_classification = lcr_params["hqla_classification"]  # this is the list to loop over
 haircuts = lcr_params["haircuts"]  # this is the level→% lookup
+runoff_rates = lcr_params["runoff_rates"]  # this is the category→% lookup
 
 # def calculate_lcr(assets, outflows, inflows, params):
 #     # 1. HQLA
@@ -124,3 +123,28 @@ def apply_hqla_cap(raw_l1: float, raw_l2a: float, raw_l2b: float) -> dict[str, f
 
 
 print(apply_hqla_cap(1000, 50, 50))
+
+
+def apply_runoff_rates(items, runoff_rates) -> dict[str, float]:
+    """
+
+    1. Start an empty dict for the breakdown, and a running total at zero
+    2. Loop through each item
+    3. Look up the run-off rate for item.category in runoff_rates
+    4. Multiply item.amount x rate
+    5. Add that to the breakdown dict (keyed by category — if the category already has a value from a previous item, add to it, don't overwrite)
+    6. Add it to the running total
+    7. Return both the breakdown dict and the total
+
+    """
+    breakdown = {}
+    total = 0.0
+    for item in items:
+        rate = runoff_rates.get(item.category, 0.0)
+        amount_after_runoff = item.amount * rate
+        breakdown[item.category] = (
+            breakdown.get(item.category, 0.0) + amount_after_runoff
+        )
+        total += amount_after_runoff
+
+    return {"breakdown": breakdown, "total": total}
