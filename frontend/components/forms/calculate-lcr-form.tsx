@@ -8,6 +8,7 @@ import {
   LCRCalculationRequest,
 } from '@/lib/definitions';
 import { useCalculateLCR } from '@/hooks/use-calculate-lcr';
+import { HqlaStep } from './hqla-step';
 
 const STEPS = [
   'hqla',
@@ -97,6 +98,7 @@ export default function CalculateLcrForm() {
   return (
     <form onSubmit={form.handleSubmit(onSubmit)}>
       {/* step indicator */}
+      <HqlaStep form={form} />
       {/* render current step's fields based on currentStep, all reading/writing `form` */}
       {/* back/next buttons update currentStep */}
       {/* final step renders a "Calculate" submit button */}
