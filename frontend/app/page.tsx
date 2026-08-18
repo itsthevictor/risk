@@ -10,7 +10,7 @@ export default function Home() {
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           transform: 'rotate(0deg)',
-          opacity: 0.2,
+          opacity: 0.1,
         }}
       />
       <div className='max-w-3xl mx-30 flex-col flex gap-y-4'>
