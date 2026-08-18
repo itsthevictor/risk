@@ -22,9 +22,6 @@ RatingBand = Literal[
     "not_rated",
 ]
 
-# issuer types where a rating is NOT required to classify the item
-RATING_EXEMPT_ISSUER_TYPES = {"sovereign_own_country", "central_bank_cash"}
-
 
 class HQLAItem(BaseModel):
     description: str
@@ -118,3 +115,15 @@ class LCRCalculationRequest(BaseModel):
     wholesale_deposits: list[WholesaleDepositItem]
     off_balance_sheet: list[OffBalanceSheetItem]
     inflow_items: list[InflowItem]
+
+
+# issuer types where a rating is NOT required to classify the item
+
+RATING_EXEMPT_ISSUER_TYPES = {
+    "sovereign_own_country",
+    "central_bank_cash",
+    "multilateral_dev_bank",
+    "equity_index_listed",
+    "equity_other",
+    "other",
+}

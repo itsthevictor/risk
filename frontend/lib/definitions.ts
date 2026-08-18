@@ -22,17 +22,6 @@ export enum RATING_BAND {
   NOT_RATED = 'not_rated',
 }
 
-// # issuer types where a rating is NOT required to classify the item
-export enum RATING_EXEMPT_ISSUER_TYPES {
-  SOVEREIGN_OWN_COUNTRY = 'sovereign_own_country',
-  CENTRAL_BANK_CASH = 'central_bank_cash',
-}
-
-const RATING_EXEMPT_ISSUER_TYPES_SET = new Set([
-  ISSUER_TYPE.SOVEREIGN_OWN_COUNTRY,
-  ISSUER_TYPE.CENTRAL_BANK_CASH,
-]);
-
 export const HQLAItemSchema = z
   .object({
     description: z.string(),
@@ -135,3 +124,45 @@ export const LCRCalculationRequestSchema = z.object({
 });
 
 export type LCRCalculationRequest = z.infer<typeof LCRCalculationRequestSchema>;
+
+export enum RATING_EXEMPT_ISSUER_TYPES {
+  SOVEREIGN_OWN_COUNTRY = 'sovereign_own_country',
+  CENTRAL_BANK_CASH = 'central_bank_cash',
+  MULTILATERAL_DEV_BANK = 'multilateral_dev_bank',
+  EQUITY_INDEX_LISTED = 'equity_index_listed',
+  EQUITY_OTHER = 'equity_other',
+  OTHER = 'other',
+}
+
+const RATING_EXEMPT_ISSUER_TYPES_SET = new Set([
+  ISSUER_TYPE.SOVEREIGN_OWN_COUNTRY,
+  ISSUER_TYPE.CENTRAL_BANK_CASH,
+  ISSUER_TYPE.MULTILATERAL_DEV_BANK,
+  ISSUER_TYPE.EQUITY_INDEX_LISTED,
+  ISSUER_TYPE.EQUITY_OTHER,
+  ISSUER_TYPE.OTHER,
+]);
+
+export const HQLA_ALLOWED_RATING_BANDS: Partial<
+  Record<ISSUER_TYPE, RATING_BAND[]>
+> = {
+  [ISSUER_TYPE.SOVEREIGN_FOREIGN]: [
+    RATING_BAND.AAA_AA,
+    RATING_BAND.A,
+    RATING_BAND.BBB,
+  ],
+  [ISSUER_TYPE.COVERED_BOND]: [
+    RATING_BAND.AAA_AA,
+    RATING_BAND.A, // maps to "ineligible" — see note below
+  ],
+  [ISSUER_TYPE.CORPORATE_BOND]: [
+    RATING_BAND.AAA_AA,
+    RATING_BAND.A,
+    RATING_BAND.BBB,
+    RATING_BAND.BELOW_BBB_MINUS, // maps to "ineligible"
+  ],
+  [ISSUER_TYPE.RMBS]: [RATING_BAND.AAA_AA],
+  // Exempt issuer types (SOVEREIGN_OWN_COUNTRY, CENTRAL_BANK_CASH,
+  // MULTILATERAL_DEV_BANK, EQUITY_INDEX_LISTED, EQUITY_OTHER, OTHER)
+  // are intentionally omitted — no rating_band select is shown for them.
+};

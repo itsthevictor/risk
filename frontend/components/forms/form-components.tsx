@@ -205,7 +205,7 @@ export function CustomFormSelectLabel<T extends FieldValues>({
           </FormLabel>
           <Select
             onValueChange={field.onChange}
-            value={field.value}
+            value={field.value ?? ''}
             disabled={disabled}
           >
             <FormControl className='w-full'>

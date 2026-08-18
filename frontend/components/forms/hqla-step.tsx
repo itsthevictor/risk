@@ -11,6 +11,7 @@ import {
   LCRCalculationRequest,
   ISSUER_TYPE,
   RATING_BAND,
+  HQLA_ALLOWED_RATING_BANDS,
 } from '@/lib/definitions';
 import {
   CustomFormField,
@@ -66,18 +67,25 @@ function HqlaItemRow({
   onRemove,
   trigger,
   setValue,
+  getValues,
 }: {
   control: Control<LCRCalculationRequest>;
   index: number;
   onRemove: () => void;
   trigger: UseFormReturn<LCRCalculationRequest>['trigger'];
   setValue: UseFormReturn<LCRCalculationRequest>['setValue'];
+  getValues: UseFormReturn<LCRCalculationRequest>['getValues'];
 }) {
   const issuerType = useWatch({
     control,
     name: `hqla_items.${index}.issuer_type`,
   });
   const ratingExempt = RATING_EXEMPT_ISSUER_TYPES.has(issuerType);
+
+  const allowedRatingBands = HQLA_ALLOWED_RATING_BANDS[issuerType] ?? [];
+  const filteredRatingBandOptions = RATING_BAND_OPTIONS.filter((opt) =>
+    allowedRatingBands.includes(opt.value as RATING_BAND),
+  );
 
   // Keep rating_band in sync with issuer_type: clear it when the new
   // issuer type is exempt, and re-run validation on it either way so
@@ -89,10 +97,20 @@ function HqlaItemRow({
         shouldValidate: true,
       });
     } else {
-      trigger(`hqla_items.${index}.rating_band`);
+      const currentRatingBand = getValues(`hqla_items.${index}.rating_band`);
+      const stillValid = allowedRatingBands.includes(
+        currentRatingBand as RATING_BAND,
+      );
+      if (!stillValid) {
+        setValue(`hqla_items.${index}.rating_band`, undefined, {
+          shouldValidate: true,
+        });
+      } else {
+        trigger(`hqla_items.${index}.rating_band`);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ratingExempt, index]);
+  }, [ratingExempt, issuerType, index]);
 
   return (
     <div className='bg-sidebar/40 relative grid grid-cols-1 gap-4 rounded-lg border p-4 md:grid-cols-2 lg:grid-cols-4'>
@@ -139,7 +157,7 @@ function HqlaItemRow({
           control={control}
           name={`hqla_items.${index}.rating_band`}
           labelText='Rating band'
-          items={RATING_BAND_OPTIONS}
+          items={filteredRatingBandOptions}
         />
       )}
     </div>
@@ -151,7 +169,7 @@ export function HqlaStep({
 }: {
   form: UseFormReturn<LCRCalculationRequest>;
 }) {
-  const { control, trigger, setValue } = form;
+  const { control, trigger, setValue, getValues } = form;
   const { fields, append, remove } = useFieldArray({
     control,
     name: 'hqla_items',
@@ -182,6 +200,7 @@ export function HqlaStep({
             onRemove={() => remove(index)}
             trigger={trigger}
             setValue={setValue}
+            getValues={getValues}
           />
         ))}
       </div>
