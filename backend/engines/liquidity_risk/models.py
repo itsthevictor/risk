@@ -55,3 +55,58 @@ class RetailDepositItem(BaseModel):
     description: str
     amount: float = Field(gt=0)
     category: RetailDepositCategory
+
+
+WholesaleDepositCategory = Literal[
+    "operational_deposit",
+    "non_operational_corporate",
+    "non_operational_financial_institution",
+]
+
+
+class WholesaleDepositItem(BaseModel):
+    description: str
+    amount: float = Field(gt=0)
+    category: WholesaleDepositCategory
+
+
+OffBalanceSheetCategory = Literal[
+    "retail_sme_facility",
+    "corporate_facility",
+    "bank_fi_facility",
+]
+
+
+class OffBalanceSheetItem(BaseModel):
+    description: str
+    amount: float = Field(gt=0)
+    category: OffBalanceSheetCategory
+
+
+InflowItemCategory = Literal[
+    "secured_lending_l1_collateral",
+    "secured_lending_l2a_collateral",
+    "retail_sme_loan_repayment",
+    "corporate_loan_repayment",
+    "bank_fi_loan_repayment",
+]
+
+
+class InflowItem(BaseModel):
+    description: str
+    amount: float = Field(gt=0)
+    category: InflowItemCategory
+
+
+class LCRResult(BaseModel):
+    hqla_l1: float
+    hqla_l2a: float
+    hqla_l2b: float
+    hqla_total: float
+    total_outflows: float
+    outflow_breakdown: dict[str, float]
+    total_inflows_uncapped: float
+    total_inflows_capped: float
+    inflow_breakdown: dict[str, float]
+    net_outflows: float
+    lcr_ratio: float

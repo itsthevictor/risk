@@ -1,0 +1,82 @@
+[
+  {
+    "issuer_type": "sovereign_own_country",
+    "rating_band": null,
+    "hqla_level": "L1"
+  },
+  {
+    "issuer_type": "central_bank_cash",
+    "rating_band": null,
+    "hqla_level": "L1"
+  },
+  {
+    "issuer_type": "sovereign_foreign",
+    "rating_band": "AAA_AA",
+    "hqla_level": "L1"
+  },
+  {
+    "issuer_type": "sovereign_foreign",
+    "rating_band": "A",
+    "hqla_level": "L2A"
+  },
+  {
+    "issuer_type": "sovereign_foreign",
+    "rating_band": "BBB",
+    "hqla_level": "L2A"
+  },
+  {
+    "issuer_type": "multilateral_dev_bank",
+    "rating_band": null,
+    "hqla_level": "L1"
+  },
+  {
+    "issuer_type": "covered_bond",
+    "rating_band": "AAA_AA",
+    "hqla_level": "L2A"
+  },
+  {
+    "issuer_type": "covered_bond",
+    "rating_band": "A",
+    "hqla_level": "ineligible"
+  },
+  {
+    "issuer_type": "corporate_bond",
+    "rating_band": "AAA_AA",
+    "hqla_level": "L2A"
+  },
+  {
+    "issuer_type": "corporate_bond",
+    "rating_band": "A",
+    "hqla_level": "L2B"
+  },
+  {
+    "issuer_type": "corporate_bond",
+    "rating_band": "BBB",
+    "hqla_level": "L2B"
+  },
+  {
+    "issuer_type": "corporate_bond",
+    "rating_band": "below_BBB_minus",
+    "hqla_level": "ineligible"
+  },
+  {
+    "issuer_type": "equity_index_listed",
+    "rating_band": null,
+    "hqla_level": "L2B"
+  },
+  {
+    "issuer_type": "equity_other",
+    "rating_band": null,
+    "hqla_level": "ineligible"
+  },
+  {
+    "issuer_type": "rmbs",
+    "rating_band": "AAA_AA",
+    "hqla_level": "L2B"
+  },
+  {
+    "issuer_type": "other",
+    "rating_band": null,
+    "hqla_level": "ineligible"
+  }
+]
