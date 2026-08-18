@@ -110,3 +110,11 @@ class LCRResult(BaseModel):
     inflow_breakdown: dict[str, float]
     net_outflows: float
     lcr_ratio: float
+
+
+class LCRCalculationRequest(BaseModel):
+    hqla_items: list[HQLAItem]
+    retail_deposits: list[RetailDepositItem]
+    wholesale_deposits: list[WholesaleDepositItem]
+    off_balance_sheet: list[OffBalanceSheetItem]
+    inflow_items: list[InflowItem]

@@ -4,9 +4,13 @@ from pathlib import Path
 
 if __package__ is None:
     sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-    from engines.liquidity_risk.models import RATING_EXEMPT_ISSUER_TYPES, HQLAItem
+    from engines.liquidity_risk.models import (
+        RATING_EXEMPT_ISSUER_TYPES,
+        HQLAItem,
+        LCRResult,
+    )
 else:
-    from .models import RATING_EXEMPT_ISSUER_TYPES, HQLAItem
+    from .models import RATING_EXEMPT_ISSUER_TYPES, HQLAItem, LCRResult
 
 CONFIG_PATH = Path(__file__).parent / "config" / "lcr_params.json"
 
@@ -19,27 +23,56 @@ haircuts = lcr_params["haircuts"]  # this is the level→% lookup
 runoff_rates = lcr_params["runoff_rates"]  # this is the category→% lookup
 inflow_rates = lcr_params["inflow_rates"]  # this is the category→% lookup
 
-# def calculate_lcr(assets, outflows, inflows, params):
-#     # 1. HQLA
-#     hqla_raw = apply_haircuts(assets, params)  # L1/L2A/L2B after haircut
-#     hqla = apply_l2_caps(hqla_raw)  # 40% L2 cap, 15% L2B cap
 
-#     # 2. Outflows
-#     total_outflows = sum(apply_runoff_rates(outflows, params))
+def calculate_lcr(
+    hqla_items: list[HQLAItem],
+    retail_deposits: list[dict],
+    wholesale_deposits: list[dict],
+    off_balance_sheet: list[dict],
+    inflow_items: list[dict],
+) -> dict:
+    # 1. HQLA
 
-#     # 3. Inflows (capped at 75% of outflows)
-#     total_inflows = min(sum(apply_inflow_rates(inflows, params)), 0.75 * total_outflows)
+    haircut_hqla = apply_haircuts(hqla_items)  # L1/L2A/L2B after haircut
 
-#     net_outflows = total_outflows - total_inflows
+    hqla = apply_l2_caps(
+        haircut_hqla["L1"], haircut_hqla["L2A"], haircut_hqla["L2B"]
+    )  # 40% L2 cap, 15% L2B cap
 
-#     lcr = hqla / net_outflows * 100
-#     return {
-#         "hqla": hqla,
-#         "outflows": total_outflows,
-#         "inflows": total_inflows,
-#         "net_outflows": net_outflows,
-#         "lcr_pct": lcr,
-#     }
+    # 2. Outflows
+    retail_result = apply_runoff_rates(retail_deposits, runoff_rates)
+    wholesale_result = apply_runoff_rates(wholesale_deposits, runoff_rates)
+    obs_result = apply_runoff_rates(off_balance_sheet, runoff_rates)
+
+    total_outflows = (
+        retail_result["total"] + wholesale_result["total"] + obs_result["total"]
+    )
+
+    # 3. Inflows (capped at 75% of outflows)
+    inflow_result = apply_inflow_rates(inflow_items, inflow_rates, total_outflows)
+    total_inflows_capped = inflow_result["total_inflows_capped"]
+
+    net_outflows = total_outflows - total_inflows_capped
+
+    lcr = hqla["Total"] / net_outflows * 100
+
+    return LCRResult(
+        hqla_l1=hqla["L1"],
+        hqla_l2a=hqla["L2A"],
+        hqla_l2b=hqla["L2B"],
+        hqla_total=hqla["Total"],
+        total_outflows=total_outflows,
+        outflow_breakdown={
+            **retail_result["breakdown"],
+            **wholesale_result["breakdown"],
+            **obs_result["breakdown"],
+        },
+        total_inflows_uncapped=inflow_result["total_inflows_uncapped"],
+        total_inflows_capped=total_inflows_capped,
+        inflow_breakdown=inflow_result["breakdown"],
+        net_outflows=net_outflows,
+        lcr_ratio=lcr,
+    )
 
 
 def classify_hqla_levels(issuer_type: str, rating_band: str | None) -> dict[str, str]:
@@ -91,7 +124,7 @@ def apply_haircuts(hqla_items) -> dict[str, float]:
     return {"L1": l1_total, "L2A": l2a_total, "L2B": l2b_total}
 
 
-def apply_hqla_cap(raw_l1: float, raw_l2a: float, raw_l2b: float) -> dict[str, float]:
+def apply_l2_caps(raw_l1: float, raw_l2a: float, raw_l2b: float) -> dict[str, float]:
     """
     Apply the L2 cap to the HQLA items based on their levels.
     """
@@ -123,9 +156,6 @@ def apply_hqla_cap(raw_l1: float, raw_l2a: float, raw_l2b: float) -> dict[str, f
     return {"L1": raw_l1, "L2A": l2a_total, "L2B": l2b_total, "Total": total_hqla}
 
 
-print(apply_hqla_cap(1000, 50, 50))
-
-
 def apply_runoff_rates(items, runoff_rates) -> dict[str, float]:
     """
 
@@ -149,3 +179,29 @@ def apply_runoff_rates(items, runoff_rates) -> dict[str, float]:
         total += amount_after_runoff
 
     return {"breakdown": breakdown, "total": total}
+
+
+def apply_inflow_rates(items, inflow_rates, total_outflows) -> dict[str, float]:
+    """
+    1. Same loop pattern as apply_runoff_rates() — build a breakdown dict and a raw total, exactly the same way
+    2. New step: after the loop, compute capped_total = min(raw_total, 0.75 * total_outflows)
+    3. Return breakdown, raw total, and capped total — all three, since your LCRResult needs total_inflows_uncapped and total_inflows_capped as separate fields
+
+    """
+
+    breakdown = {}
+    total_inflows_uncapped = 0.0
+    for item in items:
+        rate = inflow_rates.get(item.category, 0.0)
+        amount_after_inflow = item.amount * rate
+        breakdown[item.category] = (
+            breakdown.get(item.category, 0.0) + amount_after_inflow
+        )
+        total_inflows_uncapped = total_inflows_uncapped + amount_after_inflow
+
+    capped_total = min(total_inflows_uncapped, 0.75 * total_outflows)
+    return {
+        "breakdown": breakdown,
+        "total_inflows_uncapped": total_inflows_uncapped,
+        "total_inflows_capped": capped_total,
+    }
