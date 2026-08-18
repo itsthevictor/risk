@@ -17,6 +17,7 @@ with open(CONFIG_PATH) as f:
 hqla_classification = lcr_params["hqla_classification"]  # this is the list to loop over
 haircuts = lcr_params["haircuts"]  # this is the level→% lookup
 runoff_rates = lcr_params["runoff_rates"]  # this is the category→% lookup
+inflow_rates = lcr_params["inflow_rates"]  # this is the category→% lookup
 
 # def calculate_lcr(assets, outflows, inflows, params):
 #     # 1. HQLA
