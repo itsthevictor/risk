@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { IconChevronDown, IconChevronUp } from '@tabler/icons-react';
+import { ThemeToggle } from './theme-toggle';
 
 const PATH_LABELS: Record<string, string> = {
   '/liquidity': 'Risc de lichiditate',
@@ -30,6 +31,10 @@ const Header = () => {
         RISK
       </Link>
       <div className='flex items-center justify-between gap-x-4'>
+        <div className='md:hidden sm:block'>
+          <ThemeToggle />
+        </div>
+
         <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
           <DropdownMenuTrigger render={<Button variant='outline' />}>
             {currentLabel}{' '}
