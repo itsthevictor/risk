@@ -6,7 +6,7 @@ import 'katex/dist/katex.min.css';
 import QueryProvider from '@/providers/query-provider';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
-
+import { ThemeProvider } from '@/providers/theme-provider';
 const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
   variable: '--font-mono',
@@ -40,13 +40,22 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
         'font-mono',
         jetbrainsMono.variable,
       )}
+      suppressHydrationWarning
     >
       <body className='min-h-full flex flex-col'>
-        <Header />
-        <QueryProvider>
-          <div className='flex flex-col flex-1'>{children}</div>
-        </QueryProvider>
-        <Footer />
+        <ThemeProvider
+          attribute='class'
+          defaultTheme='system'
+          enableSystem
+          disableTransitionOnChange
+          themes={['light', 'dark']}
+        >
+          <Header />
+          <QueryProvider>
+            <div className='flex flex-col flex-1'>{children}</div>
+          </QueryProvider>
+          <Footer />
+        </ThemeProvider>
       </body>
     </html>
   );
