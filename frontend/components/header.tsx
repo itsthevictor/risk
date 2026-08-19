@@ -37,7 +37,7 @@ const Header = () => {
 
         <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
           <DropdownMenuTrigger render={<Button variant='outline' />}>
-            {currentLabel}{' '}
+            {currentLabel}
             {isOpen ? (
               <IconChevronUp className='ml-2 h-4 w-4' />
             ) : (
@@ -61,7 +61,9 @@ const Header = () => {
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem>Despre</DropdownMenuItem>
-              <DropdownMenuItem>Documentatie</DropdownMenuItem>
+              <Link href='/about' className='w-full'>
+                <DropdownMenuItem>Despre</DropdownMenuItem>
+              </Link>
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
