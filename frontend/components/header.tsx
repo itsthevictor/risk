@@ -60,7 +60,6 @@ const Header = () => {
 
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>Despre</DropdownMenuItem>
               <Link href='/about' className='w-full'>
                 <DropdownMenuItem>Despre</DropdownMenuItem>
               </Link>
