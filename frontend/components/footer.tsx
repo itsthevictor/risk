@@ -23,7 +23,7 @@ const Footer = () => {
         target='_blank'
         rel='noopener noreferrer'
       >
-        CV
+        Curriculum Vitae
       </a>
     </footer>
   );
