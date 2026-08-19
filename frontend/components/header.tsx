@@ -27,7 +27,7 @@ const Header = () => {
   return (
     <div className='header flex flex-row items-center justify-between p-4 border-b border-muted-foreground'>
       <Link href='/' className='text-lg font-bold'>
-        Risk Analysis Portfolio
+        Portofoliu analiză de risc
       </Link>
       <div className='flex items-center justify-between gap-x-4'>
         <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>

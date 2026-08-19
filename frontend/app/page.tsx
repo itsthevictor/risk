@@ -1,3 +1,6 @@
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+
 export default function Home() {
   return (
     <div className='relative flex flex-col flex-1 justify-center min-h-full p-4 overflow-hidden items-start'>
@@ -5,13 +8,13 @@ export default function Home() {
       <div className='absolute inset-0 -z-10 bg-background' />
       <div className='max-w-3xl mx-30 flex-col flex gap-y-4'>
         <h1 className='text-4xl font-bold mb-4'>Portofoliu analiză de risc</h1>
-        <p className='text-lg text-muted-foreground'>
+        <p className='text-lg font-uppercase text-red-600 dark:text-red-400'>
           Portofoliu live de instrumente de analiză de risc - Proiect personal
           Victor Alexa.
         </p>
         <p className='text-sm text-muted-foreground mt-2'>
           Acest proiect include instrumente pentru analiza riscului de
-          lichiditate, riscului de piață și riscului de credit, și este
+          lichiditate, riscului de piață și riscului de credit, și a fost
           construit folosind Python și Next.js.
         </p>
         <p className='text-sm text-muted-foreground mt-2'>
@@ -29,6 +32,17 @@ export default function Home() {
             repository-ul GitHub
           </a>
         </p>
+        <div className='md:flex md:flex-row flex-col max-w-3xl gap-x-4 gap-y-2 mt-4'>
+          <Button variant='outline' className='w-45'>
+            <Link href='/market'>Risc de piață</Link>
+          </Button>
+          <Button variant='outline' className=' w-45'>
+            <Link href='/liquidity'>Risc de lichiditate</Link>
+          </Button>
+          <Button variant='outline' className='w-45'>
+            <Link href='/credit'>Risc de credit</Link>
+          </Button>
+        </div>
       </div>
     </div>
   );
