@@ -2,17 +2,7 @@ export default function Home() {
   return (
     <div className='relative flex flex-col flex-1 justify-center min-h-full p-4 overflow-hidden items-start'>
       {/* background layer — isolated so transform/opacity don't affect content */}
-      <div
-        className='absolute inset-0 -z-10'
-        style={{
-          backgroundImage:
-            'url(https://res.cloudinary.com/dgp67jheg/image/upload/v1787081939/Abstract_White_Background_fp9wlp.jpg)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          transform: 'rotate(0deg)',
-          opacity: 0.1,
-        }}
-      />
+      <div className='absolute inset-0 -z-10 bg-background' />
       <div className='max-w-3xl mx-30 flex-col flex gap-y-4'>
         <h1 className='text-4xl font-bold mb-4'>Portofoliu analiză de risc</h1>
         <p className='text-lg text-muted-foreground'>
