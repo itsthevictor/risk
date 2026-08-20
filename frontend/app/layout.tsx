@@ -7,6 +7,8 @@ import QueryProvider from '@/providers/query-provider';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import { ThemeProvider } from '@/providers/theme-provider';
+import Script from 'next/script';
+
 const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
   variable: '--font-mono',
@@ -53,6 +55,13 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
           <Header />
           <QueryProvider>
             <div className='flex flex-col flex-1'>{children}</div>
+            {process.env.NODE_ENV === 'production' && (
+              <Script
+                src='https://analytics.oncaworks.com/script.js'
+                data-website-id='2dc0117a-d9fd-4744-b6ba-6fa6df7c506f'
+                strategy='afterInteractive'
+              />
+            )}
           </QueryProvider>
           <Footer />
         </ThemeProvider>
