@@ -5,7 +5,7 @@ from engines.liquidity_risk.models import LCRCalculationRequest, LCRResult
 router = APIRouter(prefix="/liquidity-risk", tags=["liquidity-risk"])
 
 
-@router.post("/calculate", response_model=LCRResult)
+@router.post("/analyze", response_model=LCRResult)
 def calculate(request: LCRCalculationRequest) -> LCRResult:
     return calculate_lcr(
         hqla_items=request.hqla_items,

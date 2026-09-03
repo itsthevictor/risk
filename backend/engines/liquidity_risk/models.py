@@ -1,3 +1,9 @@
+"""
+
+Pydantic request/response models for the Liquidity Risk API (`POST /api/liquidity-risk/analyze`
+
+"""
+
 from pydantic import BaseModel, Field, model_validator
 from typing import Literal, Optional
 
