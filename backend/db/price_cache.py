@@ -39,7 +39,7 @@ def _missing_ranges(
 ) -> list[tuple[date, date]]:
     """Sub-intervale de [start, end] care nu sunt deja acoperite de [cached_min, cached_max]."""
     if end < cached_min or start > cached_max:
-        return [(start, end)]  # no overlap at all — fetch the whole thing
+        return [(start, end)]  # no overlap
     gaps = []
     if start < cached_min:
         gaps.append((start, cached_min - timedelta(days=1)))
@@ -107,7 +107,7 @@ def _fetch_from_yfinance(ticker: str, start: date, end: date) -> pd.Series:
     close = raw["Close"]
     if hasattr(
         close, "columns"
-    ):  # yfinance can return a 1-col DataFrame for a single ticker
+    ):  # yfinance poate returna un DataFrame cu o singură coloană pentru un singur ticker
         close = close[ticker] if ticker in close.columns else close.iloc[:, 0]
     return close
 
