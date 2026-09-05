@@ -24,3 +24,5 @@ next-env.d.ts
 # ---- Jupyter (placeholder, final version TBD) ----
 /backend/notebooks/*
 /backend/notebooks/.ipynb_checkpoints/
+/backend/.env
+/frontend/.env

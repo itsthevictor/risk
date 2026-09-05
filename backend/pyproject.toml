@@ -23,5 +23,6 @@ dependencies = [
     "reportlab>=5.0.0",
     "scipy>=1.18.0",
     "sqlalchemy>=2.0.52",
+    "sqlmodel>=0.0.42",
     "uvicorn[standard]>=0.52.2",
 ]
