@@ -2,12 +2,12 @@ import os
 
 from dotenv import load_dotenv
 from sqlmodel import Session, create_engine
+from db.url import normalize_database_url
 
 load_dotenv()
 
-DATABASE_URL = os.environ["DATABASE_URL"]
-if DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+DATABASE_URL = normalize_database_url(os.environ["DATABASE_URL"])
+
 
 engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 

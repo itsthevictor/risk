@@ -7,6 +7,7 @@ from sqlalchemy import pool
 from sqlmodel import SQLModel
 
 from alembic import context
+from db.url import normalize_database_url
 
 load_dotenv()
 
@@ -18,7 +19,7 @@ config = context.config
 # iar ConfigParser-ul din spatele Alembic tratează '%' ca interpolare —
 # deci citim variabila direct din environment, nu o mai trecem prin
 # config.set_main_option()/sqlalchemy.url din alembic.ini.
-DATABASE_URL = os.environ["DATABASE_URL"]
+DATABASE_URL = normalize_database_url(os.environ["DATABASE_URL"])
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
