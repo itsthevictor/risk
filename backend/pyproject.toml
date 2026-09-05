@@ -25,4 +25,5 @@ dependencies = [
     "sqlalchemy>=2.0.52",
     "sqlmodel>=0.0.42",
     "uvicorn[standard]>=0.52.2",
+    "yfinance>=1.7.0",
 ]
