@@ -37,7 +37,20 @@ import { cn } from '@/lib/utils';
 import { NumericFormat } from 'react-number-format';
 import { Switch } from '@/components/ui/switch';
 
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+
+import { Badge } from '@/components/ui/badge';
+import { IconCheck, IconChevronDown, IconX } from '@tabler/icons-react';
+
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+
 // import { Label } from '@/components/ui/label';
 const futureDate = new Date();
 futureDate.setFullYear(futureDate.getFullYear() + 10);
@@ -851,6 +864,161 @@ export function CustomIntegerField<T extends FieldValues>({
                 className='bg-background [appearance:textfield] text-center [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
               />
             </FormControl>
+            <FormMessage />
+          </FormItem>
+        );
+      }}
+    />
+  );
+}
+
+export interface MultiSelectOption {
+  value: string;
+  label: string;
+}
+
+type CustomMultiSelectFieldProps<T extends FieldValues> = {
+  name: Path<T>;
+  control: Control<T>;
+  options: MultiSelectOption[];
+  labelText?: string;
+  placeholder?: string;
+  min?: number;
+  max?: number;
+  disabled?: boolean;
+};
+
+export function CustomMultiSelectField<T extends FieldValues>({
+  name,
+  control,
+  options,
+  labelText,
+  placeholder = 'Selectează...',
+  min,
+  max,
+  disabled,
+}: CustomMultiSelectFieldProps<T>) {
+  const [open, setOpen] = React.useState(false);
+
+  return (
+    <FormField
+      control={control}
+      name={name}
+      render={({ field }) => {
+        const selected: string[] = field.value ?? [];
+        const atMax = max !== undefined && selected.length >= max;
+        const atMin = min !== undefined && selected.length <= min;
+
+        const toggle = (value: string) => {
+          if (selected.includes(value)) {
+            if (atMin) return;
+            field.onChange(selected.filter((v: string) => v !== value));
+          } else {
+            if (atMax) return;
+            field.onChange([...selected, value]);
+          }
+        };
+
+        const remove = (value: string) => {
+          if (atMin) return;
+          field.onChange(selected.filter((v: string) => v !== value));
+        };
+
+        return (
+          <FormItem className='flex flex-col'>
+            <FormLabel className='text-muted-foreground!'>
+              {labelText || name}
+            </FormLabel>
+            <Popover open={open} onOpenChange={setOpen}>
+              <PopoverTrigger
+                render={
+                  <FormControl>
+                    <Button
+                      type='button'
+                      variant='outline'
+                      role='combobox'
+                      aria-expanded={open}
+                      disabled={disabled}
+                      className={cn(
+                        'bg-background h-auto min-h-9 w-full justify-between font-normal',
+                        selected.length === 0 && 'text-muted-foreground',
+                      )}
+                    >
+                      <div className='flex flex-1 flex-wrap gap-1'>
+                        {selected.length === 0 ? (
+                          <span>{placeholder}</span>
+                        ) : (
+                          selected.map((value) => {
+                            const opt = options.find((o) => o.value === value);
+                            return (
+                              <Badge
+                                key={value}
+                                variant='secondary'
+                                className='gap-1 pr-1'
+                                onClick={(e: React.MouseEvent) =>
+                                  e.stopPropagation()
+                                }
+                              >
+                                {opt?.label ?? value}
+                                <button
+                                  type='button'
+                                  className='hover:bg-muted-foreground/20 rounded-sm'
+                                  onClick={(e: React.MouseEvent) => {
+                                    e.stopPropagation();
+                                    remove(value);
+                                  }}
+                                >
+                                  <IconX className='h-3 w-3' />
+                                </button>
+                              </Badge>
+                            );
+                          })
+                        )}
+                      </div>
+                      <IconChevronDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
+                    </Button>
+                  </FormControl>
+                }
+              />
+              <PopoverContent
+                className='w-(--radix-popover-trigger-width) p-0'
+                align='start'
+              >
+                <Command>
+                  <CommandInput placeholder='Caută ticker...' />
+                  <CommandList>
+                    <CommandEmpty>Niciun rezultat.</CommandEmpty>
+                    <CommandGroup>
+                      {options.map((option) => {
+                        const isSelected = selected.includes(option.value);
+                        const disableAdd = !isSelected && atMax;
+                        const disableRemove = isSelected && atMin;
+                        return (
+                          <CommandItem
+                            key={option.value}
+                            value={option.value}
+                            disabled={disableAdd || disableRemove}
+                            onSelect={() => toggle(option.value)}
+                          >
+                            <div
+                              className={cn(
+                                'border-primary mr-2 flex h-4 w-4 items-center justify-center rounded-sm border',
+                                isSelected
+                                  ? 'bg-primary text-primary-foreground'
+                                  : 'opacity-50 [&_svg]:invisible',
+                              )}
+                            >
+                              <IconCheck className='h-3 w-3' />
+                            </div>
+                            {option.label}
+                          </CommandItem>
+                        );
+                      })}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
             <FormMessage />
           </FormItem>
         );

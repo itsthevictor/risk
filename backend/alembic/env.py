@@ -9,7 +9,7 @@ from alembic import context
 
 # import every SQLModel table module so its class registers on SQLModel.metadata
 # before target_metadata is read below
-import models  # noqa: F401
+import db.models
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
