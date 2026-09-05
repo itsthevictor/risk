@@ -9,8 +9,8 @@ export default function Home() {
       <div className='max-w-3xl md:mx-30 sm:mx-0 flex-col flex gap-y-4'>
         <h1 className='text-4xl font-bold mb-4'>Portofoliu analiză de risc</h1>
         <p className='text-lg uppercase text-red-600 dark:text-red-400 font-medium'>
-          Portofoliu live de instrumente de analiză de risc - Proiect personal
-          Victor Alexa. Produs nedestinat pentru uz comercial.
+          Portofoliu de instrumente de analiză de risc - Proiect personal Victor
+          Alexa. Produs nedestinat pentru uz comercial.
         </p>
         <p className='text-sm text-foreground mt-2'>
           Acest portofoliu cuprinde instrumente bazate pe tehnicile fundamentale
