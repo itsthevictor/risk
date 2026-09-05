@@ -4,13 +4,17 @@ from pathlib import Path
 
 if __package__ is None:
     sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-    from engines.liquidity_risk.models import (
+    from api.schemas.liquidity_models import (
         RATING_EXEMPT_ISSUER_TYPES,
         HQLAItem,
         LCRResult,
     )
 else:
-    from .models import RATING_EXEMPT_ISSUER_TYPES, HQLAItem, LCRResult
+    from api.schemas.liquidity_models import (
+        RATING_EXEMPT_ISSUER_TYPES,
+        HQLAItem,
+        LCRResult,
+    )
 
 CONFIG_PATH = Path(__file__).parent / "config" / "lcr_params.json"
 

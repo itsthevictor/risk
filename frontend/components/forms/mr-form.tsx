@@ -3,6 +3,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
+import { Form } from '@/components/ui/form';
 import {
   CustomFormSelect,
   CustomIncrementalFormField,
@@ -44,45 +45,47 @@ export function MarketRiskForm({
   });
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className='grid grid-cols-2 gap-4 md:grid-cols-4'
-    >
-      <div className='col-span-2'>
-        <CustomMultiSelectField
-          name='tickers'
+    <Form {...form}>
+      <form
+        onSubmit={handleSubmit}
+        className='grid grid-cols-2 gap-4 md:grid-cols-4'
+      >
+        <div className='col-span-2'>
+          <CustomMultiSelectField
+            name='tickers'
+            control={form.control}
+            options={tickerOptions}
+            labelText='Tickers'
+            min={2}
+            max={10}
+          />
+        </div>
+        <CustomFormSelect
+          name='crisis_window'
           control={form.control}
-          options={tickerOptions}
-          labelText='Tickers'
-          min={2}
-          max={10}
+          items={['2020', '2022', 'custom']}
+          labelText='Crisis window'
         />
-      </div>
-      <CustomFormSelect
-        name='crisis_window'
-        control={form.control}
-        items={['2020', '2022', 'custom']}
-        labelText='Crisis window'
-      />
-      <CustomNumberField
-        name='portfolio_value'
-        control={form.control}
-        labelText='Portfolio value'
-        currency='USD'
-      />
-      <CustomIncrementalFormField
-        name='estimation_window_days'
-        control={form.control}
-        labelText='Estimation window (days)'
-        step={21}
-        min={30}
-        max={756}
-      />
-      <div className='col-span-2 flex items-end md:col-span-4'>
-        <Button type='submit' disabled={isSubmitting}>
-          {isSubmitting ? 'Analyzing…' : 'Analyze'}
-        </Button>
-      </div>
-    </form>
+        <CustomNumberField
+          name='portfolio_value'
+          control={form.control}
+          labelText='Portfolio value'
+          currency='USD'
+        />
+        <CustomIncrementalFormField
+          name='estimation_window_days'
+          control={form.control}
+          labelText='Estimation window (days)'
+          step={21}
+          min={30}
+          max={756}
+        />
+        <div className='col-span-2 flex items-end md:col-span-4'>
+          <Button type='submit' disabled={isSubmitting}>
+            {isSubmitting ? 'Analyzing…' : 'Analyze'}
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 }

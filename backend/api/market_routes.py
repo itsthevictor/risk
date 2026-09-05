@@ -8,7 +8,7 @@ import pandas as pd
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
 
-from db import get_session
+from db.session import get_session
 from db.price_cache import TickerNotFoundError, get_adj_close
 from api.schemas.market_models import (
     ConfidenceLevelResult,
