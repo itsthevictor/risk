@@ -40,7 +40,16 @@ from engines.market_risk.market_risk_service import (
     score_method,
 )
 
+from api.schemas.market_models import TickerListResponse
+from api.ticker_registry import TICKER_REGISTRY
+
 router = APIRouter(prefix="/api/market-risk", tags=["market-risk"])
+
+
+@router.get("/tickers", response_model=TickerListResponse)
+def list_tickers():
+    return TickerListResponse(tickers=TICKER_REGISTRY)
+
 
 CRISIS_WINDOWS: dict[str, tuple[date, date]] = {
     "2020": (date(2020, 1, 1), date(2020, 12, 31)),
@@ -60,7 +69,7 @@ _CACHE_TTL_SECONDS = 60 * 30
 
 
 def _cache_key(req: MarketRiskAnalyzeRequest) -> tuple:
-    window = req.crisis_window.value
+    window = req.crisis_window.value if req.crisis_window is not None else None
     custom = (
         (req.custom_window.start, req.custom_window.end) if req.custom_window else None
     )
@@ -88,8 +97,14 @@ def analyze_market_risk(
     if cached and (time.time() - cached[0]) < _CACHE_TTL_SECONDS:
         return cached[1]
 
-    crisis_start, crisis_end = _resolve_window(req)
-    fetch_start = crisis_start - timedelta(days=FETCH_BUFFER_DAYS)
+    if req.crisis_window is not None:
+        crisis_start, crisis_end = _resolve_window(req)
+        fetch_start = crisis_start - timedelta(days=FETCH_BUFFER_DAYS)
+    else:
+        lookback_days = int((req.estimation_window_days + MIN_HISTORY_DAYS) * 1.6)
+    fetch_start = date.today() - timedelta(days=lookback_days)
+    crisis_start, crisis_end = fetch_start, date.today()
+
     fetch_end = date.today()
 
     try:

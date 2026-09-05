@@ -64,7 +64,7 @@ export async function analyzeMarketRisk(
 }
 
 export async function fetchTickers(): Promise<TickerListResponse> {
-  const response = await fetch(`${API_BASE_URL}/tickers`);
+  const response = await fetch(`${API_BASE_URL}/market-risk/tickers`);
 
   if (!response.ok) {
     throw await toApiError(response);

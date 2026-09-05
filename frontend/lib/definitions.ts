@@ -217,7 +217,7 @@ export const MarketRiskAnalyzeRequestSchema = z
         message: 'Duplicate tickers in portfolio',
       }),
     portfolio_value: z.number().positive().default(1_000_000),
-    crisis_window: CrisisWindowPresetSchema.default('2022'),
+    crisis_window: CrisisWindowPresetSchema.nullable().optional(),
     custom_window: CustomWindowSchema.nullable().optional(),
     estimation_window_days: z.number().int().min(30).max(756).default(252),
     confidence_levels: z

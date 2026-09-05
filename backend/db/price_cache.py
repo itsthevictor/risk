@@ -13,7 +13,7 @@ import yfinance as yf
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlmodel import Session, select
 
-from models import PriceHistory
+from db.models import PriceHistory
 
 
 class TickerNotFoundError(Exception):

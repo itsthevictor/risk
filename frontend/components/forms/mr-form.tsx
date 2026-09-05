@@ -34,7 +34,6 @@ export function MarketRiskForm({
     defaultValues: {
       tickers: [],
       portfolio_value: 1_000_000,
-      crisis_window: '2022',
       estimation_window_days: 252,
     },
   });
@@ -60,12 +59,7 @@ export function MarketRiskForm({
             max={10}
           />
         </div>
-        <CustomFormSelect
-          name='crisis_window'
-          control={form.control}
-          items={['2020', '2022', 'custom']}
-          labelText='Crisis window'
-        />
+
         <CustomNumberField
           name='portfolio_value'
           control={form.control}

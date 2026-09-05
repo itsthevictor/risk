@@ -56,7 +56,7 @@ class MarketRiskAnalyzeRequest(BaseModel):
         description="Equity/FX tickers for the equal-weight portfolio, e.g. ['AAPL', 'MSFT', 'EURUSD=X']",
     )
     portfolio_value: float = Field(default=1_000_000, gt=0)
-    crisis_window: CrisisWindowPreset = CrisisWindowPreset.y2022
+    crisis_window: Optional[CrisisWindowPreset] = None
     custom_window: Optional[CustomWindow] = Field(
         default=None,
         description="Required when crisis_window == 'custom', ignored otherwise",

@@ -960,16 +960,25 @@ export function CustomMultiSelectField<T extends FieldValues>({
                                 }
                               >
                                 {opt?.label ?? value}
-                                <button
-                                  type='button'
+                                <span
+                                  role='button'
+                                  tabIndex={0}
+                                  aria-label={`Remove ${opt?.label ?? value}`}
                                   className='hover:bg-muted-foreground/20 rounded-sm'
                                   onClick={(e: React.MouseEvent) => {
                                     e.stopPropagation();
                                     remove(value);
                                   }}
+                                  onKeyDown={(e: React.KeyboardEvent) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      remove(value);
+                                    }
+                                  }}
                                 >
                                   <IconX className='h-3 w-3' />
-                                </button>
+                                </span>
                               </Badge>
                             );
                           })
