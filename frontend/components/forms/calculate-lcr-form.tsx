@@ -89,6 +89,7 @@ export default function CalculateLcrForm() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/incompatible-library -- RHF's watch() isn't memoizable; not passed to other memoized hooks/components
     const subscription = form.watch((values) => {
       sessionStorage.setItem('lcr-wizard-draft', JSON.stringify(values));
     });

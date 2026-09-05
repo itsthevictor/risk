@@ -151,18 +151,247 @@ export const HQLA_ALLOWED_RATING_BANDS: Partial<
     RATING_BAND.A,
     RATING_BAND.BBB,
   ],
-  [ISSUER_TYPE.COVERED_BOND]: [
-    RATING_BAND.AAA_AA,
-    RATING_BAND.A, // maps to "ineligible" — see note below
-  ],
+  [ISSUER_TYPE.COVERED_BOND]: [RATING_BAND.AAA_AA, RATING_BAND.A],
   [ISSUER_TYPE.CORPORATE_BOND]: [
     RATING_BAND.AAA_AA,
     RATING_BAND.A,
     RATING_BAND.BBB,
-    RATING_BAND.BELOW_BBB_MINUS, // maps to "ineligible"
+    RATING_BAND.BELOW_BBB_MINUS,
   ],
   [ISSUER_TYPE.RMBS]: [RATING_BAND.AAA_AA],
-  // Exempt issuer types (SOVEREIGN_OWN_COUNTRY, CENTRAL_BANK_CASH,
-  // MULTILATERAL_DEV_BANK, EQUITY_INDEX_LISTED, EQUITY_OTHER, OTHER)
-  // are intentionally omitted — no rating_band select is shown for them.
 };
+
+export const RiskMethodSchema = z.enum([
+  'historical',
+  'parametric',
+  'ewma',
+  'garch',
+  'monte_carlo',
+]);
+export type RiskMethod = z.infer<typeof RiskMethodSchema>;
+
+export const CrisisWindowPresetSchema = z.enum(['2020', '2022', 'custom']);
+export type CrisisWindowPreset = z.infer<typeof CrisisWindowPresetSchema>;
+
+export const TrafficLightSchema = z.enum(['green', 'yellow', 'red']);
+export type TrafficLight = z.infer<typeof TrafficLightSchema>;
+
+const isoDateSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, 'Expected date as YYYY-MM-DD');
+
+// ---------------------------------------------------------------------------
+// request
+// ---------------------------------------------------------------------------
+
+export const CustomWindowSchema = z
+  .object({
+    start: isoDateSchema,
+    end: isoDateSchema,
+  })
+  .refine((d) => d.start < d.end, {
+    message: 'start must be before end',
+    path: ['start'],
+  });
+export type CustomWindow = z.infer<typeof CustomWindowSchema>;
+
+const tickerSchema = z
+  .string()
+  .trim()
+  .min(1, 'Ticker cannot be empty')
+  .regex(/^[A-Za-z0-9.^=-]+$/, 'Invalid ticker format')
+  .transform((t) => t.toUpperCase());
+
+const confidenceLevelSchema = z
+  .number()
+  .gt(0.5, 'Confidence level must be greater than 0.5')
+  .lt(1.0, 'Confidence level must be less than 1.0');
+
+export const MarketRiskAnalyzeRequestSchema = z
+  .object({
+    tickers: z
+      .array(tickerSchema)
+      .min(2, 'Select at least 2 tickers')
+      .max(10, 'Select at most 10 tickers')
+      .refine((tickers) => new Set(tickers).size === tickers.length, {
+        message: 'Duplicate tickers in portfolio',
+      }),
+    portfolio_value: z.number().positive().default(1_000_000),
+    crisis_window: CrisisWindowPresetSchema.default('2022'),
+    custom_window: CustomWindowSchema.nullable().optional(),
+    estimation_window_days: z.number().int().min(30).max(756).default(252),
+    confidence_levels: z
+      .array(confidenceLevelSchema)
+      .min(1, 'At least one confidence level is required')
+      .default([0.9, 0.95, 0.99])
+      .transform((levels) => [...levels].sort((a, b) => a - b)),
+  })
+  .refine(
+    (data) => data.crisis_window !== 'custom' || data.custom_window != null,
+    {
+      message: "custom_window is required when crisis_window is 'custom'",
+      path: ['custom_window'],
+    },
+  );
+// Input = what a form provides before defaults are applied.
+// Output = what actually gets sent to the API.
+export type MarketRiskAnalyzeRequest = z.input<
+  typeof MarketRiskAnalyzeRequestSchema
+>;
+export type MarketRiskAnalyzeRequestParsed = z.output<
+  typeof MarketRiskAnalyzeRequestSchema
+>;
+
+// ---------------------------------------------------------------------------
+// response
+// ---------------------------------------------------------------------------
+
+export const VarEsPairSchema = z.object({
+  var: z.number(),
+  es: z.number(),
+  var_pct: z.number(),
+  es_pct: z.number(),
+});
+export type VarEsPair = z.infer<typeof VarEsPairSchema>;
+
+export const MethodResultsSchema = z.object({
+  historical: VarEsPairSchema,
+  parametric: VarEsPairSchema,
+  ewma: VarEsPairSchema,
+  garch: VarEsPairSchema,
+  monte_carlo: VarEsPairSchema,
+});
+export type MethodResults = z.infer<typeof MethodResultsSchema>;
+
+export const ConfidenceLevelResultSchema = z.object({
+  confidence_level: z.number(),
+  methods: MethodResultsSchema,
+});
+export type ConfidenceLevelResult = z.infer<typeof ConfidenceLevelResultSchema>;
+
+export const TimeSeriesSchema = z
+  .object({
+    dates: z.array(isoDateSchema),
+    values: z.array(z.number()),
+  })
+  .refine((d) => d.dates.length === d.values.length, {
+    message: 'dates and values must be the same length',
+  });
+export type TimeSeries = z.infer<typeof TimeSeriesSchema>;
+
+export const VolatilityForecastSchema = z.object({
+  dates: z.array(isoDateSchema),
+  ewma: z.array(z.number()),
+  garch: z.array(z.number()),
+});
+export type VolatilityForecast = z.infer<typeof VolatilityForecastSchema>;
+
+export const BacktestStatsSchema = z.object({
+  hits: z.number().int(),
+  total_observations: z.number().int(),
+  kupiec_lr: z.number(),
+  kupiec_p_value: z.number(),
+  christoffersen_lr: z.number(),
+  christoffersen_p_value: z.number(),
+  conditional_coverage_lr: z.number(),
+  conditional_coverage_p_value: z.number(),
+  traffic_light: TrafficLightSchema,
+  breach_dates: z.array(isoDateSchema),
+});
+export type BacktestStats = z.infer<typeof BacktestStatsSchema>;
+
+export const MethodBacktestSchema = z.object({
+  historical: BacktestStatsSchema,
+  parametric: BacktestStatsSchema,
+  ewma: BacktestStatsSchema,
+  garch: BacktestStatsSchema,
+  monte_carlo: BacktestStatsSchema,
+});
+export type MethodBacktest = z.infer<typeof MethodBacktestSchema>;
+
+export const DrawdownResultSchema = z.object({
+  dates: z.array(isoDateSchema),
+  values: z.array(z.number()),
+  max_drawdown: z.number(),
+});
+export type DrawdownResult = z.infer<typeof DrawdownResultSchema>;
+
+export const DiversificationResultSchema = z.object({
+  // keyed by ticker symbol, e.g. { AAPL: 12000 } — data, not schema fields
+  standalone_vars: z.record(z.string(), z.number()),
+  portfolio_var: z.number(),
+  diversification_benefit: z.number(),
+  diversification_benefit_pct: z.number(),
+});
+export type DiversificationResult = z.infer<typeof DiversificationResultSchema>;
+
+export const CorrelationMatrixSchema = z
+  .object({
+    tickers: z.array(z.string()),
+    matrix: z.array(z.array(z.number())),
+  })
+  .refine(
+    (d) =>
+      d.matrix.length === d.tickers.length &&
+      d.matrix.every((row) => row.length === d.tickers.length),
+    { message: 'matrix must be square and match tickers length' },
+  );
+export type CorrelationMatrix = z.infer<typeof CorrelationMatrixSchema>;
+
+export const PortfolioSummarySchema = z.object({
+  tickers: z.array(z.string()),
+  weights: z.array(z.number()),
+  value: z.number(),
+  start_date: isoDateSchema,
+  end_date: isoDateSchema,
+});
+export type PortfolioSummary = z.infer<typeof PortfolioSummarySchema>;
+
+export const MarketRiskAnalyzeResponseSchema = z.object({
+  portfolio: PortfolioSummarySchema,
+  var_comparison: z.array(ConfidenceLevelResultSchema),
+  actual_pnl: TimeSeriesSchema,
+  volatility_forecast: VolatilityForecastSchema,
+  backtest: MethodBacktestSchema,
+  drawdown: DrawdownResultSchema,
+  diversification: DiversificationResultSchema,
+  correlation_matrix: CorrelationMatrixSchema,
+});
+export type MarketRiskAnalyzeResponse = z.infer<
+  typeof MarketRiskAnalyzeResponseSchema
+>;
+
+// ---------------------------------------------------------------------------
+// tickers endpoint
+// ---------------------------------------------------------------------------
+
+export const TickerInfoSchema = z.object({
+  symbol: z.string(),
+  name: z.string(),
+  asset_class: z.enum(['equity', 'fx']),
+});
+export type TickerInfo = z.infer<typeof TickerInfoSchema>;
+
+export const TickerListResponseSchema = z.object({
+  tickers: z.array(TickerInfoSchema),
+});
+export type TickerListResponse = z.infer<typeof TickerListResponseSchema>;
+
+// ---------------------------------------------------------------------------
+// errors
+// ---------------------------------------------------------------------------
+
+export const ErrorCodeSchema = z.enum([
+  'ticker_not_found',
+  'insufficient_history',
+  'garch_did_not_converge',
+  'validation_error',
+]);
+export type ErrorCode = z.infer<typeof ErrorCodeSchema>;
+
+export const ErrorResponseSchema = z.object({
+  code: ErrorCodeSchema,
+  message: z.string(),
+  details: z.record(z.string(), z.unknown()).nullable().optional(),
+});
+export type ErrorResponse = z.infer<typeof ErrorResponseSchema>;
