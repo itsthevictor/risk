@@ -1,8 +1,8 @@
 from fastapi import APIRouter
 from engines.liquidity_risk.liquidity_engine import calculate_lcr
-from engines.liquidity_risk.models import LCRCalculationRequest, LCRResult
+from schemas.liquidity_models import LCRCalculationRequest, LCRResult
 
-router = APIRouter(prefix="/liquidity-risk", tags=["liquidity-risk"])
+router = APIRouter(prefix="/api/liquidity-risk", tags=["liquidity-risk"])
 
 
 @router.post("/analyze", response_model=LCRResult)

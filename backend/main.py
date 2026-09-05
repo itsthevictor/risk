@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api.liquidity_routes import router as liquidity_router
+from api.market_routes import router as market_risk_router
 
 app = FastAPI()
 
@@ -18,6 +19,7 @@ app.add_middleware(
 )
 
 app.include_router(liquidity_router)
+app.include_router(market_risk_router)
 
 
 @app.get("/health")
