@@ -11,6 +11,8 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ARG NEXT_PUBLIC_API_BASE_URL
 ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
+RUN echo ">>> NEXT_PUBLIC_API_BASE_URL is: [$NEXT_PUBLIC_API_BASE_URL]"
+
 RUN npm run build
 
 FROM base AS runner
