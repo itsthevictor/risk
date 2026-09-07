@@ -15,11 +15,6 @@ import {
   Cell,
 } from 'recharts';
 
-// ---------------------------------------------------------------------------
-// Mock data — shaped exactly like the FastAPI /credit-risk/summary response.
-// Swap the useEffect block below for a real fetch() once the endpoint is live.
-// ---------------------------------------------------------------------------
-
 interface PortfolioSummary {
   n_loans: number;
   ead_total: number;
@@ -302,17 +297,12 @@ function CalibrationTooltip({
 
 export default function CreditRiskDashboard() {
   const [data, setData] = useState<CreditRiskSummary>(MOCK_RESPONSE);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Uncomment once the FastAPI endpoint is deployed:
-    //
-    // setLoading(true);
-    // fetch("/api/credit-risk/summary")
-    //   .then((r) => r.json())
-    //   .then((json) => setData(json))
-    //   .catch(() => {})
-    //   .finally(() => setLoading(false));
+    setTimeout(() => {
+      setLoading(false);
+    }, 1000);
   }, []);
 
   const { portfolio, by_grade, calibration } = data;
