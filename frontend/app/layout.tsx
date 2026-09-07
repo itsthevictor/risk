@@ -25,9 +25,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Risk Analysis Portfolio - VA Demo',
+  title: 'Portofoliu risc - Victor Alexa',
   description:
-    'Real time risk analysis tools portfolio - V.A. personal project',
+    'Portofoliu de tehnici fundamentale de analiză de risc. Proiect personal - Victor A.',
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {
