@@ -30,8 +30,11 @@ export function DiversificationChart({ data }: DiversificationChartProps) {
   ];
 
   return (
-    <ChartContainer config={chartConfig} className='aspect-auto h-[32rem] w-full'>
-      <BarChart data={rows} margin={{ top: 12, right: 12, left: 12, bottom: 0 }}>
+    <ChartContainer config={chartConfig} className='aspect-auto h-128 w-full'>
+      <BarChart
+        data={rows}
+        margin={{ top: 12, right: 12, left: 12, bottom: 0 }}
+      >
         <CartesianGrid vertical={false} strokeDasharray='3 3' />
         <XAxis dataKey='name' tick={{ fontSize: 10 }} />
         <YAxis
@@ -51,9 +54,7 @@ export function DiversificationChart({ data }: DiversificationChartProps) {
             <Cell
               key={row.name}
               fill={
-                row.diversified
-                  ? 'var(--color-chart-4)'
-                  : 'var(--color-var)'
+                row.diversified ? 'var(--color-chart-4)' : 'var(--color-var)'
               }
             />
           ))}

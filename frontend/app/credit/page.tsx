@@ -296,7 +296,7 @@ function CalibrationTooltip({
 }
 
 export default function CreditRiskDashboard() {
-  const [data, setData] = useState<CreditRiskSummary>(MOCK_RESPONSE);
+  const [data] = useState<CreditRiskSummary>(MOCK_RESPONSE);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

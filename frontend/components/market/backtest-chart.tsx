@@ -46,8 +46,11 @@ export function BacktestChart({ data, confidenceLevel }: BacktestChartProps) {
   });
 
   return (
-    <ChartContainer config={chartConfig} className='aspect-auto h-[32rem] w-full'>
-      <BarChart data={rows} margin={{ top: 12, right: 12, left: 12, bottom: 0 }}>
+    <ChartContainer config={chartConfig} className='aspect-auto h-128 w-full'>
+      <BarChart
+        data={rows}
+        margin={{ top: 12, right: 12, left: 12, bottom: 0 }}
+      >
         <CartesianGrid vertical={false} strokeDasharray='3 3' />
         <XAxis dataKey='name' tick={{ fontSize: 10 }} />
         <YAxis allowDecimals={false} tick={{ fontSize: 10 }} width={28} />
@@ -65,7 +68,10 @@ export function BacktestChart({ data, confidenceLevel }: BacktestChartProps) {
         />
         <Bar dataKey='hits' radius={2}>
           {rows.map((row) => (
-            <Cell key={row.name} fill={TRAFFIC_LIGHT_COLORS[row.trafficLight]} />
+            <Cell
+              key={row.name}
+              fill={TRAFFIC_LIGHT_COLORS[row.trafficLight]}
+            />
           ))}
         </Bar>
       </BarChart>

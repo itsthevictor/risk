@@ -32,8 +32,11 @@ export function VolatilityForecastChart({
   }));
 
   return (
-    <ChartContainer config={chartConfig} className='aspect-auto h-[32rem] w-full'>
-      <LineChart data={rows} margin={{ top: 12, right: 12, left: 12, bottom: 0 }}>
+    <ChartContainer config={chartConfig} className='aspect-auto h-128 w-full'>
+      <LineChart
+        data={rows}
+        margin={{ top: 12, right: 12, left: 12, bottom: 0 }}
+      >
         <CartesianGrid vertical={false} strokeDasharray='3 3' />
         <XAxis dataKey='date' tick={{ fontSize: 10 }} minTickGap={32} />
         <YAxis
