@@ -81,12 +81,12 @@ export default function MarketRiskPage() {
         <p className='text-destructive text-sm'>
           {analysis.error instanceof MarketRiskApiError
             ? analysis.error.message
-            : 'Something went wrong running the analysis.'}
+            : 'A apărut o eroare la rularea analizei.'}
         </p>
       )}
 
       {analysis.isPending && (
-        <p className='text-muted-foreground text-sm'>Running analysis…</p>
+        <p className='text-muted-foreground text-sm'>Se rulează analiza…</p>
       )}
 
       {analysis.data && (

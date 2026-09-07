@@ -10,8 +10,8 @@ import type { ConfidenceLevelResult, MethodResults } from '@/lib/definitions';
 import { formatPercent, formatUsd } from '@/lib/utils';
 
 const METHOD_LABELS: Record<keyof MethodResults, string> = {
-  historical: 'Historical Simulation',
-  parametric: 'Parametric (sample std)',
+  historical: 'Simulare Istorică',
+  parametric: 'Parametric (deviație standard eșantion)',
   ewma: 'Parametric (EWMA)',
   garch: 'Parametric (GARCH)',
   monte_carlo: 'Monte Carlo',
@@ -35,7 +35,8 @@ export function VarComparisonTable({
   if (!result) {
     return (
       <p className='text-muted-foreground text-sm'>
-        No data for confidence level {formatPercent(confidenceLevel, 0)}.
+        Nu există date pentru nivelul de încredere{' '}
+        {formatPercent(confidenceLevel, 0)}.
       </p>
     );
   }
@@ -44,7 +45,7 @@ export function VarComparisonTable({
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Method</TableHead>
+          <TableHead>Metodă</TableHead>
           <TableHead className='text-right'>VaR</TableHead>
           <TableHead className='text-right'>ES</TableHead>
         </TableRow>

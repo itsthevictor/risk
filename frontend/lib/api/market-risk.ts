@@ -43,7 +43,7 @@ async function toApiError(response: Response): Promise<MarketRiskApiError> {
   } catch {
     // response body wasn't JSON, or didn't match ErrorResponse — fall through
   }
-  return new MarketRiskApiError(`Request failed: ${response.statusText}`);
+  return new MarketRiskApiError(`Cerere eșuată: ${response.statusText}`);
 }
 
 export async function analyzeMarketRisk(

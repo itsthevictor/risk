@@ -10,8 +10,8 @@ const TRAFFIC_LIGHT_STYLES: Record<TrafficLight, string> = {
 
 const TRAFFIC_LIGHT_LABELS: Record<TrafficLight, string> = {
   green: 'OK',
-  yellow: 'Warning',
-  red: 'Breach',
+  yellow: 'Avertisment',
+  red: 'Depășire',
 };
 
 const SEVERITY: Record<TrafficLight, number> = { green: 0, yellow: 1, red: 2 };

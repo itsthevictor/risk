@@ -54,7 +54,7 @@ export function MarketRiskForm({
             name='tickers'
             control={form.control}
             options={tickerOptions}
-            labelText='Tickers'
+            labelText='Tickere'
             min={2}
             max={10}
           />
@@ -63,20 +63,20 @@ export function MarketRiskForm({
         <CustomNumberField
           name='portfolio_value'
           control={form.control}
-          labelText='Portfolio value'
+          labelText='Valoarea portofoliului'
           currency='USD'
         />
         <CustomIncrementalFormField
           name='estimation_window_days'
           control={form.control}
-          labelText='Estimation window (days)'
+          labelText='Fereastra de estimare (zile)'
           step={21}
           min={30}
           max={756}
         />
         <div className='col-span-2 flex items-end md:col-span-4'>
           <Button type='submit' disabled={isSubmitting}>
-            {isSubmitting ? 'Analyzing…' : 'Analyze'}
+            {isSubmitting ? 'Se analizează…' : 'Analizează'}
           </Button>
         </div>
       </form>
