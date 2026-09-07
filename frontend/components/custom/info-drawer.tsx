@@ -48,12 +48,16 @@ function InfoDrawer({
         <InfoIcon />
         <span className='sr-only'>Mai multe informații</span>
       </DrawerTrigger>
-      <DrawerContent className='flex flex-col gap-y-8'>
+      <DrawerContent className='flex flex-col gap-8'>
         <DrawerHeader>
-          <DrawerTitle>{title}</DrawerTitle>
+          <DrawerTitle className='text-foreground text-2xl'>
+            {title}
+          </DrawerTitle>
         </DrawerHeader>
-        <div className='flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4 pt-0'>
-          {definition && <DrawerDescription>{definition}</DrawerDescription>}
+        <div className='flex min-h-0 flex-1 flex-col gap-8 overflow-y-auto p-4 pt-0'>
+          {definition && (
+            <DrawerDescription className='mt-8'>{definition}</DrawerDescription>
+          )}
 
           {equation && (
             <div className='overflow-x-auto rounded-none border border-border bg-muted/40 p-3'>
@@ -62,7 +66,7 @@ function InfoDrawer({
           )}
 
           {implementation && implementation.length > 0 && (
-            <div className='flex flex-col gap-1.5'>
+            <div className='flex flex-col gap-1.5 '>
               <span className='font-heading text-xs font-medium text-foreground'>
                 Implementare
               </span>
