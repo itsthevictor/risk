@@ -12,7 +12,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 from arch import arch_model
-from scipy.stats import chi2, norm
+from scipy.stats import binom, chi2, norm
 
 RANDOM_SEED = (
     42  # fixed so re-running the same portfolio doesn't change MC VaR on every request
@@ -197,17 +197,25 @@ def christoffersen_test(hit_series: np.ndarray) -> tuple[float, float]:
 
 
 def traffic_light_status(
-    hit_series: np.ndarray, window: int = TRAFFIC_LIGHT_WINDOW
-) -> list[str]:
-    """Returneaza statusul semaforului in sistem Basel pe baza ultimei ferestre de zile."""
+    hit_series: np.ndarray, confidence: float, window: int = TRAFFIC_LIGHT_WINDOW
+) -> str:
+    """Semafor stil Basel pe baza ultimei ferestre de zile, generalizat la orice nivel
+    de incredere: pragurile oficiale Basel (verde 0-4, galben 5-9 din 250 zile la 99%)
+    corespund cutoff-urilor de 95% si 99.99% din functia de repartitie binomiala pentru
+    numarul de depasiri asteptat. La 99% incredere formula de mai jos reproduce exact
+    pragurile 4/9; la orice alt nivel (ex. 95%, unde se asteapta ~12.5 depasiri din 250,
+    nu ~2.5), pragurile se scaleaza corespunzator in loc sa ramana fixate la 4/9."""
     if len(hit_series) < window:
         window = len(hit_series)
     recent_hits = hit_series[-window:].sum()
-    if recent_hits <= 4:
-        return ["green"] * 1
-    elif recent_hits <= 9:
-        return ["yellow"] * 1
-    return ["red"] * 1
+    p = 1 - confidence
+    green_upper = binom.ppf(0.95, window, p) - 1
+    yellow_upper = binom.ppf(0.9999, window, p) - 1
+    if recent_hits <= green_upper:
+        return "green"
+    elif recent_hits <= yellow_upper:
+        return "yellow"
+    return "red"
 
 
 def score_method(
@@ -221,7 +229,7 @@ def score_method(
     christoffersen_lr, christoffersen_p = christoffersen_test(hit_series)
     cc_lr = kupiec_lr + christoffersen_lr
     cc_p = 1 - chi2.cdf(cc_lr, df=2)
-    traffic_light = traffic_light_status(hit_series)[0]
+    traffic_light = traffic_light_status(hit_series, confidence)
 
     return {
         "hits": hits,
