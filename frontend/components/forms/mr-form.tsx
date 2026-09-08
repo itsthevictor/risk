@@ -47,7 +47,7 @@ export function MarketRiskForm({
     <Form {...form}>
       <form
         onSubmit={handleSubmit}
-        className='grid grid-cols-2 gap-4 md:grid-cols-4'
+        className='grid grid-cols-2 gap-4 md:grid-cols-4 md:items-start'
       >
         <div className='col-span-2'>
           <CustomMultiSelectField

@@ -452,7 +452,7 @@ export function CustomIncrementalFormField<T extends FieldValues>({
                   size='icon'
                   disabled={disabled || (min !== undefined && current <= min)}
                   onClick={decrement}
-                  className='h-9 w-9 shrink-0'
+                  className=' shrink-0'
                 >
                   −
                 </Button>
@@ -470,7 +470,7 @@ export function CustomIncrementalFormField<T extends FieldValues>({
                   size='icon'
                   disabled={disabled || (max !== undefined && current >= max)}
                   onClick={increment}
-                  className='h-9 w-9 shrink-0'
+                  className=' shrink-0'
                 >
                   +
                 </Button>
