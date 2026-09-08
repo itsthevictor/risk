@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { CartesianGrid, Line, LineChart, ReferenceLine, XAxis, YAxis } from 'recharts';
 import type { DotItemDotProps } from 'recharts';
 
@@ -31,14 +32,14 @@ interface PnlRow {
 function BreachDot(props: DotItemDotProps) {
   const { cx, cy, payload, index } = props;
   const row = payload as PnlRow;
+  // recharts calls `dot` once per point (thousands, on the full history) — returning
+  // null for the ~98% that aren't breaches is cheaper than mounting an empty element.
   if (!row?.isBreach || cx === undefined || cy === undefined) {
-    // recharts always calls `dot` once per point — an empty group keeps
-    // non-breach days silent instead of drawing a dot for every day.
-    return <g key={`dot-${index}`} />;
+    return null;
   }
   return (
     <circle
-      key={`dot-${index}`}
+      key={`breach-${index}`}
       cx={cx}
       cy={cy}
       r={3}
@@ -63,7 +64,10 @@ export interface PnlExceptionsChartProps {
   methodLabel?: string;
 }
 
-export function PnlExceptionsChart({
+// The full-history P&L line (thousands of points, 2 series) is expensive to
+// reconcile — memoized so it doesn't re-render on unrelated page state changes
+// (confidence-level tab, stress-testing inputs, etc.) that don't touch its props.
+export const PnlExceptionsChart = memo(function PnlExceptionsChart({
   pnl,
   breachDates,
   varSeries,
@@ -139,4 +143,4 @@ export function PnlExceptionsChart({
       </ChartContainer>
     </div>
   );
-}
+});
