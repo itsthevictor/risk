@@ -239,7 +239,7 @@ class MarketRiskAnalyzeResponse(BaseModel):
 class TickerInfo(BaseModel):
     symbol: str
     name: str
-    asset_class: Literal["equity", "fx"]
+    asset_class: Literal["equity", "fx", "bond", "crypto"]
 
 
 class TickerListResponse(BaseModel):

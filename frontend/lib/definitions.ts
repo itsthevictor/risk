@@ -369,7 +369,7 @@ export type MarketRiskAnalyzeResponse = z.infer<
 export const TickerInfoSchema = z.object({
   symbol: z.string(),
   name: z.string(),
-  asset_class: z.enum(['equity', 'fx']),
+  asset_class: z.enum(['equity', 'fx', 'bond', 'crypto']),
 });
 export type TickerInfo = z.infer<typeof TickerInfoSchema>;
 
