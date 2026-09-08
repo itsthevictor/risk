@@ -297,6 +297,7 @@ export const BacktestStatsSchema = z.object({
   conditional_coverage_p_value: z.number(),
   traffic_light: TrafficLightSchema,
   breach_dates: z.array(isoDateSchema),
+  var_series: TimeSeriesSchema,
 });
 export type BacktestStats = z.infer<typeof BacktestStatsSchema>;
 

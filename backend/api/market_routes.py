@@ -168,7 +168,13 @@ def _compute_bundle(req: MarketRiskAnalyzeRequest, session: Session) -> dict:
         breach_dates = [
             d.date() for d, hit in zip(dates, scored.pop("hit_mask")) if hit
         ]
-        backtest_scores[method] = {**scored, "breach_dates": breach_dates}
+        backtest_scores[method] = {
+            **scored,
+            "breach_dates": breach_dates,
+            "var_series": TimeSeries(
+                dates=list(dates.date), values=var_series.tolist()
+            ),
+        }
 
     drawdown_raw = compute_drawdown(portfolio_returns, req.portfolio_value)
     diversification_raw = compute_diversification(

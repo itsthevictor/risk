@@ -159,6 +159,14 @@ class BacktestStats(BaseModel):
     breach_dates: list[date] = Field(
         ..., description="Dates where actual P&L breached this method's VaR"
     )
+    var_series: TimeSeries = Field(
+        ...,
+        description=(
+            "This method's rolling VaR (dollar terms, positive = loss) for every "
+            "backtested day — the actual time-varying threshold breach_dates was "
+            "computed against, not a single constant 'today' value."
+        ),
+    )
 
 
 class MethodBacktest(BaseModel):

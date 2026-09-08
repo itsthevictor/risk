@@ -31,6 +31,14 @@ import type {
 
 const CONFIDENCE_LEVELS = [0.9, 0.95, 0.99] as const;
 const PRIMARY_METHOD: keyof MethodBacktest = 'historical';
+const METHOD_LABELS: Record<keyof MethodBacktest, string> = {
+  historical: 'Simulare Istorică',
+  parametric: 'Parametric',
+  ewma: 'Parametric (EWMA)',
+  garch: 'Parametric (GARCH)',
+  monte_carlo: 'Monte Carlo',
+};
+const METHOD_ORDER = Object.keys(METHOD_LABELS) as (keyof MethodBacktest)[];
 const STRESS_WINDOWS = ['full', '2020', '2022', 'custom'] as const;
 type StressWindow = (typeof STRESS_WINDOWS)[number];
 const STRESS_WINDOW_LABELS: Record<StressWindow, string> = {
@@ -42,6 +50,8 @@ const STRESS_WINDOW_LABELS: Record<StressWindow, string> = {
 
 export default function MarketRiskPage() {
   const [confidenceLevel, setConfidenceLevel] = useState<number>(0.95);
+  const [chartMethod, setChartMethod] =
+    useState<keyof MethodBacktest>(PRIMARY_METHOD);
 
   // parametrii portofoliului din ultimul submit — folosiți ca să putem
   // re-rula analiza de stress testing fără să reafișăm formularul.
@@ -131,6 +141,16 @@ export default function MarketRiskPage() {
         onSubmit={handleInitialSubmit}
       />
 
+      {tickersQuery.isError && (
+        <p className='text-destructive text-sm'>
+          Nu s-a putut încărca lista de tickere — verifică dacă backend-ul
+          rulează
+          {tickersQuery.error instanceof MarketRiskApiError
+            ? `: ${tickersQuery.error.message}`
+            : '.'}
+        </p>
+      )}
+
       {analysis.isError && (
         <p className='text-destructive text-sm'>
           {analysis.error instanceof MarketRiskApiError
@@ -187,14 +207,36 @@ export default function MarketRiskPage() {
               </p>
             </div>
             <BacktestScorecardTable data={analysis.data.backtest} />
+
+            <div className='space-y-1'>
+              <label className='text-sm font-medium'>
+                Metodă (grafic depășiri)
+              </label>
+              <Select
+                value={chartMethod}
+                onValueChange={(v) =>
+                  v && setChartMethod(v as keyof MethodBacktest)
+                }
+              >
+                <SelectTrigger className='w-56'>
+                  <SelectValue>
+                    {(v: keyof MethodBacktest) => METHOD_LABELS[v]}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {METHOD_ORDER.map((m) => (
+                    <SelectItem key={m} value={m}>
+                      {METHOD_LABELS[m]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <PnlExceptionsChart
               pnl={analysis.data.actual_pnl}
-              breachDates={analysis.data.backtest[PRIMARY_METHOD].breach_dates}
-              varLevel={
-                analysis.data.var_comparison.find(
-                  (c) => c.confidence_level === confidenceLevel,
-                )?.methods[PRIMARY_METHOD].var
-              }
+              breachDates={analysis.data.backtest[chartMethod].breach_dates}
+              varSeries={analysis.data.backtest[chartMethod].var_series}
+              methodLabel={METHOD_LABELS[chartMethod]}
             />
           </div>
 
@@ -227,7 +269,9 @@ export default function MarketRiskPage() {
                       onValueChange={handleStressWindowChange}
                     >
                       <SelectTrigger className='w-44'>
-                        <SelectValue />
+                        <SelectValue>
+                          {(v: StressWindow) => STRESS_WINDOW_LABELS[v]}
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         {STRESS_WINDOWS.map((w) => (
@@ -286,25 +330,22 @@ export default function MarketRiskPage() {
                     <>
                       <p className='text-muted-foreground text-sm'>
                         {
-                          stressData.backtest[PRIMARY_METHOD].breach_dates.filter(
+                          stressData.backtest[chartMethod].breach_dates.filter(
                             (d) => stressData.actual_pnl.dates.includes(d),
                           ).length
                         }{' '}
-                        depășiri VaR (Simulare Istorică) în intervalul
-                        selectat, drawdown maxim{' '}
+                        depășiri VaR ({METHOD_LABELS[chartMethod]}) în
+                        intervalul selectat, drawdown maxim{' '}
                         {(stressData.drawdown.max_drawdown * 100).toFixed(1)}%
                         pe tot istoricul.
                       </p>
                       <PnlExceptionsChart
                         pnl={stressData.actual_pnl}
                         breachDates={
-                          stressData.backtest[PRIMARY_METHOD].breach_dates
+                          stressData.backtest[chartMethod].breach_dates
                         }
-                        varLevel={
-                          stressData.var_comparison.find(
-                            (c) => c.confidence_level === confidenceLevel,
-                          )?.methods[PRIMARY_METHOD].var
-                        }
+                        varSeries={stressData.backtest[chartMethod].var_series}
+                        methodLabel={METHOD_LABELS[chartMethod]}
                       />
                     </>
                   ))}
