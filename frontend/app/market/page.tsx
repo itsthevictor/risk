@@ -1,8 +1,10 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { format } from 'date-fns';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -10,29 +12,46 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { DatePickerPopover } from '@/components/forms/form-components';
 import { MarketRiskForm } from '@/components/forms/mr-form';
 import { MarketRiskKpiStrip } from '@/components/market/kpi-strip';
 import { VarComparisonTable } from '@/components/market/var-table';
+import { BacktestScorecardTable } from '@/components/market/backtest-table';
+import { PnlExceptionsChart } from '@/components/market/pnl-exceptions-chart';
 import {
   analyzeMarketRisk,
   fetchTickers,
   MarketRiskApiError,
 } from '@/lib/api/market-risk';
-import type { MarketRiskAnalyzeRequestParsed } from '@/lib/definitions';
+import type {
+  MarketRiskAnalyzeRequestParsed,
+  MarketRiskAnalyzeResponse,
+  MethodBacktest,
+} from '@/lib/definitions';
 
 const CONFIDENCE_LEVELS = [0.9, 0.95, 0.99] as const;
-const BACKTEST_WINDOWS = ['2020', '2022'] as const;
+const PRIMARY_METHOD: keyof MethodBacktest = 'historical';
+const STRESS_WINDOWS = ['full', '2020', '2022', 'custom'] as const;
+type StressWindow = (typeof STRESS_WINDOWS)[number];
+const STRESS_WINDOW_LABELS: Record<StressWindow, string> = {
+  full: 'Tot istoricul',
+  '2020': '2020',
+  '2022': '2022',
+  custom: 'Personalizat',
+};
 
 export default function MarketRiskPage() {
   const [confidenceLevel, setConfidenceLevel] = useState<number>(0.95);
-  const [backtestWindow, setBacktestWindow] =
-    useState<(typeof BACKTEST_WINDOWS)[number]>('2022');
 
   // parametrii portofoliului din ultimul submit — folosiți ca să putem
-  // re-rula analiza doar cu o fereastră de backtest diferită, fără să
-  // reafișăm formularul.
+  // re-rula analiza de stress testing fără să reafișăm formularul.
   const [baseParams, setBaseParams] =
     useState<MarketRiskAnalyzeRequestParsed | null>(null);
+
+  const [stressOpen, setStressOpen] = useState(false);
+  const [stressWindow, setStressWindow] = useState<StressWindow>('full');
+  const [customStart, setCustomStart] = useState<Date>();
+  const [customEnd, setCustomEnd] = useState<Date>();
 
   const tickersQuery = useQuery({
     queryKey: ['tickers'],
@@ -41,6 +60,13 @@ export default function MarketRiskPage() {
   });
 
   const analysis = useMutation({
+    mutationFn: (values: MarketRiskAnalyzeRequestParsed) =>
+      analyzeMarketRisk(values),
+  });
+
+  // Separate mutation for the stress-test slice, so switching crisis windows
+  // never overwrites the full-history data driving the KPI strip / tables above.
+  const stressAnalysis = useMutation({
     mutationFn: (values: MarketRiskAnalyzeRequestParsed) =>
       analyzeMarketRisk(values),
   });
@@ -56,18 +82,46 @@ export default function MarketRiskPage() {
 
   const handleInitialSubmit = (values: MarketRiskAnalyzeRequestParsed) => {
     setBaseParams(values);
+    setStressWindow('full');
     analysis.mutate(values);
   };
 
-  const handleBacktestWindowChange = (
-    value: (typeof BACKTEST_WINDOWS)[number] | null,
-  ) => {
+  const handleStressWindowChange = (value: string | null) => {
     if (!value) return;
-    setBacktestWindow(value);
-    if (baseParams) {
-      analysis.mutate({ ...baseParams, crisis_window: value });
+    const window = value as StressWindow;
+    setStressWindow(window);
+    if (!baseParams) return;
+    // 'full' reuses the already-loaded full-history data below — no request needed.
+    if (window === '2020' || window === '2022') {
+      stressAnalysis.mutate({
+        ...baseParams,
+        crisis_window: window,
+        custom_window: null,
+      });
     }
   };
+
+  const handleApplyCustomWindow = () => {
+    if (!baseParams || !customStart || !customEnd) return;
+    stressAnalysis.mutate({
+      ...baseParams,
+      crisis_window: 'custom',
+      custom_window: {
+        start: format(customStart, 'yyyy-MM-dd'),
+        end: format(customEnd, 'yyyy-MM-dd'),
+      },
+    });
+  };
+
+  const stressData: MarketRiskAnalyzeResponse | undefined =
+    stressWindow === 'full' ? analysis.data : stressAnalysis.data;
+  const stressPending = stressWindow !== 'full' && stressAnalysis.isPending;
+  const stressErrorMessage =
+    stressWindow !== 'full' && stressAnalysis.isError
+      ? stressAnalysis.error instanceof MarketRiskApiError
+        ? stressAnalysis.error.message
+        : 'A apărut o eroare la rularea stress testului.'
+      : null;
 
   return (
     <div className='space-y-6 p-6'>
@@ -94,7 +148,8 @@ export default function MarketRiskPage() {
           <div className='space-y-1'>
             <h2 className='text-lg font-semibold'>Risc curent</h2>
             <p className='text-muted-foreground text-sm'>
-              Calculat la {analysis.data.portfolio.end_date}.
+              Calculat la {analysis.data.portfolio.end_date}, pe baza întregului
+              istoric disponibil.
             </p>
           </div>
 
@@ -122,29 +177,139 @@ export default function MarketRiskPage() {
           />
 
           <div className='space-y-3 border-t pt-6'>
-            <div className='flex items-center justify-between'>
-              <h2 className='text-lg font-semibold'>Backtest</h2>
-              <Select
-                value={backtestWindow}
-                onValueChange={handleBacktestWindowChange}
-              >
-                <SelectTrigger className='w-40'>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {BACKTEST_WINDOWS.map((w) => (
-                    <SelectItem key={w} value={w}>
-                      {w}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className='space-y-1'>
+              <h2 className='text-lg font-semibold'>Backtest complet</h2>
+              <p className='text-muted-foreground text-sm'>
+                Kupiec, Christoffersen și lumina de semafor pentru fiecare
+                metodă, calculate pe tot istoricul disponibil (
+                {analysis.data.backtest[PRIMARY_METHOD].total_observations}{' '}
+                observații).
+              </p>
             </div>
-            <p className='text-muted-foreground text-sm'>
-              Cum s-ar fi comportat modelul de VaR în perioada de stres
-              selectată (exceptions overlay, Kupiec, traffic-light).
-            </p>
-            {/* aici vin, când le construim: exceptions overlay chart + volatility forecast chart + backtest scorecard */}
+            <BacktestScorecardTable data={analysis.data.backtest} />
+            <PnlExceptionsChart
+              pnl={analysis.data.actual_pnl}
+              breachDates={analysis.data.backtest[PRIMARY_METHOD].breach_dates}
+              varLevel={
+                analysis.data.var_comparison.find(
+                  (c) => c.confidence_level === confidenceLevel,
+                )?.methods[PRIMARY_METHOD].var
+              }
+            />
+          </div>
+
+          <div className='space-y-3 border-t pt-6'>
+            <div className='flex items-center justify-between gap-2'>
+              <div className='space-y-1'>
+                <h2 className='text-lg font-semibold'>Stress Testing</h2>
+                <p className='text-muted-foreground text-sm'>
+                  Decupaj din analiza de mai sus pentru o perioadă de stres
+                  istorică — fără recalcul.
+                </p>
+              </div>
+              <Button
+                type='button'
+                variant='outline'
+                size='sm'
+                onClick={() => setStressOpen((open) => !open)}
+              >
+                {stressOpen ? 'Ascunde' : 'Arată'}
+              </Button>
+            </div>
+
+            {stressOpen && (
+              <div className='space-y-4'>
+                <div className='flex flex-wrap items-end gap-3'>
+                  <div className='space-y-1'>
+                    <label className='text-sm font-medium'>Fereastră</label>
+                    <Select
+                      value={stressWindow}
+                      onValueChange={handleStressWindowChange}
+                    >
+                      <SelectTrigger className='w-44'>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {STRESS_WINDOWS.map((w) => (
+                          <SelectItem key={w} value={w}>
+                            {STRESS_WINDOW_LABELS[w]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {stressWindow === 'custom' && (
+                    <>
+                      <div className='space-y-1'>
+                        <label className='text-sm font-medium'>Start</label>
+                        <DatePickerPopover
+                          date={customStart}
+                          onDateChange={setCustomStart}
+                        />
+                      </div>
+                      <div className='space-y-1'>
+                        <label className='text-sm font-medium'>Sfârșit</label>
+                        <DatePickerPopover
+                          date={customEnd}
+                          onDateChange={setCustomEnd}
+                        />
+                      </div>
+                      <Button
+                        type='button'
+                        size='sm'
+                        disabled={
+                          !customStart || !customEnd || stressAnalysis.isPending
+                        }
+                        onClick={handleApplyCustomWindow}
+                      >
+                        Aplică
+                      </Button>
+                    </>
+                  )}
+                </div>
+
+                {stressErrorMessage && (
+                  <p className='text-destructive text-sm'>
+                    {stressErrorMessage}
+                  </p>
+                )}
+                {stressPending && (
+                  <p className='text-muted-foreground text-sm'>Se rulează…</p>
+                )}
+                {stressData &&
+                  (stressData.actual_pnl.dates.length === 0 ? (
+                    <p className='text-muted-foreground text-sm'>
+                      Nu există date pentru intervalul selectat.
+                    </p>
+                  ) : (
+                    <>
+                      <p className='text-muted-foreground text-sm'>
+                        {
+                          stressData.backtest[PRIMARY_METHOD].breach_dates.filter(
+                            (d) => stressData.actual_pnl.dates.includes(d),
+                          ).length
+                        }{' '}
+                        depășiri VaR (Simulare Istorică) în intervalul
+                        selectat, drawdown maxim{' '}
+                        {(stressData.drawdown.max_drawdown * 100).toFixed(1)}%
+                        pe tot istoricul.
+                      </p>
+                      <PnlExceptionsChart
+                        pnl={stressData.actual_pnl}
+                        breachDates={
+                          stressData.backtest[PRIMARY_METHOD].breach_dates
+                        }
+                        varLevel={
+                          stressData.var_comparison.find(
+                            (c) => c.confidence_level === confidenceLevel,
+                          )?.methods[PRIMARY_METHOD].var
+                        }
+                      />
+                    </>
+                  ))}
+              </div>
+            )}
           </div>
         </>
       )}
