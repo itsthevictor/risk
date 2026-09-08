@@ -287,3 +287,66 @@ def compute_diversification(
 def compute_correlation(log_returns: pd.DataFrame) -> dict:
     corr = log_returns.corr()
     return {"tickers": list(corr.columns), "matrix": corr.to_numpy().tolist()}
+
+
+# ---------------------------------------------------------------------------
+# Stress testing — replay real historical returns, or a hypothetical per-asset-class
+# shock, onto TODAY's portfolio value. Unlike the backtest above, this deliberately
+# does not touch the rolling VaR/backtest machinery: it answers "what would happen to
+# my portfolio right now if this scenario played out", not "how did my model do".
+# ---------------------------------------------------------------------------
+
+
+def historical_scenario_pnl(
+    returns: pd.Series, start: str, end: str, portfolio_value: float
+) -> dict:
+    """Replays the actual cumulative log-return realised between start and end onto
+    portfolio_value, e.g. 'what if my current portfolio had lived through COVID.'"""
+    window_returns = returns.loc[start:end]
+    if window_returns.empty:
+        raise ValueError(f"No trading days between {start} and {end}")
+    total_return_factor = float(np.exp(window_returns.sum()))
+    ending_value = portfolio_value * total_return_factor
+    pnl = ending_value - portfolio_value
+    return {
+        "total_return_factor": total_return_factor,
+        "ending_value": ending_value,
+        "pnl": pnl,
+        "pnl_pct": pnl / portfolio_value,
+    }
+
+
+def hypothetical_scenario_pnl(
+    weights: np.ndarray,
+    asset_classes: list[str],
+    shocks: dict[str, float],
+    portfolio_value: float,
+) -> dict:
+    """Applies a per-asset-class shock (e.g. {'equity': -0.30}) weighted by how much
+    of the portfolio sits in each class. A class present in the portfolio but absent
+    from `shocks` is treated as unshocked (0%)."""
+    weighted_return = sum(
+        shocks.get(cls, 0.0) * w for cls, w in zip(asset_classes, weights)
+    )
+    total_return_factor = 1 + weighted_return
+    ending_value = portfolio_value * total_return_factor
+    pnl = ending_value - portfolio_value
+    return {
+        "total_return_factor": total_return_factor,
+        "ending_value": ending_value,
+        "pnl": pnl,
+        "pnl_pct": pnl / portfolio_value,
+    }
+
+
+def categorize_stress_result(
+    pnl_pct: float, warning_pct: float = 0.15, critical_pct: float = 0.20
+) -> str:
+    """Basel-style breach categorisation: how far the scenario loss sits past the
+    warning/critical thresholds set for this book."""
+    loss_pct = -pnl_pct
+    if loss_pct >= critical_pct:
+        return "critical"
+    if loss_pct >= warning_pct:
+        return "warning"
+    return "ok"

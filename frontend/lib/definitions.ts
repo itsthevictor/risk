@@ -369,7 +369,7 @@ export type MarketRiskAnalyzeResponse = z.infer<
 export const TickerInfoSchema = z.object({
   symbol: z.string(),
   name: z.string(),
-  asset_class: z.enum(['equity', 'fx', 'bond', 'crypto']),
+  asset_class: z.enum(['equity', 'fx', 'bond', 'crypto', 'commodity']),
 });
 export type TickerInfo = z.infer<typeof TickerInfoSchema>;
 
@@ -377,6 +377,59 @@ export const TickerListResponseSchema = z.object({
   tickers: z.array(TickerInfoSchema),
 });
 export type TickerListResponse = z.infer<typeof TickerListResponseSchema>;
+
+// ---------------------------------------------------------------------------
+// stress testing (POST /market-risk/stress-test) — separate from /analyze:
+// replays real historical returns, or a hypothetical per-asset-class shock, onto
+// today's portfolio value. Not a slice of the backtest above.
+// ---------------------------------------------------------------------------
+
+export const StressScenarioModeSchema = z.enum(['historical', 'hypothetical']);
+export type StressScenarioMode = z.infer<typeof StressScenarioModeSchema>;
+
+export const StressStatusSchema = z.enum(['ok', 'warning', 'critical']);
+export type StressStatus = z.infer<typeof StressStatusSchema>;
+
+export const StressTestRequestSchema = z
+  .object({
+    tickers: z.array(tickerSchema).min(2).max(10),
+    portfolio_value: z.number().positive().default(1_000_000),
+    mode: StressScenarioModeSchema,
+    window: CrisisWindowPresetSchema.nullable().optional(),
+    custom_window: CustomWindowSchema.nullable().optional(),
+    shocks: z.record(z.string(), z.number()).nullable().optional(),
+  })
+  .refine(
+    (data) =>
+      data.mode !== 'historical' ||
+      (data.window != null &&
+        (data.window !== 'custom' || data.custom_window != null)),
+    {
+      message:
+        "window is required for mode 'historical' (and custom_window when window is 'custom')",
+      path: ['window'],
+    },
+  )
+  .refine((data) => data.mode !== 'hypothetical' || !!data.shocks, {
+    message: "shocks is required for mode 'hypothetical'",
+    path: ['shocks'],
+  });
+export type StressTestRequest = z.input<typeof StressTestRequestSchema>;
+export type StressTestRequestParsed = z.output<typeof StressTestRequestSchema>;
+
+export const StressTestResultSchema = z.object({
+  mode: StressScenarioModeSchema,
+  label: z.string(),
+  start_date: isoDateSchema.nullable().optional(),
+  end_date: isoDateSchema.nullable().optional(),
+  total_return_factor: z.number(),
+  ending_value: z.number(),
+  pnl: z.number(),
+  pnl_pct: z.number(),
+  status: StressStatusSchema,
+  shocks_applied: z.record(z.string(), z.number()).nullable().optional(),
+});
+export type StressTestResult = z.infer<typeof StressTestResultSchema>;
 
 // ---------------------------------------------------------------------------
 // errors

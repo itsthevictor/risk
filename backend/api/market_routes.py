@@ -23,12 +23,16 @@ from api.schemas.market_models import (
     MethodBacktest,
     MethodResults,
     PortfolioSummary,
+    StressScenarioMode,
+    StressTestRequest,
+    StressTestResult,
     TimeSeries,
     VarEsPair,
     VolatilityForecast,
 )
 from engines.market_risk.market_risk_service import (
     GarchConvergenceError,
+    categorize_stress_result,
     compute_correlation,
     compute_diversification,
     compute_drawdown,
@@ -36,6 +40,8 @@ from engines.market_risk.market_risk_service import (
     compute_log_returns,
     compute_portfolio_returns,
     fit_garch_volatility,
+    historical_scenario_pnl,
+    hypothetical_scenario_pnl,
     run_backtest,
     score_method,
 )
@@ -252,4 +258,98 @@ def analyze_market_risk(
         ),
         diversification=DiversificationResult(**bundle["diversification"]),
         correlation_matrix=CorrelationMatrix(**bundle["correlation"]),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Stress testing — deliberately independent of /analyze's cache: it never needs the
+# GARCH fit or the rolling backtest, just price history (already cached in Postgres)
+# or, for the hypothetical mode, no market data at all.
+# ---------------------------------------------------------------------------
+
+# Tight, acute drawdown windows (not full calendar years like CRISIS_WINDOWS above) —
+# these are the periods that actually define "what a crisis felt like" for a replay.
+HISTORICAL_STRESS_WINDOWS: dict[str, tuple[date, date]] = {
+    "2020": (date(2020, 2, 19), date(2020, 3, 20)),  # COVID crash
+    "2022": (date(2021, 12, 27), date(2022, 10, 14)),  # rate-hike sell-off
+}
+STRESS_SCENARIO_LABELS: dict[str, str] = {
+    "2020": "COVID-19 (19 feb – 20 mar 2020)",
+    "2022": "Rate-hike sell-off (27 dec 2021 – 14 oct 2022)",
+}
+# Prefilled per-asset-class shocks offered alongside each historical replay — editable
+# by the user, mirrored in the frontend for the initial form values.
+PRESET_SHOCK_SCENARIOS: dict[str, dict[str, float]] = {
+    "2020": {"equity": -0.30, "bond": -0.05, "commodity": 0.05},
+    "2022": {"equity": -0.20, "bond": -0.13, "commodity": 0.00},
+}
+STRESS_WARNING_PCT = 0.15
+STRESS_CRITICAL_PCT = 0.20
+
+_TICKER_ASSET_CLASS: dict[str, str] = {t.symbol: t.asset_class for t in TICKER_REGISTRY}
+
+
+@router.post("/stress-test", response_model=StressTestResult)
+def stress_test(
+    req: StressTestRequest, session: Session = Depends(get_session)
+) -> StressTestResult:
+    weights = np.full(len(req.tickers), 1 / len(req.tickers))
+
+    if req.mode == StressScenarioMode.historical:
+        if req.window == CrisisWindowPreset.custom:
+            start, end = req.custom_window.start, req.custom_window.end
+            label = f"Personalizat ({start.isoformat()} → {end.isoformat()})"
+        else:
+            start, end = HISTORICAL_STRESS_WINDOWS[req.window.value]
+            label = STRESS_SCENARIO_LABELS[req.window.value]
+
+        fetch_start = date.today() - timedelta(days=FULL_HISTORY_YEARS * 365)
+        fetch_end = date.today()
+        try:
+            adj_close = get_adj_close(session, req.tickers, fetch_start, fetch_end)
+        except TickerNotFoundError as exc:
+            raise HTTPException(
+                status_code=422,
+                detail=ErrorResponse(
+                    code=ErrorCode.ticker_not_found,
+                    message=str(exc),
+                    details={"ticker": exc.ticker},
+                ).model_dump(),
+            ) from exc
+
+        log_returns = compute_log_returns(adj_close)
+        portfolio_returns = compute_portfolio_returns(log_returns, weights)
+
+        try:
+            result = historical_scenario_pnl(
+                portfolio_returns, start.isoformat(), end.isoformat(), req.portfolio_value
+            )
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=422,
+                detail=ErrorResponse(
+                    code=ErrorCode.insufficient_history, message=str(exc)
+                ).model_dump(),
+            ) from exc
+
+        status = categorize_stress_result(
+            result["pnl_pct"], STRESS_WARNING_PCT, STRESS_CRITICAL_PCT
+        )
+        return StressTestResult(
+            mode=req.mode, label=label, start_date=start, end_date=end, status=status, **result
+        )
+
+    asset_classes = [_TICKER_ASSET_CLASS.get(t, "equity") for t in req.tickers]
+    result = hypothetical_scenario_pnl(
+        weights, asset_classes, req.shocks or {}, req.portfolio_value
+    )
+    status = categorize_stress_result(
+        result["pnl_pct"], STRESS_WARNING_PCT, STRESS_CRITICAL_PCT
+    )
+    return StressTestResult(
+        mode=req.mode,
+        label="Scenariu ipotetic",
+        status=status,
+        shocks_applied=req.shocks,
+        **result,
     )

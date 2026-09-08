@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { format } from 'date-fns';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -12,21 +11,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { DatePickerPopover } from '@/components/forms/form-components';
+import InfoDrawer from '@/components/custom/info-drawer';
 import { MarketRiskForm } from '@/components/forms/mr-form';
 import { MarketRiskKpiStrip } from '@/components/market/kpi-strip';
 import { VarComparisonTable } from '@/components/market/var-table';
 import { BacktestScorecardTable } from '@/components/market/backtest-table';
 import { PnlExceptionsChart } from '@/components/market/pnl-exceptions-chart';
+import { StressResultCard } from '@/components/market/stress-result-card';
+import { ShockInputs } from '@/components/market/shock-inputs';
 import {
   analyzeMarketRisk,
   fetchTickers,
   MarketRiskApiError,
+  runStressTest,
 } from '@/lib/api/market-risk';
 import type {
   MarketRiskAnalyzeRequestParsed,
-  MarketRiskAnalyzeResponse,
   MethodBacktest,
+  StressTestRequestParsed,
 } from '@/lib/definitions';
 
 const CONFIDENCE_LEVELS = [0.9, 0.95, 0.99] as const;
@@ -38,14 +40,23 @@ const METHOD_LABELS: Record<keyof MethodBacktest, string> = {
   garch: 'Parametric (GARCH)',
   monte_carlo: 'Monte Carlo',
 };
-const METHOD_ORDER = Object.keys(METHOD_LABELS) as (keyof MethodBacktest)[];
-const STRESS_WINDOWS = ['full', '2020', '2022', 'custom'] as const;
-type StressWindow = (typeof STRESS_WINDOWS)[number];
-const STRESS_WINDOW_LABELS: Record<StressWindow, string> = {
-  full: 'Tot istoricul',
-  '2020': '2020',
-  '2022': '2022',
+
+// Mirrors backend/api/market_routes.py — acute crash windows (not full calendar
+// years), plus the per-asset-class shocks prefilled alongside each one.
+const STRESS_SCENARIOS = ['2020', '2022', 'custom'] as const;
+type StressScenario = (typeof STRESS_SCENARIOS)[number];
+const STRESS_SCENARIO_LABELS: Record<StressScenario, string> = {
+  '2020': '2020 — COVID-19',
+  '2022': '2022 — Rate-hike sell-off',
   custom: 'Personalizat',
+};
+const HISTORICAL_REPLAY_LABELS: Record<'2020' | '2022', string> = {
+  '2020': 'COVID-19 (19 feb – 20 mar 2020)',
+  '2022': 'Rate-hike sell-off (27 dec 2021 – 14 oct 2022)',
+};
+const PRESET_SHOCKS: Record<'2020' | '2022', Record<string, number>> = {
+  '2020': { equity: -0.3, bond: -0.05, commodity: 0.05 },
+  '2022': { equity: -0.2, bond: -0.13, commodity: 0.0 },
 };
 
 export default function MarketRiskPage() {
@@ -54,14 +65,15 @@ export default function MarketRiskPage() {
     useState<keyof MethodBacktest>(PRIMARY_METHOD);
 
   // parametrii portofoliului din ultimul submit — folosiți ca să putem
-  // re-rula analiza de stress testing fără să reafișăm formularul.
+  // re-rula stress testing fără să reafișăm formularul.
   const [baseParams, setBaseParams] =
     useState<MarketRiskAnalyzeRequestParsed | null>(null);
 
   const [stressOpen, setStressOpen] = useState(false);
-  const [stressWindow, setStressWindow] = useState<StressWindow>('full');
-  const [customStart, setCustomStart] = useState<Date>();
-  const [customEnd, setCustomEnd] = useState<Date>();
+  const [stressScenario, setStressScenario] = useState<StressScenario>('2020');
+  const [shocks, setShocks] = useState<Record<string, number>>(
+    PRESET_SHOCKS['2020'],
+  );
 
   const tickersQuery = useQuery({
     queryKey: ['tickers'],
@@ -74,11 +86,11 @@ export default function MarketRiskPage() {
       analyzeMarketRisk(values),
   });
 
-  // Separate mutation for the stress-test slice, so switching crisis windows
-  // never overwrites the full-history data driving the KPI strip / tables above.
-  const stressAnalysis = useMutation({
-    mutationFn: (values: MarketRiskAnalyzeRequestParsed) =>
-      analyzeMarketRisk(values),
+  const historicalStress = useMutation({
+    mutationFn: (values: StressTestRequestParsed) => runStressTest(values),
+  });
+  const hypotheticalStress = useMutation({
+    mutationFn: (values: StressTestRequestParsed) => runStressTest(values),
   });
 
   const tickerOptions = useMemo(
@@ -90,48 +102,70 @@ export default function MarketRiskPage() {
     [tickersQuery.data],
   );
 
+  // Asset classes actually present in the analyzed portfolio — drives which shock
+  // inputs are shown (no point offering a "bond" shock for an all-equity portfolio).
+  const portfolioAssetClasses = useMemo(() => {
+    if (!baseParams || !tickersQuery.data) return [];
+    const byTicker = new Map(
+      tickersQuery.data.tickers.map((t) => [t.symbol, t.asset_class]),
+    );
+    const classes = new Set(
+      baseParams.tickers.map((t) => byTicker.get(t) ?? 'equity'),
+    );
+    return Array.from(classes);
+  }, [baseParams, tickersQuery.data]);
+
   const handleInitialSubmit = (values: MarketRiskAnalyzeRequestParsed) => {
     setBaseParams(values);
-    setStressWindow('full');
     analysis.mutate(values);
   };
 
-  const handleStressWindowChange = (value: string | null) => {
-    if (!value) return;
-    const window = value as StressWindow;
-    setStressWindow(window);
-    if (!baseParams) return;
-    // 'full' reuses the already-loaded full-history data below — no request needed.
-    if (window === '2020' || window === '2022') {
-      stressAnalysis.mutate({
-        ...baseParams,
-        crisis_window: window,
-        custom_window: null,
-      });
-    }
-  };
-
-  const handleApplyCustomWindow = () => {
-    if (!baseParams || !customStart || !customEnd) return;
-    stressAnalysis.mutate({
-      ...baseParams,
-      crisis_window: 'custom',
-      custom_window: {
-        start: format(customStart, 'yyyy-MM-dd'),
-        end: format(customEnd, 'yyyy-MM-dd'),
-      },
+  const runHypothetical = (
+    params: MarketRiskAnalyzeRequestParsed,
+    shockValues: Record<string, number>,
+  ) => {
+    hypotheticalStress.mutate({
+      tickers: params.tickers,
+      portfolio_value: params.portfolio_value,
+      mode: 'hypothetical',
+      shocks: shockValues,
     });
   };
 
-  const stressData: MarketRiskAnalyzeResponse | undefined =
-    stressWindow === 'full' ? analysis.data : stressAnalysis.data;
-  const stressPending = stressWindow !== 'full' && stressAnalysis.isPending;
-  const stressErrorMessage =
-    stressWindow !== 'full' && stressAnalysis.isError
-      ? stressAnalysis.error instanceof MarketRiskApiError
-        ? stressAnalysis.error.message
-        : 'A apărut o eroare la rularea stress testului.'
-      : null;
+  const handleScenarioChange = (value: string | null) => {
+    if (!value) return;
+    const scenario = value as StressScenario;
+    setStressScenario(scenario);
+
+    const initialShocks =
+      scenario === 'custom'
+        ? Object.fromEntries(portfolioAssetClasses.map((c) => [c, 0]))
+        : PRESET_SHOCKS[scenario];
+    setShocks(initialShocks);
+
+    if (!baseParams) return;
+    if (scenario === '2020' || scenario === '2022') {
+      historicalStress.mutate({
+        tickers: baseParams.tickers,
+        portfolio_value: baseParams.portfolio_value,
+        mode: 'historical',
+        window: scenario,
+      });
+      runHypothetical(baseParams, initialShocks);
+    } else {
+      historicalStress.reset();
+      hypotheticalStress.reset();
+    }
+  };
+
+  const handleShockChange = (assetClass: string, value: number) => {
+    setShocks((prev) => ({ ...prev, [assetClass]: value }));
+  };
+
+  const handleRecalculateShocks = () => {
+    if (!baseParams) return;
+    runHypothetical(baseParams, shocks);
+  };
 
   return (
     <div className='space-y-6 p-6'>
@@ -194,11 +228,18 @@ export default function MarketRiskPage() {
           <VarComparisonTable
             varComparison={analysis.data.var_comparison}
             confidenceLevel={confidenceLevel}
+            actualPnl={analysis.data.actual_pnl}
           />
 
           <div className='space-y-3 border-t pt-6'>
             <div className='space-y-1'>
-              <h2 className='text-lg font-semibold'>Backtest complet</h2>
+              <div className='flex items-center gap-1'>
+                <h2 className='text-lg font-semibold'>Backtest complet</h2>
+                <InfoDrawer
+                  title='Backtest complet'
+                  definition='Click pe o metodă din tabel (sau pe iconița grafic din dreptul ei) pentru a actualiza graficul depășirilor de mai jos.'
+                />
+              </div>
               <p className='text-muted-foreground text-sm'>
                 Kupiec, Christoffersen și lumina de semafor pentru fiecare
                 metodă, calculate pe tot istoricul disponibil (
@@ -206,32 +247,11 @@ export default function MarketRiskPage() {
                 observații).
               </p>
             </div>
-            <BacktestScorecardTable data={analysis.data.backtest} />
-
-            <div className='space-y-1'>
-              <label className='text-sm font-medium'>
-                Metodă (grafic depășiri)
-              </label>
-              <Select
-                value={chartMethod}
-                onValueChange={(v) =>
-                  v && setChartMethod(v as keyof MethodBacktest)
-                }
-              >
-                <SelectTrigger className='w-56'>
-                  <SelectValue>
-                    {(v: keyof MethodBacktest) => METHOD_LABELS[v]}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {METHOD_ORDER.map((m) => (
-                    <SelectItem key={m} value={m}>
-                      {METHOD_LABELS[m]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <BacktestScorecardTable
+              data={analysis.data.backtest}
+              activeMethod={chartMethod}
+              onSelectMethod={setChartMethod}
+            />
             <PnlExceptionsChart
               pnl={analysis.data.actual_pnl}
               breachDates={analysis.data.backtest[chartMethod].breach_dates}
@@ -245,15 +265,20 @@ export default function MarketRiskPage() {
               <div className='space-y-1'>
                 <h2 className='text-lg font-semibold'>Stress Testing</h2>
                 <p className='text-muted-foreground text-sm'>
-                  Decupaj din analiza de mai sus pentru o perioadă de stres
-                  istorică — fără recalcul.
+                  Impactul asupra portofoliului de{' '}
+                  <strong>azi</strong> — nu cum s-a comportat modelul de VaR,
+                  ci ce s-ar întâmpla cu valoarea curentă dacă s-ar repeta un
+                  scenariu de criză.
                 </p>
               </div>
               <Button
                 type='button'
                 variant='outline'
                 size='sm'
-                onClick={() => setStressOpen((open) => !open)}
+                onClick={() => {
+                  setStressOpen((open) => !open);
+                  if (!stressOpen) handleScenarioChange(stressScenario);
+                }}
               >
                 {stressOpen ? 'Ascunde' : 'Arată'}
               </Button>
@@ -261,94 +286,98 @@ export default function MarketRiskPage() {
 
             {stressOpen && (
               <div className='space-y-4'>
-                <div className='flex flex-wrap items-end gap-3'>
-                  <div className='space-y-1'>
-                    <label className='text-sm font-medium'>Fereastră</label>
-                    <Select
-                      value={stressWindow}
-                      onValueChange={handleStressWindowChange}
-                    >
-                      <SelectTrigger className='w-44'>
-                        <SelectValue>
-                          {(v: StressWindow) => STRESS_WINDOW_LABELS[v]}
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {STRESS_WINDOWS.map((w) => (
-                          <SelectItem key={w} value={w}>
-                            {STRESS_WINDOW_LABELS[w]}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {stressWindow === 'custom' && (
-                    <>
-                      <div className='space-y-1'>
-                        <label className='text-sm font-medium'>Start</label>
-                        <DatePickerPopover
-                          date={customStart}
-                          onDateChange={setCustomStart}
-                        />
-                      </div>
-                      <div className='space-y-1'>
-                        <label className='text-sm font-medium'>Sfârșit</label>
-                        <DatePickerPopover
-                          date={customEnd}
-                          onDateChange={setCustomEnd}
-                        />
-                      </div>
-                      <Button
-                        type='button'
-                        size='sm'
-                        disabled={
-                          !customStart || !customEnd || stressAnalysis.isPending
-                        }
-                        onClick={handleApplyCustomWindow}
-                      >
-                        Aplică
-                      </Button>
-                    </>
-                  )}
+                <div className='space-y-1'>
+                  <label className='text-sm font-medium'>Scenariu</label>
+                  <Select
+                    value={stressScenario}
+                    onValueChange={handleScenarioChange}
+                  >
+                    <SelectTrigger className='w-56'>
+                      <SelectValue>
+                        {(v: StressScenario) => STRESS_SCENARIO_LABELS[v]}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {STRESS_SCENARIOS.map((s) => (
+                        <SelectItem key={s} value={s}>
+                          {STRESS_SCENARIO_LABELS[s]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
-                {stressErrorMessage && (
-                  <p className='text-destructive text-sm'>
-                    {stressErrorMessage}
-                  </p>
-                )}
-                {stressPending && (
-                  <p className='text-muted-foreground text-sm'>Se rulează…</p>
-                )}
-                {stressData &&
-                  (stressData.actual_pnl.dates.length === 0 ? (
-                    <p className='text-muted-foreground text-sm'>
-                      Nu există date pentru intervalul selectat.
-                    </p>
-                  ) : (
-                    <>
-                      <p className='text-muted-foreground text-sm'>
-                        {
-                          stressData.backtest[chartMethod].breach_dates.filter(
-                            (d) => stressData.actual_pnl.dates.includes(d),
-                          ).length
-                        }{' '}
-                        depășiri VaR ({METHOD_LABELS[chartMethod]}) în
-                        intervalul selectat, drawdown maxim{' '}
-                        {(stressData.drawdown.max_drawdown * 100).toFixed(1)}%
-                        pe tot istoricul.
+                <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+                  {stressScenario !== 'custom' && (
+                    <div className='space-y-2'>
+                      {historicalStress.isError && (
+                        <p className='text-destructive text-sm'>
+                          {historicalStress.error instanceof MarketRiskApiError
+                            ? historicalStress.error.message
+                            : 'A apărut o eroare la calculul replay-ului istoric.'}
+                        </p>
+                      )}
+                      {historicalStress.isPending && (
+                        <p className='text-muted-foreground text-sm'>
+                          Se calculează…
+                        </p>
+                      )}
+                      {historicalStress.data && (
+                        <StressResultCard
+                          title='Replay istoric'
+                          description={
+                            HISTORICAL_REPLAY_LABELS[
+                              stressScenario as '2020' | '2022'
+                            ]
+                          }
+                          result={historicalStress.data}
+                        />
+                      )}
+                    </div>
+                  )}
+
+                  <div className='space-y-2'>
+                    {hypotheticalStress.isError && (
+                      <p className='text-destructive text-sm'>
+                        {hypotheticalStress.error instanceof MarketRiskApiError
+                          ? hypotheticalStress.error.message
+                          : 'A apărut o eroare la calculul scenariului.'}
                       </p>
-                      <PnlExceptionsChart
-                        pnl={stressData.actual_pnl}
-                        breachDates={
-                          stressData.backtest[chartMethod].breach_dates
-                        }
-                        varSeries={stressData.backtest[chartMethod].var_series}
-                        methodLabel={METHOD_LABELS[chartMethod]}
+                    )}
+                    {hypotheticalStress.isPending && (
+                      <p className='text-muted-foreground text-sm'>
+                        Se calculează…
+                      </p>
+                    )}
+                    {hypotheticalStress.data && (
+                      <StressResultCard
+                        title='Scenariu parametric'
+                        description='Șoc pe clase de active, ponderat cu compoziția portofoliului'
+                        result={hypotheticalStress.data}
                       />
-                    </>
-                  ))}
+                    )}
+                  </div>
+                </div>
+
+                <div className='space-y-2'>
+                  <label className='text-sm font-medium'>
+                    Șocuri per clasă de active
+                  </label>
+                  <ShockInputs
+                    assetClasses={portfolioAssetClasses}
+                    shocks={shocks}
+                    onChange={handleShockChange}
+                    disabled={hypotheticalStress.isPending}
+                  />
+                  <Button
+                    type='button'
+                    size='sm'
+                    disabled={hypotheticalStress.isPending}
+                    onClick={handleRecalculateShocks}
+                  >
+                    Recalculează
+                  </Button>
+                </div>
               </div>
             )}
           </div>

@@ -6,8 +6,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import type { ConfidenceLevelResult, MethodResults } from '@/lib/definitions';
+import type {
+  ConfidenceLevelResult,
+  MethodResults,
+  TimeSeries,
+} from '@/lib/definitions';
 import { formatPercent, formatUsd } from '@/lib/utils';
+import KpiChart from './kpi-chart';
+import { VarHistogramChart } from './var-histogram-chart';
 
 const METHOD_LABELS: Record<keyof MethodResults, string> = {
   historical: 'Simulare Istorică',
@@ -22,11 +28,13 @@ const METHOD_ORDER = Object.keys(METHOD_LABELS) as (keyof MethodResults)[];
 export interface VarComparisonTableProps {
   varComparison: ConfidenceLevelResult[];
   confidenceLevel: number;
+  actualPnl: TimeSeries;
 }
 
 export function VarComparisonTable({
   varComparison,
   confidenceLevel,
+  actualPnl,
 }: VarComparisonTableProps) {
   const result = varComparison.find(
     (c) => c.confidence_level === confidenceLevel,
@@ -48,6 +56,7 @@ export function VarComparisonTable({
           <TableHead>Metodă</TableHead>
           <TableHead className='text-right'>VaR</TableHead>
           <TableHead className='text-right'>ES</TableHead>
+          <TableHead className='w-8' />
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -69,6 +78,18 @@ export function VarComparisonTable({
                 <span className='text-muted-foreground ml-1.5 text-xs'>
                   ({formatPercent(pair.es_pct)})
                 </span>
+              </TableCell>
+              <TableCell>
+                <KpiChart
+                  title={`Distribuția P&L — ${METHOD_LABELS[method]}`}
+                  description='Histograma P&L-ului zilnic realizat, cu pragurile de pierdere VaR și ES marcate.'
+                >
+                  <VarHistogramChart
+                    pnl={actualPnl}
+                    varLevel={pair.var}
+                    esLevel={pair.es}
+                  />
+                </KpiChart>
               </TableCell>
             </TableRow>
           );

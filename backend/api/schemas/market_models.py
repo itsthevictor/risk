@@ -34,6 +34,17 @@ class TrafficLight(str, Enum):
     red = "red"
 
 
+class StressScenarioMode(str, Enum):
+    historical = "historical"  # replay actual historical returns onto today's portfolio
+    hypothetical = "hypothetical"  # apply a per-asset-class shock scenario
+
+
+class StressStatus(str, Enum):
+    ok = "ok"
+    warning = "warning"
+    critical = "critical"
+
+
 # REQUEST
 
 
@@ -98,6 +109,61 @@ class MarketRiskAnalyzeRequest(BaseModel):
         ):
             raise ValueError("custom_window is required when crisis_window == 'custom'")
         return self
+
+
+class StressTestRequest(BaseModel):
+    tickers: list[str] = Field(..., min_length=2, max_length=10)
+    portfolio_value: float = Field(default=1_000_000, gt=0)
+    mode: StressScenarioMode
+    window: Optional[CrisisWindowPreset] = Field(
+        default=None, description="Required for mode == 'historical'"
+    )
+    custom_window: Optional[CustomWindow] = Field(
+        default=None, description="Required when window == 'custom'"
+    )
+    shocks: Optional[dict[str, float]] = Field(
+        default=None,
+        description=(
+            "Required for mode == 'hypothetical': asset_class -> fractional shock "
+            "(e.g. {'equity': -0.30, 'bond': -0.05, 'commodity': 0.05}). Asset "
+            "classes present in the portfolio but missing here default to 0."
+        ),
+    )
+
+    @field_validator("tickers")
+    @classmethod
+    def normalize_tickers(cls, v: list[str]) -> list[str]:
+        return [t.strip().upper() for t in v]
+
+    @model_validator(mode="after")
+    def validate_mode_fields(self) -> "StressTestRequest":
+        if self.mode == StressScenarioMode.historical:
+            if self.window is None:
+                raise ValueError("window is required when mode == 'historical'")
+            if self.window == CrisisWindowPreset.custom and self.custom_window is None:
+                raise ValueError("custom_window is required when window == 'custom'")
+        elif not self.shocks:
+            raise ValueError("shocks is required when mode == 'hypothetical'")
+        return self
+
+
+class StressTestResult(BaseModel):
+    mode: StressScenarioMode
+    label: str = Field(..., description="Human-readable scenario name")
+    start_date: Optional[date] = Field(
+        None, description="Set for mode == 'historical'"
+    )
+    end_date: Optional[date] = Field(None, description="Set for mode == 'historical'")
+    total_return_factor: float = Field(
+        ..., description="ending_value / portfolio_value"
+    )
+    ending_value: float
+    pnl: float
+    pnl_pct: float
+    status: StressStatus
+    shocks_applied: Optional[dict[str, float]] = Field(
+        None, description="Set for mode == 'hypothetical'"
+    )
 
 
 # RESPONSE
@@ -239,7 +305,7 @@ class MarketRiskAnalyzeResponse(BaseModel):
 class TickerInfo(BaseModel):
     symbol: str
     name: str
-    asset_class: Literal["equity", "fx", "bond", "crypto"]
+    asset_class: Literal["equity", "fx", "bond", "crypto", "commodity"]
 
 
 class TickerListResponse(BaseModel):

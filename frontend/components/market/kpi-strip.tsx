@@ -8,7 +8,6 @@ import { BacktestChart } from './backtest-chart';
 import { DiversificationChart } from './diversification-chart';
 import { DrawdownChart } from './drawdown-chart';
 import { KpiCard } from './kpi-card';
-import { VarHistogramChart } from './var-histogram-chart';
 import { VolatilityForecastChart } from './volatility-forecast-chart';
 import { worstTrafficLight } from './traffic-light-badge';
 
@@ -18,29 +17,15 @@ const TRAFFIC_LIGHT_VALUE_LABELS: Record<TrafficLight, string> = {
   red: 'ROȘU',
 };
 
-const METHOD_LABELS: Record<keyof MethodBacktest, string> = {
-  historical: 'Simulare Istorică',
-  parametric: 'Parametric',
-  ewma: 'Parametric (EWMA)',
-  garch: 'Parametric (GARCH)',
-  monte_carlo: 'Monte Carlo',
-};
-
 export interface MarketRiskKpiStripProps {
   data: MarketRiskAnalyzeResponse;
   confidenceLevel: number;
-  primaryMethod?: keyof MethodBacktest;
 }
 
 export function MarketRiskKpiStrip({
   data,
   confidenceLevel,
-  primaryMethod = 'historical',
 }: MarketRiskKpiStripProps) {
-  const confResult = data.var_comparison.find(
-    (c) => c.confidence_level === confidenceLevel,
-  );
-  const headline = confResult?.methods[primaryMethod];
   const latestGarchVol =
     data.volatility_forecast.garch[data.volatility_forecast.garch.length - 1];
 
@@ -50,41 +35,7 @@ export function MarketRiskKpiStrip({
   );
 
   return (
-    <div className='grid grid-cols-2 gap-4 md:grid-cols-5'>
-      <KpiCard
-        label={`VaR — ${METHOD_LABELS[primaryMethod]}`}
-        value={headline ? formatUsd(headline.var) : '—'}
-        subValue={headline ? `ES ${formatUsd(headline.es)}` : undefined}
-        info={{
-          title: `Value at Risk — ${METHOD_LABELS[primaryMethod]}`,
-          definition:
-            'Pierderea maximă estimată pe un anumit orizont de timp, la nivelul de încredere ales. Expected Shortfall (ES) reprezintă pierderea medie în coada distribuției, dincolo de VaR.',
-          equation:
-            'VaR_\\alpha = \\inf\\{x \\in \\mathbb{R} : P(L > x) \\le 1 - \\alpha\\}',
-          implementation: [
-            'Simulare istorică: cuantila empirică a distribuției P&L realizate',
-            'Parametric: cuantilă calculată analitic presupunând o distribuție normală (sau Student-t) a randamentelor',
-            'EWMA / GARCH: VaR parametric folosind o estimare a volatilității condiționate în locul varianței eșantionului',
-            'Monte Carlo: cuantilă estimată din traiectorii simulate ale randamentului portofoliului',
-          ],
-        }}
-        chart={
-          headline
-            ? {
-                title: `Distribuția P&L — ${METHOD_LABELS[primaryMethod]}`,
-                description:
-                  'Histograma P&L-ului zilnic realizat pe fereastra analizată, cu pragurile de pierdere VaR și ES marcate.',
-                content: (
-                  <VarHistogramChart
-                    pnl={data.actual_pnl}
-                    varLevel={headline.var}
-                    esLevel={headline.es}
-                  />
-                ),
-              }
-            : undefined
-        }
-      />
+    <div className='grid grid-cols-2 gap-4 md:grid-cols-4'>
       <KpiCard
         label='Volatilitate (GARCH)'
         value={

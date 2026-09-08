@@ -16,7 +16,7 @@ TICKER_REGISTRY: list[TickerInfo] = [
     TickerInfo(symbol="KO", name="Coca-Cola Co.", asset_class="equity"),
     TickerInfo(symbol="TSLA", name="Tesla Inc.", asset_class="equity"),
     TickerInfo(symbol="V", name="Visa Inc.", asset_class="equity"),
-    TickerInfo(symbol="GLD", name="SPDR Gold Trust", asset_class="equity"),
+    TickerInfo(symbol="GLD", name="SPDR Gold Trust", asset_class="commodity"),
     TickerInfo(symbol="BND", name="Vanguard Total Bond Market ETF", asset_class="bond"),
     TickerInfo(symbol="QQQ", name="Invesco QQQ Trust", asset_class="equity"),
     TickerInfo(symbol="SPY", name="SPDR S&P 500 ETF Trust", asset_class="equity"),

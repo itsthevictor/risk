@@ -2,6 +2,9 @@ import {
   MarketRiskAnalyzeRequest,
   MarketRiskAnalyzeResponse,
   MarketRiskAnalyzeResponseSchema,
+  StressTestRequest,
+  StressTestResult,
+  StressTestResultSchema,
   TickerListResponse,
   TickerListResponseSchema,
   ErrorResponseSchema,
@@ -61,6 +64,23 @@ export async function analyzeMarketRisk(
 
   const data = await response.json();
   return MarketRiskAnalyzeResponseSchema.parse(data);
+}
+
+export async function runStressTest(
+  payload: StressTestRequest,
+): Promise<StressTestResult> {
+  const response = await fetch(`${API_BASE_URL}/market-risk/stress-test`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    throw await toApiError(response);
+  }
+
+  const data = await response.json();
+  return StressTestResultSchema.parse(data);
 }
 
 export async function fetchTickers(): Promise<TickerListResponse> {

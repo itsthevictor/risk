@@ -1,3 +1,7 @@
+'use client';
+
+import { ChartBarIcon } from '@phosphor-icons/react';
+
 import {
   Table,
   TableBody,
@@ -6,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { cn } from '@/lib/utils';
 import type { MethodBacktest } from '@/lib/definitions';
 import { TrafficLightBadge } from './traffic-light-badge';
 
@@ -29,9 +34,15 @@ function formatPValue(value: number): string {
 
 export interface BacktestScorecardTableProps {
   data: MethodBacktest;
+  activeMethod?: keyof MethodBacktest;
+  onSelectMethod?: (method: keyof MethodBacktest) => void;
 }
 
-export function BacktestScorecardTable({ data }: BacktestScorecardTableProps) {
+export function BacktestScorecardTable({
+  data,
+  activeMethod,
+  onSelectMethod,
+}: BacktestScorecardTableProps) {
   return (
     <div className='overflow-x-auto'>
       <Table>
@@ -52,10 +63,31 @@ export function BacktestScorecardTable({ data }: BacktestScorecardTableProps) {
         <TableBody>
           {METHOD_ORDER.map((method) => {
             const stats = data[method];
+            const isActive = method === activeMethod;
             return (
-              <TableRow key={method}>
+              <TableRow
+                key={method}
+                onClick={
+                  onSelectMethod ? () => onSelectMethod(method) : undefined
+                }
+                className={cn(
+                  onSelectMethod && 'cursor-pointer',
+                  isActive && 'bg-muted/50',
+                )}
+              >
                 <TableCell className='font-medium'>
-                  {METHOD_LABELS[method]}
+                  <span className='inline-flex items-center gap-1.5'>
+                    {onSelectMethod && (
+                      <ChartBarIcon
+                        className={cn(
+                          'text-muted-foreground',
+                          isActive && 'text-foreground',
+                        )}
+                        weight={isActive ? 'fill' : 'regular'}
+                      />
+                    )}
+                    {METHOD_LABELS[method]}
+                  </span>
                 </TableCell>
                 <TableCell className='text-right tabular-nums'>
                   {stats.hits}
