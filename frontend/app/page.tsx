@@ -28,21 +28,38 @@ export default function Home() {
           <a
             href='https://github.com/itsthevictor/risk'
             className='hover:underline hover:text-foreground'
+            data-umami-event='homepage-github-link'
           >
             repository-ul GitHub
           </a>
         </p>
         <div className='md:flex md:flex-row flex flex-col max-w-3xl gap-x-4 gap-y-2 mt-4'>
-          <Button variant='outline' className='w-fit'>
+          <Button
+            variant='outline'
+            className='w-fit'
+            data-umami-event='homepage-market-link'
+          >
             <Link href='/market'>Risc de piață</Link>
           </Button>
-          <Button variant='outline' className=' w-fit'>
+          <Button
+            variant='outline'
+            className=' w-fit'
+            data-umami-event='homepage-liquidity-link'
+          >
             <Link href='/liquidity'>Risc de lichiditate</Link>
           </Button>
-          <Button variant='outline' className=' w-fit'>
+          <Button
+            variant='outline'
+            className=' w-fit'
+            data-umami-event='homepage-interest-rate-link'
+          >
             <Link href='/interest-rate'>Risc de dobândă</Link>
           </Button>
-          <Button variant='outline' className='w-fit'>
+          <Button
+            variant='outline'
+            className='w-fit'
+            data-umami-event='homepage-credit-link'
+          >
             <Link href='/credit'>Risc de credit</Link>
           </Button>
         </div>

@@ -46,16 +46,32 @@ const Header = () => {
           </DropdownMenuTrigger>
           <DropdownMenuContent>
             <DropdownMenuGroup>
-              <Link href='/market' className='w-full'>
+              <Link
+                href='/market'
+                className='w-full'
+                data-umami-event='header-market-link'
+              >
                 <DropdownMenuItem>Risc de piață</DropdownMenuItem>
               </Link>
-              <Link href='/liquidity' className='w-full'>
+              <Link
+                href='/liquidity'
+                className='w-full'
+                data-umami-event='header-liquidity-link'
+              >
                 <DropdownMenuItem>Risc de lichiditate</DropdownMenuItem>
               </Link>
-              <Link href='/interest-rate' className='w-full'>
+              <Link
+                href='/interest-rate'
+                className='w-full'
+                data-umami-event='header-interest-rate-link'
+              >
                 <DropdownMenuItem>Risc de dobândă</DropdownMenuItem>
               </Link>
-              <Link href='/credit' className='w-full'>
+              <Link
+                href='/credit'
+                className='w-full'
+                data-umami-event='header-credit-link'
+              >
                 <DropdownMenuItem>Risc de credit</DropdownMenuItem>
               </Link>
             </DropdownMenuGroup>
@@ -63,7 +79,11 @@ const Header = () => {
 
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <Link href='/about' className='w-full'>
+              <Link
+                href='/about'
+                className='w-full'
+                data-umami-event='header-about-link'
+              >
                 <DropdownMenuItem>Despre</DropdownMenuItem>
               </Link>
             </DropdownMenuGroup>

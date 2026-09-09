@@ -14,6 +14,7 @@ export function ThemeToggle() {
       size='icon'
       onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
       className='bg-transparent hover:bg-transparent focus:bg-transparent active:bg-transparent hover:dark:bg-transparent focus:dark:bg-transparent active:dark:bg-transparent cursor-pointer'
+      data-umami-event='theme-toggle-click'
     >
       <IconBrightness />
     </Button>

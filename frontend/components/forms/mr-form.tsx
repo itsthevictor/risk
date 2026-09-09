@@ -74,7 +74,11 @@ export function MarketRiskForm({
           max={756}
         />
         <div className='col-span-2 flex items-end md:col-span-4'>
-          <Button type='submit' disabled={isSubmitting}>
+          <Button
+            type='submit'
+            disabled={isSubmitting}
+            data-umami-event='mr-form-click'
+          >
             {isSubmitting ? 'Se analizează…' : 'Analizează'}
           </Button>
         </div>

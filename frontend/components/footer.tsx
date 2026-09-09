@@ -15,6 +15,7 @@ const Footer = () => {
           className='hover:underline hover:text-foreground'
           target='_blank'
           rel='noopener noreferrer'
+          data-umami-event='footer-github-link'
         >
           GitHub
         </a>
@@ -23,6 +24,7 @@ const Footer = () => {
           className='hover:underline hover:text-foreground'
           target='_blank'
           rel='noopener noreferrer'
+          data-umami-event='footer-linkedin-link'
         >
           LinkedIn
         </a>
@@ -31,6 +33,7 @@ const Footer = () => {
           className='hover:underline hover:text-foreground'
           target='_blank'
           rel='noopener noreferrer'
+          data-umami-event='footer-cv-link'
         >
           Curriculum Vitae
         </a>
