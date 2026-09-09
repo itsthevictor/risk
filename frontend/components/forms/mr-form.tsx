@@ -37,7 +37,6 @@ export function MarketRiskForm({
     },
   });
 
-  // zodResolver ruleaza mai întâi validarea schema-ului și apoi transformările sale (.transform()), deci valorile runtime aici sunt deja MarketRiskAnalyzeRequestParsed.
   const handleSubmit = form.handleSubmit((values) => {
     onSubmit(values as unknown as MarketRiskAnalyzeRequestParsed);
   });

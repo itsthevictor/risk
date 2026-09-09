@@ -294,16 +294,26 @@ export default function CalculateLcrForm() {
               variant='outline'
               onClick={handleBack}
               disabled={isFirstStep || isPending}
+              data-umami-event={'calculate-lcr-back-click'}
             >
               Înapoi
             </Button>
 
             {isReviewStep ? (
-              <Button type='submit' disabled={isPending || !!data}>
+              <Button
+                type='submit'
+                disabled={isPending || !!data}
+                data-umami-event='calculate-lcr-submit-click'
+              >
                 {isPending ? 'Se calculează…' : 'Calculează'}
               </Button>
             ) : (
-              <Button type='button' onClick={handleNext} disabled={isPending}>
+              <Button
+                type='button'
+                onClick={handleNext}
+                disabled={isPending}
+                data-umami-event='calculate-lcr-next-click'
+              >
                 Următorul
               </Button>
             )}

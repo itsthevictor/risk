@@ -214,7 +214,11 @@ export default function MarketRiskPage() {
           >
             <TabsList>
               {CONFIDENCE_LEVELS.map((cl) => (
-                <TabsTrigger key={cl} value={String(cl)}>
+                <TabsTrigger
+                  key={cl}
+                  value={String(cl)}
+                  data-umami-event={`mr-confidence-level-${cl}-click`}
+                >
                   {(cl * 100).toFixed(0)}%
                 </TabsTrigger>
               ))}
@@ -266,10 +270,9 @@ export default function MarketRiskPage() {
               <div className='space-y-1'>
                 <h2 className='text-lg font-semibold'>Stress Testing</h2>
                 <p className='text-muted-foreground text-sm'>
-                  Impactul asupra portofoliului de{' '}
-                  <strong>azi</strong> — nu cum s-a comportat modelul de VaR,
-                  ci ce s-ar întâmpla cu valoarea curentă dacă s-ar repeta un
-                  scenariu de criză.
+                  Impactul asupra portofoliului de <strong>azi</strong> — nu cum
+                  s-a comportat modelul de VaR, ci ce s-ar întâmpla cu valoarea
+                  curentă dacă s-ar repeta un scenariu de criză.
                 </p>
               </div>
               <Button
