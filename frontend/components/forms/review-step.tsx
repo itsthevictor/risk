@@ -11,12 +11,10 @@ import {
   InflowItem,
 } from '@/lib/definitions';
 
-function formatAmount(amount: number) {
-  return new Intl.NumberFormat('ro-RO', {
-    style: 'currency',
-    currency: 'RON',
+export function formatAmount(amount: number) {
+  return `${new Intl.NumberFormat('ro-RO', {
     maximumFractionDigits: 2,
-  }).format(amount);
+  }).format(amount)} mil. RON`;
 }
 
 // Maps the raw enum values used across issuer_type/rating_band/category
@@ -46,7 +44,8 @@ const RO_LABELS: Record<string, string> = {
   // wholesale deposit categories
   operational_deposit: 'Depozit operațional',
   non_operational_corporate: 'Neoperațional (corporativ)',
-  non_operational_financial_institution: 'Neoperațional (instituție financiară)',
+  non_operational_financial_institution:
+    'Neoperațional (instituție financiară)',
   // off-balance-sheet categories
   retail_sme_facility: 'Facilitate retail / IMM',
   corporate_facility: 'Facilitate corporativă',
@@ -113,7 +112,7 @@ function CategoryItemsSummary<
 
   return (
     <SectionShell title={title} itemCount={items.length} total={total}>
-      <thead className='bg-sidebar/40 text-muted-foreground'>
+      <thead className='bg-muted/40 text-muted-foreground'>
         <tr>
           <th className='px-3 py-2 text-left font-medium'>Descriere</th>
           <th className='px-3 py-2 text-left font-medium'>Categorie</th>
@@ -151,7 +150,7 @@ function HqlaItemsSummary({ items }: { items: HQLAItem[] }) {
 
   return (
     <SectionShell title='Active HQLA' itemCount={items.length} total={total}>
-      <thead className='bg-sidebar/40 text-muted-foreground'>
+      <thead className='bg-muted/40 text-muted-foreground'>
         <tr>
           <th className='px-3 py-2 text-left font-medium'>Descriere</th>
           <th className='px-3 py-2 text-left font-medium'>Tip emitent</th>
@@ -212,10 +211,10 @@ export function ReviewStep({
   return (
     <div className='space-y-8'>
       <div>
-        <h2 className='text-lg font-semibold'>Verificare</h2>
+        <h2 className='text-lg font-semibold'>Rezultat LCR</h2>
         <p className='text-muted-foreground text-sm'>
-          Verificați toate informațiile de mai jos înainte de a rula
-          calculul.
+          Mai jos regăsiți tabelele cu datele agregate introduse la pașii
+          anteriori, rezultatul LCR apare într-un card sub aceste tabele.
         </p>
       </div>
 

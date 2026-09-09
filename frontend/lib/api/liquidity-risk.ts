@@ -9,7 +9,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 export async function calculateLCR(
   payload: LCRCalculationRequest,
 ): Promise<LCRResult> {
-  const response = await fetch(`${API_BASE_URL}/liquidity-risk/calculate`, {
+  const response = await fetch(`${API_BASE_URL}/liquidity-risk/analyze`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),

@@ -34,7 +34,7 @@ export const HQLAItemSchema = z
       RATING_EXEMPT_ISSUER_TYPES_SET.has(data.issuer_type) ||
       data.rating_band !== undefined,
     {
-      message: 'rating_band is required for this issuer_type',
+      message: 'banda de rating este obligatorie pentru acest tip de emitent',
       path: ['rating_band'],
     },
   );

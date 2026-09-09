@@ -223,7 +223,11 @@ export function CustomFormSelectLabel<T extends FieldValues>({
           >
             <FormControl className='w-full'>
               <SelectTrigger className='bg-background'>
-                <SelectValue placeholder='Alege' />
+                <SelectValue placeholder='Alege'>
+                  {(value: string) =>
+                    items.find((item) => item.value === value)?.label ?? value
+                  }
+                </SelectValue>
               </SelectTrigger>
             </FormControl>
             <SelectContent>
@@ -352,7 +356,7 @@ export function CustomNumberField<T extends FieldValues>({
   name,
   control,
   labelText,
-  currency = 'RON',
+  currency = 'mil. RON',
   disabled = false,
   max,
 }: {

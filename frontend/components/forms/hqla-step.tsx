@@ -11,6 +11,7 @@ import {
   LCRCalculationRequest,
   ISSUER_TYPE,
   RATING_BAND,
+  RATING_EXEMPT_ISSUER_TYPES,
   HQLA_ALLOWED_RATING_BANDS,
 } from '@/lib/definitions';
 import {
@@ -20,12 +21,12 @@ import {
   SelectOption,
 } from '@/components/forms/form-components';
 import { Button } from '@/components/ui/button';
+import InfoDrawer from '@/components/custom/info-drawer';
 import { IconTrash, IconPlus } from '@tabler/icons-react';
 
-const RATING_EXEMPT_ISSUER_TYPES = new Set<ISSUER_TYPE>([
-  ISSUER_TYPE.SOVEREIGN_OWN_COUNTRY,
-  ISSUER_TYPE.CENTRAL_BANK_CASH,
-]);
+const RATING_EXEMPT_ISSUER_TYPES_SET = new Set<string>(
+  Object.values(RATING_EXEMPT_ISSUER_TYPES),
+);
 
 const ISSUER_TYPE_OPTIONS: SelectOption[] = [
   {
@@ -80,7 +81,7 @@ function HqlaItemRow({
     control,
     name: `hqla_items.${index}.issuer_type`,
   });
-  const ratingExempt = RATING_EXEMPT_ISSUER_TYPES.has(issuerType);
+  const ratingExempt = RATING_EXEMPT_ISSUER_TYPES_SET.has(issuerType);
 
   const allowedRatingBands = HQLA_ALLOWED_RATING_BANDS[issuerType] ?? [];
   const filteredRatingBandOptions = RATING_BAND_OPTIONS.filter((opt) =>
@@ -113,53 +114,72 @@ function HqlaItemRow({
   }, [ratingExempt, issuerType, index]);
 
   return (
-    <div className='bg-sidebar/40 relative grid grid-cols-1 gap-4 rounded-lg border p-4 md:grid-cols-2 lg:grid-cols-4'>
-      <Button
-        type='button'
-        variant='ghost'
-        size='icon'
-        className='absolute top-2 right-2 h-7 w-7'
-        onClick={onRemove}
-        aria-label={`Elimină elementul ${index + 1}`}
-      >
-        <IconTrash className='h-4 w-4' />
-      </Button>
+    <div className='bg-sidebar/40 flex flex-col gap-4 rounded-lg border p-4'>
+      <div className='flex items-end gap-2'>
+        <div className='flex-1'>
+          <CustomFormField
+            control={control}
+            name={`hqla_items.${index}.description`}
+            labelText='Denumire'
+          />
+        </div>
 
-      <div className='md:col-span-2 lg:col-span-4'>
-        <CustomFormField
-          control={control}
-          name={`hqla_items.${index}.description`}
-          labelText='Descriere'
-        />
+        <Button
+          type='button'
+          variant='ghost'
+          size='sm'
+          className='h-9 w-9 shrink-0 hover:text-destructive text-muted-foreground'
+          onClick={onRemove}
+          aria-label={`Elimină elementul ${index + 1}`}
+        >
+          <IconTrash className='h-4 w-4 ' />
+        </Button>
       </div>
 
-      <CustomNumberField
-        control={control}
-        name={`hqla_items.${index}.amount`}
-        labelText='Sumă'
-      />
+      <div className='grid grid-cols-1 items-start gap-4 md:grid-cols-3'>
+        <CustomNumberField
+          control={control}
+          name={`hqla_items.${index}.amount`}
+          labelText='Sumă'
+        />
 
-      <CustomFormSelectLabel
-        control={control}
-        name={`hqla_items.${index}.issuer_type`}
-        labelText='Tip emitent'
-        items={ISSUER_TYPE_OPTIONS}
-      />
-
-      {ratingExempt ? (
-        <div className='flex flex-col justify-end pb-2'>
-          <p className='text-muted-foreground text-xs'>
-            Banda de rating nu este necesară pentru acest tip de emitent.
-          </p>
-        </div>
-      ) : (
         <CustomFormSelectLabel
           control={control}
-          name={`hqla_items.${index}.rating_band`}
-          labelText='Bandă de rating'
-          items={filteredRatingBandOptions}
+          name={`hqla_items.${index}.issuer_type`}
+          labelText='Tip emitent'
+          items={ISSUER_TYPE_OPTIONS}
         />
-      )}
+
+        {ratingExempt ? (
+          <div className='flex flex-col justify-end pb-2'>
+            <p className='text-muted-foreground text-xs'>
+              Banda de rating nu este necesară pentru acest tip de emitent.
+            </p>
+          </div>
+        ) : (
+          <div className='flex items-start gap-1'>
+            <div className='flex-1'>
+              <CustomFormSelectLabel
+                control={control}
+                name={`hqla_items.${index}.rating_band`}
+                labelText='Bandă de rating'
+                items={filteredRatingBandOptions}
+              />
+            </div>
+            <InfoDrawer
+              title='Bandă de rating'
+              definition={
+                "În practică, banda de rating se derivă din rating-ul emis de agenții precum S&P, Moody's sau Fitch, mapat conform tabelelor ESMA/EBA. Pentru simplitate, acest formular permite selectarea directă a benzii — logica de mapare rating→CQS este un proces separat de clasificare a activelor, nu face parte din calculul LCR propriu-zis."
+              }
+              implementation={[
+                'Nu este implementată preluarea rating-ului brut de la agențiile de rating și maparea sa automată la Credit Quality Steps (CQS).',
+                'Complexitatea suplimentară (surse de rating, reguli de agregare, mapări ESMA/EBA) depășește scopul acestui proiect.',
+              ]}
+              triggerClassName='mb-2'
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -182,8 +202,8 @@ export function HqlaStep({
           Active lichide de calitate ridicată (HQLA)
         </h2>
         <p className='text-muted-foreground text-sm'>
-          Adăugați fiecare activ lichid de calitate ridicată, tipul
-          emitentului și, unde este necesar, banda de rating de credit.
+          Adăugați fiecare activ lichid de calitate ridicată, tipul emitentului
+          și, unde este necesar, banda de rating de credit.
         </p>
       </div>
 

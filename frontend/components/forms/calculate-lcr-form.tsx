@@ -2,21 +2,56 @@
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   LCRCalculationRequestSchema,
   LCRCalculationRequest,
 } from '@/lib/definitions';
 import { useCalculateLCR } from '@/hooks/use-calculate-lcr';
 import { Form } from '@/components/ui/form';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardAction,
+  CardContent,
+} from '@/components/ui/card';
 import { HqlaStep } from './hqla-step';
 import { RetailDepositsStep } from './retail-deposits-step';
 import { OffBalanceSheetStep } from './off-balance-sheet-step';
 import { WholesaleDepositsStep } from './wholesale-deposit-step';
 import { InflowsStep } from './inflows-step';
 import { cn } from '@/lib/utils';
-import { ReviewStep } from './review-step';
+import { ReviewStep, formatAmount } from './review-step';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+
+const LCR_STATUS = {
+  below_minimum: {
+    label: 'Sub minim',
+    meaning: 'Non-conformitate reglementară',
+    textStyles: 'text-red-600 dark:text-red-400',
+    badgeStyles: 'bg-red-500/15 text-red-600 dark:text-red-400',
+  },
+  marginal: {
+    label: 'Marginal / buffer redus',
+    meaning: 'Conform, dar buffer de siguranță redus',
+    textStyles: 'text-amber-600 dark:text-amber-400',
+    badgeStyles: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
+  },
+  comfortable: {
+    label: 'Confortabil',
+    meaning: 'Conform, cu marjă solidă',
+    textStyles: 'text-emerald-600 dark:text-emerald-400',
+    badgeStyles: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
+  },
+} as const;
+
+function getLcrStatus(lcrRatio: number) {
+  if (lcrRatio < 100) return LCR_STATUS.below_minimum;
+  if (lcrRatio < 120) return LCR_STATUS.marginal;
+  return LCR_STATUS.comfortable;
+}
 const STEPS = [
   'hqla',
   'retail',
@@ -32,7 +67,7 @@ const STEP_LABELS: Record<(typeof STEPS)[number], string> = {
   wholesale: 'Depozite en-gros',
   'off-balance-sheet': 'Extrabilanțiere',
   inflows: 'Intrări',
-  review: 'Verificare',
+  review: 'Rezultat LCR',
 };
 
 const emptyDefaults: LCRCalculationRequest = {
@@ -48,6 +83,9 @@ export default function CalculateLcrForm() {
 
   const form = useForm<LCRCalculationRequest>({
     resolver: zodResolver(LCRCalculationRequestSchema),
+    mode: 'onChange', // trigger() on step navigation sets errors before the form is ever submitted;
+    // without this, RHF keeps using onSubmit semantics until isSubmitted is true, so those errors
+    // never re-validate on change and linger after the user fixes the field
     defaultValues: getInitialValues(), // reads from sessionStorage if present, else the empty defaults
   });
 
@@ -68,6 +106,16 @@ export default function CalculateLcrForm() {
   }
 
   const { mutate, data, isPending, error, reset } = useCalculateLCR();
+  const resultCardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (data) {
+      resultCardRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    }
+  }, [data]);
 
   const onSubmit = (values: LCRCalculationRequest) => {
     mutate(values, {
@@ -115,6 +163,7 @@ export default function CalculateLcrForm() {
   const isFirstStep = currentStep === 0;
 
   const handleBack = () => {
+    reset(); // going back to edit invalidates any previous result, so clear it and re-enable "Calculează"
     setCurrentStep((s) => Math.max(s - 1, 0));
   };
 
@@ -124,9 +173,13 @@ export default function CalculateLcrForm() {
         onSubmit={form.handleSubmit(onSubmit)}
         className='flex min-h-screen flex-col justify-between'
       >
+        <h1 className='text-2xl font-bold mb-4'>
+          Indicatorul de acoperire a lichidității (LCR)
+        </h1>
+
         {/* step indicator — stays pinned to the top as the form scrolls */}
-        <div className='bg-background sticky top-0 z-10 -mx-4 border-b px-4 py-3 sm:mx-0 sm:px-0'>
-          <ol className='flex flex-wrap gap-2 text-sm'>
+        <div className='bg-background sticky top-0 z-10 -mx-4 border-b px-4 py-3 sm:mx-0 sm:px-0 w-full'>
+          <ol className='flex flex-wrap gap-2 text-sm w-full justify-between'>
             {STEPS.map((step, i) => (
               <li
                 key={step}
@@ -145,7 +198,7 @@ export default function CalculateLcrForm() {
           </ol>
         </div>
 
-        <div className='flex-1 py-6'>
+        <div className='flex-1 py-6 w-full'>
           {currentStep === 0 && <HqlaStep form={form} />}
           {currentStep === 1 && <RetailDepositsStep form={form} />}
           {currentStep === 2 && <WholesaleDepositsStep form={form} />}
@@ -161,11 +214,67 @@ export default function CalculateLcrForm() {
             </p>
           )}
 
-          {data && (
-            <p className='mt-6 text-sm text-emerald-600'>
-              Calcul finalizat — rata LCR: {data.lcr_ratio.toFixed(1)}%
-            </p>
-          )}
+          {data &&
+            (() => {
+              const status = getLcrStatus(data.lcr_ratio);
+              return (
+                <Card
+                  ref={resultCardRef}
+                  className='mt-6 scroll-mt-20 bg-muted/40'
+                >
+                  <CardHeader>
+                    <CardTitle>Rezultat calcul LCR</CardTitle>
+                    <CardAction>
+                      <Badge
+                        variant='outline'
+                        className={cn(
+                          'border-transparent font-medium',
+                          status.badgeStyles,
+                        )}
+                      >
+                        {status.label}
+                      </Badge>
+                    </CardAction>
+                  </CardHeader>
+                  <CardContent className='space-y-3'>
+                    <p
+                      className={cn(
+                        'text-2xl font-semibold',
+                        status.textStyles,
+                      )}
+                    >
+                      {new Intl.NumberFormat('ro-RO', {
+                        maximumFractionDigits: 1,
+                      }).format(data.lcr_ratio)}
+                      %
+                    </p>
+                    <p className='text-muted-foreground text-sm'>
+                      {status.meaning}
+                    </p>
+                    <dl className='grid grid-cols-2 gap-x-4 gap-y-2 text-sm'>
+                      <div>
+                        <dt className='text-muted-foreground'>HQLA total</dt>
+                        <dd>{formatAmount(data.hqla_total)}</dd>
+                      </div>
+                      <div>
+                        <dt className='text-muted-foreground'>
+                          Intrări plafonate (75%)
+                        </dt>
+                        <dd>{formatAmount(data.total_inflows_capped)}</dd>
+                      </div>
+                      <div>
+                        <dt className='text-muted-foreground'>Ieșiri totale</dt>
+                        <dd>{formatAmount(data.total_outflows)}</dd>
+                      </div>
+                      <div>
+                        <dt className='text-muted-foreground'>Ieșiri nete</dt>
+                        <dd>{formatAmount(data.net_outflows)}</dd>
+                      </div>
+                    </dl>
+                  </CardContent>
+                </Card>
+              );
+            })()}
         </div>
 
         {/* action buttons — stay pinned to the bottom as the form scrolls */}
@@ -190,7 +299,7 @@ export default function CalculateLcrForm() {
             </Button>
 
             {isReviewStep ? (
-              <Button type='submit' disabled={isPending}>
+              <Button type='submit' disabled={isPending || !!data}>
                 {isPending ? 'Se calculează…' : 'Calculează'}
               </Button>
             ) : (
