@@ -8,7 +8,7 @@ import Header from '@/components/header';
 import Footer from '@/components/footer';
 import { ThemeProvider } from '@/providers/theme-provider';
 import Script from 'next/script';
-
+import CleanUtmUrl from '@/components/clean-utm-url';
 const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
   variable: '--font-mono',
@@ -56,6 +56,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
           disableTransitionOnChange
           themes={['light', 'dark']}
         >
+          <CleanUtmUrl />
           <Header />
           <QueryProvider>
             <div className='flex flex-col flex-1'>{children}</div>
