@@ -432,6 +432,61 @@ export const StressTestResultSchema = z.object({
 export type StressTestResult = z.infer<typeof StressTestResultSchema>;
 
 // ---------------------------------------------------------------------------
+// interest rate risk — NII (GET /interest-rate-risk/nii-analysis)
+// ---------------------------------------------------------------------------
+
+export const NIIComponentsSchema = z.object({
+  total_income: z.number(),
+  total_expense: z.number(),
+  nii_value: z.number(),
+});
+export type NIIComponents = z.infer<typeof NIIComponentsSchema>;
+
+export const NIIShockResultSchema = NIIComponentsSchema.extend({
+  delta_nii: z.number(),
+});
+export type NIIShockResult = z.infer<typeof NIIShockResultSchema>;
+
+export const NIIAnalysisResponseSchema = z.object({
+  as_of_date: isoDateSchema,
+  shock_bp: z.number(),
+  horizon_days: z.number().int(),
+  base: NIIComponentsSchema,
+  shock_up: NIIShockResultSchema,
+  shock_down: NIIShockResultSchema,
+});
+export type NIIAnalysisResponse = z.infer<typeof NIIAnalysisResponseSchema>;
+
+// ---------------------------------------------------------------------------
+// interest rate risk — EVE (GET /interest-rate-risk/eve-analysis)
+// ---------------------------------------------------------------------------
+
+export const EveScenarioResultSchema = z.object({
+  pv_assets: z.number(),
+  pv_liabilities: z.number(),
+  eve_value: z.number(),
+  delta_eve: z.number(),
+});
+export type EveScenarioResult = z.infer<typeof EveScenarioResultSchema>;
+
+export const EveScenariosSchema = z.object({
+  base: EveScenarioResultSchema,
+  parallel_up: EveScenarioResultSchema,
+  parallel_down: EveScenarioResultSchema,
+  steepener: EveScenarioResultSchema,
+  flattener: EveScenarioResultSchema,
+  short_up: EveScenarioResultSchema,
+  short_down: EveScenarioResultSchema,
+});
+export type EveScenarios = z.infer<typeof EveScenariosSchema>;
+
+export const EveAnalysisResponseSchema = z.object({
+  as_of_date: isoDateSchema,
+  scenarios: EveScenariosSchema,
+});
+export type EveAnalysisResponse = z.infer<typeof EveAnalysisResponseSchema>;
+
+// ---------------------------------------------------------------------------
 // errors
 // ---------------------------------------------------------------------------
 

@@ -13,6 +13,21 @@ export function formatUsd(value: number, maximumFractionDigits = 0): string {
   }).format(value);
 }
 
+export function formatRon(value: number, maximumFractionDigits = 0): string {
+  return new Intl.NumberFormat('ro-RO', {
+    style: 'currency',
+    currency: 'RON',
+    maximumFractionDigits,
+  }).format(value);
+}
+
+// Expects an ISO date string ("YYYY-MM-DD"); split rather than parsed via `Date` so
+// there's no timezone shift to worry about for a plain calendar date.
+export function formatDateRo(isoDate: string): string {
+  const [year, month, day] = isoDate.split('-');
+  return `${day}.${month}.${year}`;
+}
+
 export function formatPercent(value: number, digits = 2): string {
   return new Intl.NumberFormat('en-US', {
     style: 'percent',

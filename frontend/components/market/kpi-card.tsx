@@ -39,8 +39,8 @@ export function KpiCard({
 }: KpiCardProps) {
   return (
     <Card className={cn('gap-2 py-4', className)}>
-      <CardHeader className='flex flex-row items-center justify-between gap-2 px-4 pb-0'>
-        <CardTitle className='flex items-center gap-1 text-muted-foreground text-sm font-medium'>
+      <CardHeader className='flex flex-row items-start justify-between gap-2 px-4 pb-0'>
+        <CardTitle className='flex items-start gap-1 text-muted-foreground text-sm font-medium'>
           {label}
           {info && (
             <InfoDrawer

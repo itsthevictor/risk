@@ -19,6 +19,7 @@ import { BacktestScorecardTable } from '@/components/market/backtest-table';
 import { PnlExceptionsChart } from '@/components/market/pnl-exceptions-chart';
 import { StressResultCard } from '@/components/market/stress-result-card';
 import { ShockInputs } from '@/components/market/shock-inputs';
+import { formatDateRo } from '@/lib/utils';
 import {
   analyzeMarketRisk,
   fetchTickers,
@@ -202,8 +203,8 @@ export default function MarketRiskPage() {
           <div className='space-y-1'>
             <h2 className='text-lg font-semibold'>Risc curent</h2>
             <p className='text-muted-foreground text-sm'>
-              Calculat la {analysis.data.portfolio.end_date}, pe baza întregului
-              istoric disponibil.
+              Calculat la {formatDateRo(analysis.data.portfolio.end_date)}, pe
+              baza întregului istoric disponibil.
             </p>
           </div>
 
