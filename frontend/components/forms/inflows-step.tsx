@@ -15,23 +15,23 @@ import { IconTrash, IconPlus } from '@tabler/icons-react';
 const INFLOW_CATEGORY_OPTIONS: SelectOption[] = [
   {
     value: INFLOW_ITEM_CATEGORY.SECURED_LENDING_L1_COLLATERAL,
-    label: 'Secured lending (L1 collateral)',
+    label: 'Împrumut garantat (garanție L1)',
   },
   {
     value: INFLOW_ITEM_CATEGORY.SECURED_LENDING_L2A_COLLATERAL,
-    label: 'Secured lending (L2A collateral)',
+    label: 'Împrumut garantat (garanție L2A)',
   },
   {
     value: INFLOW_ITEM_CATEGORY.RETAIL_SME_LOAN_REPAYMENT,
-    label: 'Retail / SME loan repayment',
+    label: 'Rambursare împrumut retail / IMM',
   },
   {
     value: INFLOW_ITEM_CATEGORY.CORPORATE_LOAN_REPAYMENT,
-    label: 'Corporate loan repayment',
+    label: 'Rambursare împrumut corporativ',
   },
   {
     value: INFLOW_ITEM_CATEGORY.BANK_FI_LOAN_REPAYMENT,
-    label: 'Bank / financial institution loan repayment',
+    label: 'Rambursare împrumut bancă / instituție financiară',
   },
 ];
 
@@ -58,7 +58,7 @@ function InflowItemRow({
         size='icon'
         className='absolute top-2 right-2 h-7 w-7'
         onClick={onRemove}
-        aria-label={`Remove item ${index + 1}`}
+        aria-label={`Elimină elementul ${index + 1}`}
       >
         <IconTrash className='h-4 w-4' />
       </Button>
@@ -67,20 +67,20 @@ function InflowItemRow({
         <CustomFormField
           control={control}
           name={`inflow_items.${index}.description`}
-          labelText='Description'
+          labelText='Descriere'
         />
       </div>
 
       <CustomNumberField
         control={control}
         name={`inflow_items.${index}.amount`}
-        labelText='Amount'
+        labelText='Sumă'
       />
 
       <CustomFormSelectLabel
         control={control}
         name={`inflow_items.${index}.category`}
-        labelText='Category'
+        labelText='Categorie'
         items={INFLOW_CATEGORY_OPTIONS}
       />
     </div>
@@ -101,15 +101,17 @@ export function InflowsStep({
   return (
     <div className='space-y-6'>
       <div>
-        <h2 className='text-lg font-semibold'>Inflow items</h2>
+        <h2 className='text-lg font-semibold'>Intrări de numerar</h2>
         <p className='text-muted-foreground text-sm'>
-          Add each contractual inflow item and its category.
+          Adăugați fiecare intrare contractuală de numerar și categoria
+          acesteia.
         </p>
       </div>
 
       {fields.length === 0 && (
         <p className='text-muted-foreground text-sm italic'>
-          No inflow items yet. Add one to get started.
+          Nicio intrare de numerar adăugată încă. Adăugați una pentru a
+          începe.
         </p>
       )}
 
@@ -131,7 +133,7 @@ export function InflowsStep({
         className='gap-1'
       >
         <IconPlus className='h-4 w-4' />
-        Add item
+        Adaugă element
       </Button>
     </div>
   );

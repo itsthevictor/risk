@@ -19,15 +19,15 @@ import { IconTrash, IconPlus } from '@tabler/icons-react';
 const OFF_BALANCE_SHEET_CATEGORY_OPTIONS: SelectOption[] = [
   {
     value: OFF_BALANCE_SHEET_CATEGORY.RETAIL_SME_FACILITY,
-    label: 'Retail / SME facility',
+    label: 'Facilitate retail / IMM',
   },
   {
     value: OFF_BALANCE_SHEET_CATEGORY.CORPORATE_FACILITY,
-    label: 'Corporate facility',
+    label: 'Facilitate corporativă',
   },
   {
     value: OFF_BALANCE_SHEET_CATEGORY.BANK_FI_FACILITY,
-    label: 'Bank / financial institution facility',
+    label: 'Facilitate bancă / instituție financiară',
   },
 ];
 
@@ -55,7 +55,7 @@ function OffBalanceSheetRow({
         size='icon'
         className='absolute top-2 right-2 h-7 w-7'
         onClick={onRemove}
-        aria-label={`Remove item ${index + 1}`}
+        aria-label={`Elimină elementul ${index + 1}`}
       >
         <IconTrash className='h-4 w-4' />
       </Button>
@@ -64,20 +64,20 @@ function OffBalanceSheetRow({
         <CustomFormField
           control={control}
           name={`off_balance_sheet.${index}.description`}
-          labelText='Description'
+          labelText='Descriere'
         />
       </div>
 
       <CustomNumberField
         control={control}
         name={`off_balance_sheet.${index}.amount`}
-        labelText='Amount'
+        labelText='Sumă'
       />
 
       <CustomFormSelectLabel
         control={control}
         name={`off_balance_sheet.${index}.category`}
-        labelText='Category'
+        labelText='Categorie'
         items={OFF_BALANCE_SHEET_CATEGORY_OPTIONS}
       />
     </div>
@@ -98,15 +98,17 @@ export function OffBalanceSheetStep({
   return (
     <div className='space-y-6'>
       <div>
-        <h2 className='text-lg font-semibold'>Off-balance-sheet items</h2>
+        <h2 className='text-lg font-semibold'>Elemente extrabilanțiere</h2>
         <p className='text-muted-foreground text-sm'>
-          Add each off-balance-sheet commitment or facility and its category.
+          Adăugați fiecare angajament sau facilitate extrabilanțieră și
+          categoria acesteia.
         </p>
       </div>
 
       {fields.length === 0 && (
         <p className='text-muted-foreground text-sm italic'>
-          No off-balance-sheet items yet. Add one to get started.
+          Niciun element extrabilanțier adăugat încă. Adăugați unul pentru a
+          începe.
         </p>
       )}
 
@@ -128,7 +130,7 @@ export function OffBalanceSheetStep({
         className='gap-1'
       >
         <IconPlus className='h-4 w-4' />
-        Add item
+        Adaugă element
       </Button>
     </div>
   );

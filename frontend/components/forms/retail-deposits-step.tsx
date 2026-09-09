@@ -15,12 +15,12 @@ import { Button } from '@/components/ui/button';
 import { IconTrash, IconPlus } from '@tabler/icons-react';
 
 const RETAIL_CATEGORY_OPTIONS: SelectOption[] = [
-  { value: RETAIL_DEPOSIT_CATEGORY.STABLE_RETAIL, label: 'Stable retail' },
+  { value: RETAIL_DEPOSIT_CATEGORY.STABLE_RETAIL, label: 'Retail stabil' },
   {
     value: RETAIL_DEPOSIT_CATEGORY.LESS_STABLE_RETAIL,
-    label: 'Less stable retail',
+    label: 'Retail mai puțin stabil',
   },
-  { value: RETAIL_DEPOSIT_CATEGORY.SME, label: 'SME' },
+  { value: RETAIL_DEPOSIT_CATEGORY.SME, label: 'IMM' },
 ];
 
 const emptyRetailItem: LCRCalculationRequest['retail_deposits'][number] = {
@@ -46,7 +46,7 @@ function RetailDepositRow({
         size='icon'
         className='absolute top-2 right-2 h-7 w-7'
         onClick={onRemove}
-        aria-label={`Remove item ${index + 1}`}
+        aria-label={`Elimină elementul ${index + 1}`}
       >
         <IconTrash className='h-4 w-4' />
       </Button>
@@ -55,20 +55,20 @@ function RetailDepositRow({
         <CustomFormField
           control={control}
           name={`retail_deposits.${index}.description`}
-          labelText='Description'
+          labelText='Descriere'
         />
       </div>
 
       <CustomNumberField
         control={control}
         name={`retail_deposits.${index}.amount`}
-        labelText='Amount'
+        labelText='Sumă'
       />
 
       <CustomFormSelectLabel
         control={control}
         name={`retail_deposits.${index}.category`}
-        labelText='Category'
+        labelText='Categorie'
         items={RETAIL_CATEGORY_OPTIONS}
       />
     </div>
@@ -89,15 +89,15 @@ export function RetailDepositsStep({
   return (
     <div className='space-y-6'>
       <div>
-        <h2 className='text-lg font-semibold'>Retail deposits</h2>
+        <h2 className='text-lg font-semibold'>Depozite retail</h2>
         <p className='text-muted-foreground text-sm'>
-          Add each retail or SME deposit item and its category.
+          Adăugați fiecare depozit retail sau IMM și categoria acestuia.
         </p>
       </div>
 
       {fields.length === 0 && (
         <p className='text-muted-foreground text-sm italic'>
-          No retail deposit items yet. Add one to get started.
+          Niciun depozit retail adăugat încă. Adăugați unul pentru a începe.
         </p>
       )}
 
@@ -119,7 +119,7 @@ export function RetailDepositsStep({
         className='gap-1'
       >
         <IconPlus className='h-4 w-4' />
-        Add item
+        Adaugă element
       </Button>
     </div>
   );

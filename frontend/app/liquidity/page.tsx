@@ -2,7 +2,7 @@ import CalculateLcrForm from '@/components/forms/calculate-lcr-form';
 
 const LiquidityRiskPage = () => {
   return (
-    <div className='flex min-h-screen flex-col items-center justify-center gap-4 p-4 max-w-4xl mx-auto'>
+    <div className='mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-4 p-4'>
       <CalculateLcrForm />
     </div>
   );

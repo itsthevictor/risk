@@ -26,6 +26,15 @@ const STEPS = [
   'review',
 ] as const;
 
+const STEP_LABELS: Record<(typeof STEPS)[number], string> = {
+  hqla: 'Active lichide',
+  retail: 'Depozite retail',
+  wholesale: 'Depozite en-gros',
+  'off-balance-sheet': 'Extrabilanțiere',
+  inflows: 'Intrări',
+  review: 'Verificare',
+};
+
 const emptyDefaults: LCRCalculationRequest = {
   hqla_items: [],
   retail_deposits: [],
@@ -111,55 +120,63 @@ export default function CalculateLcrForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
-        {/* step indicator */}
-        <ol className='flex flex-wrap gap-2 text-sm'>
-          {STEPS.map((step, i) => (
-            <li
-              key={step}
-              className={cn(
-                'rounded-full border px-3 py-1 capitalize',
-                i === currentStep
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : i < currentStep
-                    ? 'bg-muted text-muted-foreground border-transparent'
-                    : 'text-muted-foreground border-border',
-              )}
-            >
-              {step.replace(/-/g, ' ')}
-            </li>
-          ))}
-        </ol>
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className='flex min-h-screen flex-col justify-between'
+      >
+        {/* step indicator — stays pinned to the top as the form scrolls */}
+        <div className='bg-background sticky top-0 z-10 -mx-4 border-b px-4 py-3 sm:mx-0 sm:px-0'>
+          <ol className='flex flex-wrap gap-2 text-sm'>
+            {STEPS.map((step, i) => (
+              <li
+                key={step}
+                className={cn(
+                  'rounded-full border px-3 py-1',
+                  i === currentStep
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : i < currentStep
+                      ? 'bg-muted text-muted-foreground border-transparent'
+                      : 'text-muted-foreground border-border',
+                )}
+              >
+                {i + 1}. {STEP_LABELS[step]}
+              </li>
+            ))}
+          </ol>
+        </div>
 
-        {currentStep === 0 && <HqlaStep form={form} />}
-        {currentStep === 1 && <RetailDepositsStep form={form} />}
-        {currentStep === 2 && <WholesaleDepositsStep form={form} />}
-        {currentStep === 3 && <OffBalanceSheetStep form={form} />}
-        {currentStep === 4 && <InflowsStep form={form} />}
-        {isReviewStep && <ReviewStep form={form} />}
+        <div className='flex-1 py-6'>
+          {currentStep === 0 && <HqlaStep form={form} />}
+          {currentStep === 1 && <RetailDepositsStep form={form} />}
+          {currentStep === 2 && <WholesaleDepositsStep form={form} />}
+          {currentStep === 3 && <OffBalanceSheetStep form={form} />}
+          {currentStep === 4 && <InflowsStep form={form} />}
+          {isReviewStep && <ReviewStep form={form} />}
 
-        {error && (
-          <p className='text-destructive text-sm'>
-            {error instanceof Error
-              ? error.message
-              : 'Calculation failed. Please try again.'}
-          </p>
-        )}
+          {error && (
+            <p className='text-destructive mt-6 text-sm'>
+              {error instanceof Error
+                ? error.message
+                : 'Calculul a eșuat. Vă rugăm încercați din nou.'}
+            </p>
+          )}
 
-        {data && (
-          <p className='text-sm text-emerald-600'>
-            Calculation complete — LCR ratio: {data.lcr_ratio.toFixed(1)}%
-          </p>
-        )}
+          {data && (
+            <p className='mt-6 text-sm text-emerald-600'>
+              Calcul finalizat — rata LCR: {data.lcr_ratio.toFixed(1)}%
+            </p>
+          )}
+        </div>
 
-        <div className='flex items-center justify-between border-t pt-4'>
+        {/* action buttons — stay pinned to the bottom as the form scrolls */}
+        <div className='bg-background sticky bottom-0 z-10 -mx-4 flex items-center justify-between border-t px-4 py-4 sm:mx-0 sm:px-0'>
           <Button
             type='button'
             variant='ghost'
             onClick={handleStartOver}
             disabled={isPending}
           >
-            Start over
+            Reia de la început
           </Button>
 
           <div className='flex gap-2'>
@@ -169,16 +186,16 @@ export default function CalculateLcrForm() {
               onClick={handleBack}
               disabled={isFirstStep || isPending}
             >
-              Back
+              Înapoi
             </Button>
 
             {isReviewStep ? (
               <Button type='submit' disabled={isPending}>
-                {isPending ? 'Calculating…' : 'Calculate'}
+                {isPending ? 'Se calculează…' : 'Calculează'}
               </Button>
             ) : (
               <Button type='button' onClick={handleNext} disabled={isPending}>
-                Next
+                Următorul
               </Button>
             )}
           </div>

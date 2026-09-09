@@ -18,15 +18,15 @@ import { IconTrash, IconPlus } from '@tabler/icons-react';
 const WHOLESALE_CATEGORY_OPTIONS: SelectOption[] = [
   {
     value: WHOLESALE_DEPOSIT_CATEGORY.OPERATIONAL_DEPOSIT,
-    label: 'Operational deposit',
+    label: 'Depozit operațional',
   },
   {
     value: WHOLESALE_DEPOSIT_CATEGORY.NON_OPERATIONAL_CORPORATE,
-    label: 'Non-operational (corporate)',
+    label: 'Neoperațional (corporativ)',
   },
   {
     value: WHOLESALE_DEPOSIT_CATEGORY.NON_OPERATIONAL_FINANCIAL_INSTITUTION,
-    label: 'Non-operational (financial institution)',
+    label: 'Neoperațional (instituție financiară)',
   },
 ];
 
@@ -54,7 +54,7 @@ function WholesaleDepositRow({
         size='icon'
         className='absolute top-2 right-2 h-7 w-7'
         onClick={onRemove}
-        aria-label={`Remove item ${index + 1}`}
+        aria-label={`Elimină elementul ${index + 1}`}
       >
         <IconTrash className='h-4 w-4' />
       </Button>
@@ -63,20 +63,20 @@ function WholesaleDepositRow({
         <CustomFormField
           control={control}
           name={`wholesale_deposits.${index}.description`}
-          labelText='Description'
+          labelText='Descriere'
         />
       </div>
 
       <CustomNumberField
         control={control}
         name={`wholesale_deposits.${index}.amount`}
-        labelText='Amount'
+        labelText='Sumă'
       />
 
       <CustomFormSelectLabel
         control={control}
         name={`wholesale_deposits.${index}.category`}
-        labelText='Category'
+        labelText='Categorie'
         items={WHOLESALE_CATEGORY_OPTIONS}
       />
     </div>
@@ -97,15 +97,15 @@ export function WholesaleDepositsStep({
   return (
     <div className='space-y-6'>
       <div>
-        <h2 className='text-lg font-semibold'>Wholesale deposits</h2>
+        <h2 className='text-lg font-semibold'>Depozite en-gros</h2>
         <p className='text-muted-foreground text-sm'>
-          Add each wholesale deposit item and its category.
+          Adăugați fiecare depozit en-gros și categoria acestuia.
         </p>
       </div>
 
       {fields.length === 0 && (
         <p className='text-muted-foreground text-sm italic'>
-          No wholesale deposit items yet. Add one to get started.
+          Niciun depozit en-gros adăugat încă. Adăugați unul pentru a începe.
         </p>
       )}
 
@@ -127,7 +127,7 @@ export function WholesaleDepositsStep({
         className='gap-1'
       >
         <IconPlus className='h-4 w-4' />
-        Add item
+        Adaugă element
       </Button>
     </div>
   );

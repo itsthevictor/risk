@@ -19,11 +19,54 @@ function formatAmount(amount: number) {
   }).format(amount);
 }
 
+// Maps the raw enum values used across issuer_type/rating_band/category
+// fields to their Romanian display labels shown elsewhere in the wizard.
+const RO_LABELS: Record<string, string> = {
+  // issuer types
+  sovereign_own_country: 'Suveran (țara proprie)',
+  central_bank_cash: 'Numerar bancă centrală',
+  sovereign_foreign: 'Suveran (străin)',
+  multilateral_dev_bank: 'Bancă multilaterală de dezvoltare',
+  covered_bond: 'Obligațiune garantată',
+  corporate_bond: 'Obligațiune corporativă',
+  equity_index_listed: 'Acțiuni (index listat)',
+  equity_other: 'Acțiuni (altele)',
+  rmbs: 'RMBS',
+  other: 'Altele',
+  // rating bands
+  AAA_AA: 'AAA până la AA-',
+  A: 'A+ până la A-',
+  BBB: 'BBB+ până la BBB-',
+  below_BBB_minus: 'Sub BBB-',
+  not_rated: 'Fără rating',
+  // retail deposit categories
+  stable_retail: 'Retail stabil',
+  less_stable_retail: 'Retail mai puțin stabil',
+  sme: 'IMM',
+  // wholesale deposit categories
+  operational_deposit: 'Depozit operațional',
+  non_operational_corporate: 'Neoperațional (corporativ)',
+  non_operational_financial_institution: 'Neoperațional (instituție financiară)',
+  // off-balance-sheet categories
+  retail_sme_facility: 'Facilitate retail / IMM',
+  corporate_facility: 'Facilitate corporativă',
+  bank_fi_facility: 'Facilitate bancă / instituție financiară',
+  // inflow categories
+  secured_lending_l1_collateral: 'Împrumut garantat (garanție L1)',
+  secured_lending_l2a_collateral: 'Împrumut garantat (garanție L2A)',
+  retail_sme_loan_repayment: 'Rambursare împrumut retail / IMM',
+  corporate_loan_repayment: 'Rambursare împrumut corporativ',
+  bank_fi_loan_repayment: 'Rambursare împrumut bancă / instituție financiară',
+};
+
 function labelize(value: string) {
-  return value
-    .split('_')
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(' ');
+  return (
+    RO_LABELS[value] ??
+    value
+      .split('_')
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ')
+  );
 }
 
 function SectionShell({
@@ -42,12 +85,13 @@ function SectionShell({
       <div className='flex items-baseline justify-between'>
         <h3 className='text-base font-semibold'>{title}</h3>
         <span className='text-muted-foreground text-sm'>
-          {itemCount} item{itemCount === 1 ? '' : 's'} · {formatAmount(total)}
+          {itemCount} {itemCount === 1 ? 'element' : 'elemente'} ·{' '}
+          {formatAmount(total)}
         </span>
       </div>
       {itemCount === 0 ? (
         <p className='text-muted-foreground text-sm italic'>
-          No items added.
+          Niciun element adăugat.
         </p>
       ) : (
         <div className='overflow-hidden rounded-lg border'>
@@ -71,9 +115,9 @@ function CategoryItemsSummary<
     <SectionShell title={title} itemCount={items.length} total={total}>
       <thead className='bg-sidebar/40 text-muted-foreground'>
         <tr>
-          <th className='px-3 py-2 text-left font-medium'>Description</th>
-          <th className='px-3 py-2 text-left font-medium'>Category</th>
-          <th className='px-3 py-2 text-right font-medium'>Amount</th>
+          <th className='px-3 py-2 text-left font-medium'>Descriere</th>
+          <th className='px-3 py-2 text-left font-medium'>Categorie</th>
+          <th className='px-3 py-2 text-right font-medium'>Sumă</th>
         </tr>
       </thead>
       <tbody>
@@ -82,7 +126,7 @@ function CategoryItemsSummary<
             <td className='px-3 py-2'>
               {item.description || (
                 <span className='text-muted-foreground italic'>
-                  (no description)
+                  (fără descriere)
                 </span>
               )}
             </td>
@@ -106,13 +150,13 @@ function HqlaItemsSummary({ items }: { items: HQLAItem[] }) {
   const total = items.reduce((sum, item) => sum + item.amount, 0);
 
   return (
-    <SectionShell title='HQLA items' itemCount={items.length} total={total}>
+    <SectionShell title='Active HQLA' itemCount={items.length} total={total}>
       <thead className='bg-sidebar/40 text-muted-foreground'>
         <tr>
-          <th className='px-3 py-2 text-left font-medium'>Description</th>
-          <th className='px-3 py-2 text-left font-medium'>Issuer type</th>
-          <th className='px-3 py-2 text-left font-medium'>Rating band</th>
-          <th className='px-3 py-2 text-right font-medium'>Amount</th>
+          <th className='px-3 py-2 text-left font-medium'>Descriere</th>
+          <th className='px-3 py-2 text-left font-medium'>Tip emitent</th>
+          <th className='px-3 py-2 text-left font-medium'>Bandă de rating</th>
+          <th className='px-3 py-2 text-right font-medium'>Sumă</th>
         </tr>
       </thead>
       <tbody>
@@ -121,7 +165,7 @@ function HqlaItemsSummary({ items }: { items: HQLAItem[] }) {
             <td className='px-3 py-2'>
               {item.description || (
                 <span className='text-muted-foreground italic'>
-                  (no description)
+                  (fără descriere)
                 </span>
               )}
             </td>
@@ -168,27 +212,28 @@ export function ReviewStep({
   return (
     <div className='space-y-8'>
       <div>
-        <h2 className='text-lg font-semibold'>Review</h2>
+        <h2 className='text-lg font-semibold'>Verificare</h2>
         <p className='text-muted-foreground text-sm'>
-          Check everything below before running the calculation.
+          Verificați toate informațiile de mai jos înainte de a rula
+          calculul.
         </p>
       </div>
 
       <HqlaItemsSummary items={hqlaItems} />
       <CategoryItemsSummary<RetailDepositItem>
-        title='Retail deposits'
+        title='Depozite retail'
         items={retailDeposits}
       />
       <CategoryItemsSummary<WholesaleDepositItem>
-        title='Wholesale deposits'
+        title='Depozite en-gros'
         items={wholesaleDeposits}
       />
       <CategoryItemsSummary<OffBalanceSheetItem>
-        title='Off-balance-sheet items'
+        title='Elemente extrabilanțiere'
         items={offBalanceSheet}
       />
       <CategoryItemsSummary<InflowItem>
-        title='Inflow items'
+        title='Intrări de numerar'
         items={inflowItems}
       />
     </div>

@@ -30,28 +30,28 @@ const RATING_EXEMPT_ISSUER_TYPES = new Set<ISSUER_TYPE>([
 const ISSUER_TYPE_OPTIONS: SelectOption[] = [
   {
     value: ISSUER_TYPE.SOVEREIGN_OWN_COUNTRY,
-    label: 'Sovereign (own country)',
+    label: 'Suveran (țara proprie)',
   },
-  { value: ISSUER_TYPE.CENTRAL_BANK_CASH, label: 'Central bank cash' },
-  { value: ISSUER_TYPE.SOVEREIGN_FOREIGN, label: 'Sovereign (foreign)' },
+  { value: ISSUER_TYPE.CENTRAL_BANK_CASH, label: 'Numerar bancă centrală' },
+  { value: ISSUER_TYPE.SOVEREIGN_FOREIGN, label: 'Suveran (străin)' },
   {
     value: ISSUER_TYPE.MULTILATERAL_DEV_BANK,
-    label: 'Multilateral development bank',
+    label: 'Bancă multilaterală de dezvoltare',
   },
-  { value: ISSUER_TYPE.COVERED_BOND, label: 'Covered bond' },
-  { value: ISSUER_TYPE.CORPORATE_BOND, label: 'Corporate bond' },
-  { value: ISSUER_TYPE.EQUITY_INDEX_LISTED, label: 'Equity (listed index)' },
-  { value: ISSUER_TYPE.EQUITY_OTHER, label: 'Equity (other)' },
+  { value: ISSUER_TYPE.COVERED_BOND, label: 'Obligațiune garantată' },
+  { value: ISSUER_TYPE.CORPORATE_BOND, label: 'Obligațiune corporativă' },
+  { value: ISSUER_TYPE.EQUITY_INDEX_LISTED, label: 'Acțiuni (index listat)' },
+  { value: ISSUER_TYPE.EQUITY_OTHER, label: 'Acțiuni (altele)' },
   { value: ISSUER_TYPE.RMBS, label: 'RMBS' },
-  { value: ISSUER_TYPE.OTHER, label: 'Other' },
+  { value: ISSUER_TYPE.OTHER, label: 'Altele' },
 ];
 
 const RATING_BAND_OPTIONS: SelectOption[] = [
-  { value: RATING_BAND.AAA_AA, label: 'AAA to AA-' },
-  { value: RATING_BAND.A, label: 'A+ to A-' },
-  { value: RATING_BAND.BBB, label: 'BBB+ to BBB-' },
-  { value: RATING_BAND.BELOW_BBB_MINUS, label: 'Below BBB-' },
-  { value: RATING_BAND.NOT_RATED, label: 'Not rated' },
+  { value: RATING_BAND.AAA_AA, label: 'AAA până la AA-' },
+  { value: RATING_BAND.A, label: 'A+ până la A-' },
+  { value: RATING_BAND.BBB, label: 'BBB+ până la BBB-' },
+  { value: RATING_BAND.BELOW_BBB_MINUS, label: 'Sub BBB-' },
+  { value: RATING_BAND.NOT_RATED, label: 'Fără rating' },
 ];
 
 const emptyHqlaItem: LCRCalculationRequest['hqla_items'][number] = {
@@ -120,7 +120,7 @@ function HqlaItemRow({
         size='icon'
         className='absolute top-2 right-2 h-7 w-7'
         onClick={onRemove}
-        aria-label={`Remove item ${index + 1}`}
+        aria-label={`Elimină elementul ${index + 1}`}
       >
         <IconTrash className='h-4 w-4' />
       </Button>
@@ -129,34 +129,34 @@ function HqlaItemRow({
         <CustomFormField
           control={control}
           name={`hqla_items.${index}.description`}
-          labelText='Description'
+          labelText='Descriere'
         />
       </div>
 
       <CustomNumberField
         control={control}
         name={`hqla_items.${index}.amount`}
-        labelText='Amount'
+        labelText='Sumă'
       />
 
       <CustomFormSelectLabel
         control={control}
         name={`hqla_items.${index}.issuer_type`}
-        labelText='Issuer type'
+        labelText='Tip emitent'
         items={ISSUER_TYPE_OPTIONS}
       />
 
       {ratingExempt ? (
         <div className='flex flex-col justify-end pb-2'>
           <p className='text-muted-foreground text-xs'>
-            Rating band not required for this issuer type.
+            Banda de rating nu este necesară pentru acest tip de emitent.
           </p>
         </div>
       ) : (
         <CustomFormSelectLabel
           control={control}
           name={`hqla_items.${index}.rating_band`}
-          labelText='Rating band'
+          labelText='Bandă de rating'
           items={filteredRatingBandOptions}
         />
       )}
@@ -178,16 +178,18 @@ export function HqlaStep({
   return (
     <div className='space-y-6'>
       <div>
-        <h2 className='text-lg font-semibold'>HQLA items</h2>
+        <h2 className='text-lg font-semibold'>
+          Active lichide de calitate ridicată (HQLA)
+        </h2>
         <p className='text-muted-foreground text-sm'>
-          Add each high-quality liquid asset item, its issuer type, and (where
-          required) its credit rating band.
+          Adăugați fiecare activ lichid de calitate ridicată, tipul
+          emitentului și, unde este necesar, banda de rating de credit.
         </p>
       </div>
 
       {fields.length === 0 && (
         <p className='text-muted-foreground text-sm italic'>
-          No HQLA items yet. Add one to get started.
+          Niciun activ HQLA adăugat încă. Adăugați unul pentru a începe.
         </p>
       )}
 
@@ -212,7 +214,7 @@ export function HqlaStep({
         className='gap-1'
       >
         <IconPlus className='h-4 w-4' />
-        Add item
+        Adaugă element
       </Button>
     </div>
   );

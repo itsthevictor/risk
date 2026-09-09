@@ -39,6 +39,9 @@ export default function Home() {
           <Button variant='outline' className=' w-fit'>
             <Link href='/liquidity'>Risc de lichiditate</Link>
           </Button>
+          <Button variant='outline' className=' w-fit'>
+            <Link href='/interest-rate'>Risc de dobândă</Link>
+          </Button>
           <Button variant='outline' className='w-fit'>
             <Link href='/credit'>Risc de credit</Link>
           </Button>

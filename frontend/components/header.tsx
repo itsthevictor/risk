@@ -46,11 +46,14 @@ const Header = () => {
           </DropdownMenuTrigger>
           <DropdownMenuContent>
             <DropdownMenuGroup>
+              <Link href='/market' className='w-full'>
+                <DropdownMenuItem>Risc de piață</DropdownMenuItem>
+              </Link>
               <Link href='/liquidity' className='w-full'>
                 <DropdownMenuItem>Risc de lichiditate</DropdownMenuItem>
               </Link>
-              <Link href='/market' className='w-full'>
-                <DropdownMenuItem>Risc de piață</DropdownMenuItem>
+              <Link href='/interest-rate' className='w-full'>
+                <DropdownMenuItem>Risc de dobândă</DropdownMenuItem>
               </Link>
               <Link href='/credit' className='w-full'>
                 <DropdownMenuItem>Risc de credit</DropdownMenuItem>
