@@ -155,6 +155,17 @@ export default function CreditRiskPage() {
         </p>
       </div>
 
+      <div className='flex flex-wrap items-end justify-between gap-2'>
+        <div className='space-y-1'>
+          <h1 className='text-xl font-bold'>Date și metodologie</h1>
+        </div>
+        <p className='text-muted-foreground text-sm'>
+          Lorem ipsum dolor sit amet consectetur adipisicing elit. Fugiat
+          impedit vel nesciunt quos! Inventore aliquid facilis laboriosam
+          reprehenderit! Suscipit reiciendis nam cum ipsum.
+        </p>
+      </div>
+
       <div className='grid grid-cols-2 gap-4 md:grid-cols-4'>
         <KpiCard label='EAD total' value={formatUsd(portfolio.ead_total)} />
         <KpiCard
@@ -187,8 +198,9 @@ export default function CreditRiskPage() {
         <div className='space-y-1'>
           <h2 className='text-lg font-semibold'>Calibrare model PD</h2>
           <p className='text-muted-foreground text-sm'>
-            PD prezis vs. rata de default observată, pe decile — linia punctată
-            marchează calibrarea perfectă (PD prezis = rată observată).
+            PD calibrat vs. rata de default observată, pe decile — linia
+            punctată marchează calibrarea perfectă (PD calibrat = rată
+            observată).
           </p>
         </div>
         <CalibrationChart data={calibration} />
