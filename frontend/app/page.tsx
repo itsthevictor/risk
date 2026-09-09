@@ -29,38 +29,30 @@ export default function Home() {
             href='https://github.com/itsthevictor/risk'
             className='hover:underline hover:text-foreground'
             data-umami-event='homepage-github-link'
+            target='_blank'
+            rel='noopener noreferrer'
           >
             repository-ul GitHub
           </a>
         </p>
         <div className='md:flex md:flex-row flex flex-col max-w-3xl gap-x-4 gap-y-2 mt-4'>
-          <Button
-            variant='outline'
-            className='w-fit'
-            data-umami-event='homepage-market-link'
-          >
-            <Link href='/market'>Risc de piață</Link>
+          <Button variant='outline' className='w-fit'>
+            <Link href='/market' data-umami-event='homepage-market-link'>
+              Risc de piață
+            </Link>
           </Button>
-          <Button
-            variant='outline'
-            className=' w-fit'
-            data-umami-event='homepage-liquidity-link'
-          >
-            <Link href='/liquidity'>Risc de lichiditate</Link>
+          <Button variant='outline' className=' w-fit'>
+            <Link href='/liquidity' data-umami-event='homepage-liquidity-link'>
+              Risc de lichiditate
+            </Link>
           </Button>
-          <Button
-            variant='outline'
-            className=' w-fit'
-            data-umami-event='homepage-interest-rate-link'
-          >
+          <Button variant='outline' className=' w-fit'>
             <Link href='/interest-rate'>Risc de dobândă</Link>
           </Button>
-          <Button
-            variant='outline'
-            className='w-fit'
-            data-umami-event='homepage-credit-link'
-          >
-            <Link href='/credit'>Risc de credit</Link>
+          <Button variant='outline' className='w-fit'>
+            <Link href='/credit' data-umami-event='homepage-credit-link'>
+              Risc de credit
+            </Link>
           </Button>
         </div>
       </div>
