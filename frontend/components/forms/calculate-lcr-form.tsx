@@ -192,7 +192,10 @@ export default function CalculateLcrForm() {
                       : 'text-muted-foreground border-border',
                 )}
               >
-                {i + 1}. {STEP_LABELS[step]}
+                {i + 1}.{' '}
+                <span className={cn(i === currentStep ? 'block' : 'hidden')}>
+                  {STEP_LABELS[step]}
+                </span>
               </li>
             ))}
           </ol>
