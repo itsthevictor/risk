@@ -185,6 +185,7 @@ export default function CalculateLcrForm() {
                 key={step}
                 className={cn(
                   'rounded-full border px-3 py-1',
+                  i === currentStep ? 'flex' : 'hidden md:flex',
                   i === currentStep
                     ? 'bg-primary text-primary-foreground border-primary'
                     : i < currentStep
@@ -192,10 +193,7 @@ export default function CalculateLcrForm() {
                       : 'text-muted-foreground border-border',
                 )}
               >
-                {i + 1}.{' '}
-                <span className={cn(i === currentStep ? 'block' : 'hidden')}>
-                  {STEP_LABELS[step]}
-                </span>
+                {i + 1}. <span>{STEP_LABELS[step]}</span>
               </li>
             ))}
           </ol>
