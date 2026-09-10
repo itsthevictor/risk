@@ -17,12 +17,19 @@ import { ThemeToggle } from './theme-toggle';
 const PATH_LABELS: Record<string, string> = {
   '/liquidity': 'Risc de lichiditate',
   '/market': 'Risc de piață',
+  '/interest-rate': 'Risc de dobândă',
   '/credit': 'Risc de credit',
 };
 
+const isActivePath = (pathname: string, href: string) =>
+  pathname === href || pathname.startsWith(`${href}/`);
+
 const Header = () => {
   const pathname = usePathname();
-  const currentLabel = PATH_LABELS[pathname] ?? 'Navigare';
+  const currentLabel =
+    Object.entries(PATH_LABELS).find(([href]) =>
+      isActivePath(pathname, href)
+    )?.[1] ?? 'Navigare';
   const [isOpen, setIsOpen] = useState(false);
 
   return (
