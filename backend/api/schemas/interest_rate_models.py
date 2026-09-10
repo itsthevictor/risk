@@ -55,3 +55,17 @@ class EveScenarios(BaseModel):
 class EveAnalysisResponse(BaseModel):
     as_of_date: date
     scenarios: EveScenarios
+
+
+class Position(BaseModel):
+    position_id: int
+    position_type: str
+    category: str
+    principal: float
+    current_rate: float
+    repricing_date: date
+    maturity_date: date
+
+
+class PositionsResponse(BaseModel):
+    positions: list[Position]

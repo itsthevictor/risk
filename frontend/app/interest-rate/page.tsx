@@ -20,6 +20,7 @@ import {
   InterestRateRiskApiError,
 } from '@/lib/api/interest-rate-risk';
 import { formatDateRo } from '@/lib/utils';
+import Link from 'next/link';
 
 const SHOCK_OPTIONS = [100, 200, 300] as const;
 
@@ -38,12 +39,20 @@ export default function InterestRatePage() {
 
   return (
     <div className='w-full space-y-6 p-6 max-w-6xl mx-auto'>
-      <div className='space-y-1'>
-        <h1 className='text-2xl font-bold'>Risc de dobândă — IRRBB</h1>
-        <p className='text-muted-foreground text-sm'>
-          Interest Rate Risk in the Banking Book — Net Interest Income (NII) și
-          sensibilitatea acestuia la un șoc paralel de rată.
-        </p>
+      <div className='flex flex-wrap items-end justify-between gap-2'>
+        <div className='space-y-1'>
+          <h1 className='text-2xl font-bold'>Risc de dobândă — IRRBB</h1>
+          <p className='text-muted-foreground text-sm'>
+            Interest Rate Risk in the Banking Book — Net Interest Income (NII)
+            și sensibilitatea acestuia la un șoc paralel de rată.
+          </p>
+        </div>
+        <Link
+          href='/interest-rate/data'
+          className='text-muted-foreground text-sm hover:underline'
+        >
+          Date și metodologie →
+        </Link>
       </div>
 
       <Tabs defaultValue='nii'>

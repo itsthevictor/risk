@@ -487,6 +487,26 @@ export const EveAnalysisResponseSchema = z.object({
 export type EveAnalysisResponse = z.infer<typeof EveAnalysisResponseSchema>;
 
 // ---------------------------------------------------------------------------
+// interest rate risk — positions (GET /interest-rate-risk/positions)
+// ---------------------------------------------------------------------------
+
+export const PositionSchema = z.object({
+  position_id: z.number().int(),
+  position_type: z.string(),
+  category: z.string(),
+  principal: z.number(),
+  current_rate: z.number(),
+  repricing_date: isoDateSchema,
+  maturity_date: isoDateSchema,
+});
+export type Position = z.infer<typeof PositionSchema>;
+
+export const PositionsResponseSchema = z.object({
+  positions: z.array(PositionSchema),
+});
+export type PositionsResponse = z.infer<typeof PositionsResponseSchema>;
+
+// ---------------------------------------------------------------------------
 // errors
 // ---------------------------------------------------------------------------
 

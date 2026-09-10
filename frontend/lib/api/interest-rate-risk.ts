@@ -3,6 +3,8 @@ import {
   EveAnalysisResponseSchema,
   NIIAnalysisResponse,
   NIIAnalysisResponseSchema,
+  PositionsResponse,
+  PositionsResponseSchema,
   ErrorResponseSchema,
 } from '@/lib/definitions';
 
@@ -65,4 +67,15 @@ export async function fetchEveAnalysis(): Promise<EveAnalysisResponse> {
 
   const data = await response.json();
   return EveAnalysisResponseSchema.parse(data);
+}
+
+export async function fetchPositions(): Promise<PositionsResponse> {
+  const response = await fetch(`${API_BASE_URL}/interest-rate-risk/positions`);
+
+  if (!response.ok) {
+    throw await toApiError(response);
+  }
+
+  const data = await response.json();
+  return PositionsResponseSchema.parse(data);
 }

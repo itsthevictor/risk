@@ -40,6 +40,16 @@ def load_raw_positions(path: str) -> pd.DataFrame:
     return df
 
 
+def load_prepared_positions(path: str) -> pd.DataFrame:
+    """Incarca pozitiile deja pregatite (repricing/maturity regenerate, in format
+    ISO) — echivalentul `load_raw_positions` + `prepare_irrbb_positions`, dar fara
+    a mai reface regenerarea sintetica la fiecare pornire."""
+    df = pd.read_csv(path)
+    df["repricing_date"] = pd.to_datetime(df["repricing_date"], format="%Y-%m-%d")
+    df["maturity_date"] = pd.to_datetime(df["maturity_date"], format="%Y-%m-%d")
+    return df
+
+
 def _regenerate_same_day(
     df: pd.DataFrame,
     mask: pd.Series,
