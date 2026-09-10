@@ -1,6 +1,13 @@
 'use client';
 
-import { CartesianGrid, ReferenceLine, Scatter, ScatterChart, XAxis, YAxis } from 'recharts';
+import {
+  CartesianGrid,
+  ReferenceLine,
+  Scatter,
+  ScatterChart,
+  XAxis,
+  YAxis,
+} from 'recharts';
 
 import {
   ChartContainer,
@@ -37,11 +44,16 @@ export function CalibrationChart({ data }: CalibrationChartProps) {
         <XAxis
           type='number'
           dataKey='pd_predicted'
-          name='PD prezis'
+          name='PD calibrat'
           domain={[0, axisMax]}
           tickFormatter={(v) => formatPercent(v, 0)}
           tick={{ fontSize: 10 }}
-          label={{ value: 'PD prezis', position: 'insideBottom', offset: -6, fontSize: 11 }}
+          label={{
+            value: 'PD calibrat',
+            position: 'insideBottom',
+            offset: -6,
+            fontSize: 11,
+          }}
         />
         <YAxis
           type='number'
@@ -64,7 +76,9 @@ export function CalibrationChart({ data }: CalibrationChartProps) {
           cursor={{ strokeDasharray: '3 3' }}
           content={
             <ChartTooltipContent
-              labelFormatter={(_, payload) => `Decila ${payload[0]?.payload.decile}`}
+              labelFormatter={(_, payload) =>
+                `Decila ${payload[0]?.payload.decile}`
+              }
               formatter={(value, name) => [
                 formatPercent(Number(value), 2),
                 name === 'pd_predicted' ? 'PD prezis' : 'Rată reală',
@@ -72,7 +86,11 @@ export function CalibrationChart({ data }: CalibrationChartProps) {
             />
           }
         />
-        <Scatter data={data} dataKey='default_actual' fill='var(--color-default_actual)' />
+        <Scatter
+          data={data}
+          dataKey='default_actual'
+          fill='var(--color-default_actual)'
+        />
       </ScatterChart>
     </ChartContainer>
   );
