@@ -1,4 +1,15 @@
-# PY + Next.js Risk Management real-time data analysis portfolio app
+# Portofoliu instrumente analiză de risc - proiect personal Victor Alexa
+
+#### Tehnologii utilizate
+
+**Backend** — FastAPI + Pydantic (API și validare), SQLModel/SQLAlchemy peste
+Postgres (cache de prețuri), `yfinance` (sursă de date de piață), `numpy` /
+`pandas` (calcul numeric), `scipy` (distribuții statistice) și `arch` (calibrare
+GARCH).
+
+**Frontend** — Next.js + React + TypeScript, React Hook Form + Zod (formulare și
+validare), TanStack Query (fetching/cache pe client), Recharts (grafice),
+componente shadcn/ui pe bază de Radix/Base UI + Tailwind CSS.
 
 ## Risc de Piață (Market Risk)
 
