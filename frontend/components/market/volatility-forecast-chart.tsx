@@ -13,9 +13,12 @@ import {
 import { formatPercent } from '@/lib/utils';
 import type { VolatilityForecast } from '@/lib/definitions';
 
+// chart-2/chart-4 sunt aproape identice (aceeași nuanță gri-albastru, doar
+// luminozitate diferită) — aici avem nevoie de contrast mare între cele două
+// linii, așa că folosim direct un portocaliu vs. un gri închis.
 const chartConfig: ChartConfig = {
-  ewma: { label: 'EWMA', color: 'var(--color-chart-2)' },
-  garch: { label: 'GARCH', color: 'var(--color-chart-4)' },
+  ewma: { label: 'EWMA', color: 'oklch(0.705 0.191 46.5)' },
+  garch: { label: 'GARCH', color: 'oklch(0.275 0.011 216.9)' },
 };
 
 export interface VolatilityForecastChartProps {

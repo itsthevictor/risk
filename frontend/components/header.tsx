@@ -28,7 +28,7 @@ const Header = () => {
   const pathname = usePathname();
   const currentLabel =
     Object.entries(PATH_LABELS).find(([href]) =>
-      isActivePath(pathname, href)
+      isActivePath(pathname, href),
     )?.[1] ?? 'Navigare';
   const [isOpen, setIsOpen] = useState(false);
 

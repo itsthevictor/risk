@@ -311,8 +311,20 @@ STRESS_SCENARIO_LABELS: dict[str, str] = {
 # Prefilled per-asset-class shocks offered alongside each historical replay — editable
 # by the user, mirrored in the frontend for the initial form values.
 PRESET_SHOCK_SCENARIOS: dict[str, dict[str, float]] = {
-    "2020": {"equity": -0.30, "bond": -0.05, "commodity": 0.05},
-    "2022": {"equity": -0.20, "bond": -0.13, "commodity": 0.00},
+    "2020": {
+        "equity": -0.30,
+        "bond": -0.05,
+        "commodity": 0.05,
+        "fx": -0.03,
+        "crypto": -0.50,
+    },
+    "2022": {
+        "equity": -0.20,
+        "bond": -0.13,
+        "commodity": 0.00,
+        "fx": -0.08,
+        "crypto": -0.65,
+    },
 }
 STRESS_WARNING_PCT = 0.15
 STRESS_CRITICAL_PCT = 0.20

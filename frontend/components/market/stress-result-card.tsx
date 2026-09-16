@@ -1,6 +1,7 @@
 import { cn, formatPercent, formatUsd } from '@/lib/utils';
 import type { StressTestResult } from '@/lib/definitions';
 import { StressStatusBadge } from './stress-status-badge';
+import { ASSET_CLASS_LABELS } from './shock-inputs';
 
 export interface StressResultCardProps {
   title: string;
@@ -37,6 +38,21 @@ export function StressResultCard({
       <div className='text-muted-foreground text-sm tabular-nums'>
         Valoare finală {formatUsd(result.ending_value)}
       </div>
+      {result.annualized_volatility != null && (
+        <div className='text-muted-foreground text-sm tabular-nums'>
+          Volatilitate (anualizată) în fereastră{' '}
+          {formatPercent(result.annualized_volatility)}
+        </div>
+      )}
+      {result.shocks_applied && (
+        <div className='text-muted-foreground flex flex-wrap gap-x-3 gap-y-1 text-xs'>
+          {Object.entries(result.shocks_applied).map(([cls, shock]) => (
+            <span key={cls} className='tabular-nums'>
+              {ASSET_CLASS_LABELS[cls] ?? cls}: {formatPercent(shock)}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

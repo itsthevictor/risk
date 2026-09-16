@@ -2,7 +2,7 @@
 
 import { Input } from '@/components/ui/input';
 
-const ASSET_CLASS_LABELS: Record<string, string> = {
+export const ASSET_CLASS_LABELS: Record<string, string> = {
   equity: 'Equity',
   bond: 'Obligațiuni',
   commodity: 'Aur / Marfă',

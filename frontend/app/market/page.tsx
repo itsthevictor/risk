@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { IconLoader2 } from '@tabler/icons-react';
 import InfoDrawer from '@/components/custom/info-drawer';
 import { MarketRiskForm } from '@/components/forms/mr-form';
 import { MarketRiskKpiStrip } from '@/components/market/kpi-strip';
@@ -18,8 +19,8 @@ import { VarComparisonTable } from '@/components/market/var-table';
 import { BacktestScorecardTable } from '@/components/market/backtest-table';
 import { PnlExceptionsChart } from '@/components/market/pnl-exceptions-chart';
 import { StressResultCard } from '@/components/market/stress-result-card';
-import { ShockInputs } from '@/components/market/shock-inputs';
-import { formatDateRo } from '@/lib/utils';
+import { ShockInputs, ASSET_CLASS_LABELS } from '@/components/market/shock-inputs';
+import { formatDateRo, formatPercent } from '@/lib/utils';
 import {
   analyzeMarketRisk,
   fetchTickers,
@@ -56,8 +57,20 @@ const HISTORICAL_REPLAY_LABELS: Record<'2020' | '2022', string> = {
   '2022': 'Rate-hike sell-off (27 dec 2021 – 14 oct 2022)',
 };
 const PRESET_SHOCKS: Record<'2020' | '2022', Record<string, number>> = {
-  '2020': { equity: -0.3, bond: -0.05, commodity: 0.05 },
-  '2022': { equity: -0.2, bond: -0.13, commodity: 0.0 },
+  '2020': {
+    equity: -0.3,
+    bond: -0.05,
+    commodity: 0.05,
+    fx: -0.03,
+    crypto: -0.5,
+  },
+  '2022': {
+    equity: -0.2,
+    bond: -0.13,
+    commodity: 0.0,
+    fx: -0.08,
+    crypto: -0.65,
+  },
 };
 
 export default function MarketRiskPage() {
@@ -125,6 +138,16 @@ export default function MarketRiskPage() {
     analysis.mutate(values);
   };
 
+  const handleReset = () => {
+    analysis.reset();
+    setBaseParams(null);
+    setStressOpen(true);
+    setStressScenario('2020');
+    setShocks(PRESET_SHOCKS['2020']);
+    historicalStress.reset();
+    hypotheticalStress.reset();
+  };
+
   const runHypothetical = (
     params: MarketRiskAnalyzeRequestParsed,
     shockValues: Record<string, number>,
@@ -144,7 +167,7 @@ export default function MarketRiskPage() {
 
     const initialShocks =
       scenario === 'custom'
-        ? Object.fromEntries(portfolioAssetClasses.map((c) => [c, 0]))
+        ? Object.fromEntries(portfolioAssetClasses.map((c) => [c, -0.15]))
         : PRESET_SHOCKS[scenario];
     setShocks(initialShocks);
 
@@ -186,7 +209,9 @@ export default function MarketRiskPage() {
       <MarketRiskForm
         tickerOptions={tickerOptions}
         isSubmitting={analysis.isPending}
+        hasResult={!!analysis.data}
         onSubmit={handleInitialSubmit}
+        onReset={handleReset}
       />
 
       {tickersQuery.isError && (
@@ -208,7 +233,16 @@ export default function MarketRiskPage() {
       )}
 
       {analysis.isPending && (
-        <p className='text-muted-foreground text-sm'>Se rulează analiza…</p>
+        <div className='text-foreground bg-accent mx-auto flex w-fit flex-row items-center gap-4 rounded-lg p-4 text-sm'>
+          <IconLoader2 className='text-muted-foreground h-5 w-5 shrink-0 animate-spin' />
+          <div>
+            <p className='font-medium'>Se rulează analiza…</p>
+            <p className='text-muted-foreground text-xs'>
+              Se descarcă istoricul de preț și se calibrează modelele
+              (EWMA, GARCH, Monte Carlo, backtest)…
+            </p>
+          </div>
+        </div>
       )}
 
       {analysis.data && (
@@ -318,6 +352,22 @@ export default function MarketRiskPage() {
                   </Select>
                 </div>
 
+                {stressScenario !== 'custom' && (
+                  <div className='text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-sm'>
+                    <span className='font-medium'>
+                      Scădere presupusă per clasă de active:
+                    </span>
+                    {Object.entries(PRESET_SHOCKS[stressScenario]).map(
+                      ([cls, shock]) => (
+                        <span key={cls} className='tabular-nums'>
+                          {ASSET_CLASS_LABELS[cls] ?? cls}:{' '}
+                          {formatPercent(shock)}
+                        </span>
+                      ),
+                    )}
+                  </div>
+                )}
+
                 <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
                   {stressScenario !== 'custom' && (
                     <div className='space-y-2'>
@@ -370,25 +420,27 @@ export default function MarketRiskPage() {
                   </div>
                 </div>
 
-                <div className='space-y-2'>
-                  <label className='text-sm font-medium'>
-                    Șocuri per clasă de active
-                  </label>
-                  <ShockInputs
-                    assetClasses={portfolioAssetClasses}
-                    shocks={shocks}
-                    onChange={handleShockChange}
-                    disabled={hypotheticalStress.isPending}
-                  />
-                  <Button
-                    type='button'
-                    size='sm'
-                    disabled={hypotheticalStress.isPending}
-                    onClick={handleRecalculateShocks}
-                  >
-                    Recalculează
-                  </Button>
-                </div>
+                {stressScenario === 'custom' && (
+                  <div className='space-y-2'>
+                    <label className='text-sm font-medium'>
+                      Șocuri per clasă de active
+                    </label>
+                    <ShockInputs
+                      assetClasses={portfolioAssetClasses}
+                      shocks={shocks}
+                      onChange={handleShockChange}
+                      disabled={hypotheticalStress.isPending}
+                    />
+                    <Button
+                      type='button'
+                      size='sm'
+                      disabled={hypotheticalStress.isPending}
+                      onClick={handleRecalculateShocks}
+                    >
+                      Recalculează
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
           </div>

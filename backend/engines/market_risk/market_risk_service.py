@@ -320,6 +320,7 @@ def historical_scenario_pnl(
         "ending_value": ending_value,
         "pnl": pnl,
         "pnl_pct": pnl / portfolio_value,
+        "annualized_volatility": float(window_returns.std() * np.sqrt(252)),
     }
 
 

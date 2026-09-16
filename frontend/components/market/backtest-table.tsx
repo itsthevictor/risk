@@ -50,7 +50,7 @@ export function BacktestScorecardTable({
           <TableRow>
             <TableHead>Metodă</TableHead>
             <TableHead className='text-right'>Depășiri</TableHead>
-            <TableHead className='text-right'>Observații</TableHead>
+            {/* <TableHead className='text-right'>Observații</TableHead> */}
             <TableHead className='text-right'>Kupiec LR</TableHead>
             <TableHead className='text-right'>Kupiec p</TableHead>
             <TableHead className='text-right'>Christoffersen LR</TableHead>
@@ -92,9 +92,9 @@ export function BacktestScorecardTable({
                 <TableCell className='text-right tabular-nums'>
                   {stats.hits}
                 </TableCell>
-                <TableCell className='text-right tabular-nums'>
+                {/* <TableCell className='text-right tabular-nums'>
                   {stats.total_observations}
-                </TableCell>
+                </TableCell> */}
                 <TableCell className='text-right tabular-nums'>
                   {formatLr(stats.kupiec_lr)}
                 </TableCell>

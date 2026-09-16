@@ -164,6 +164,10 @@ class StressTestResult(BaseModel):
     shocks_applied: Optional[dict[str, float]] = Field(
         None, description="Set for mode == 'hypothetical'"
     )
+    annualized_volatility: Optional[float] = Field(
+        None,
+        description="Realized annualized volatility over the window; set for mode == 'historical'",
+    )
 
 
 # RESPONSE

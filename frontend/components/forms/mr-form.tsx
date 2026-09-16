@@ -16,17 +16,22 @@ import {
   type MarketRiskAnalyzeRequest,
   type MarketRiskAnalyzeRequestParsed,
 } from '@/lib/definitions';
+import { IconInfoOctagon } from '@tabler/icons-react';
 
 export interface MarketRiskFormProps {
   tickerOptions: MultiSelectOption[];
   isSubmitting?: boolean;
+  hasResult?: boolean;
   onSubmit: (values: MarketRiskAnalyzeRequestParsed) => void;
+  onReset?: () => void;
 }
 
 export function MarketRiskForm({
   tickerOptions,
   isSubmitting,
+  hasResult,
   onSubmit,
+  onReset,
 }: MarketRiskFormProps) {
   const form = useForm<MarketRiskAnalyzeRequest>({
     resolver: zodResolver(MarketRiskAnalyzeRequestSchema),
@@ -46,51 +51,78 @@ export function MarketRiskForm({
     },
   );
 
+  const handleReset = () => {
+    form.reset();
+    onReset?.();
+  };
+
   return (
     <Form {...form}>
-      <p className='text-muted-foreground mb-4 text-sm'>
-        Pentru a iniția analiza, adaugă active în portofoliu, setează
-        valoarea și durata ferestrei de estimare.
-      </p>
-      <form
-        onSubmit={handleSubmit}
-        className='grid grid-cols-2 gap-4 md:grid-cols-4 md:items-start'
-      >
-        <div className='col-span-2'>
-          <CustomMultiSelectField
-            name='tickers'
-            control={form.control}
-            options={tickerOptions}
-            labelText='Tickere'
-            min={2}
-            max={10}
-          />
-        </div>
+      <div className='flex flex-col w-full gap-y-4'>
+        {!hasResult && !isSubmitting && (
+          <div className='text-foreground mb-4 text-sm p-4 bg-accent flex flex-row items-center justify-start gap-4'>
+            <IconInfoOctagon />
+            <p>
+              Pentru a iniția analiza selectează activele, valoarea
+              portofoliului și durata ferestrei de estimare. Pentru simplitate,
+              portofoliul va fi calculat cu ponderi egale pentru fiecare activ
+              selectat.
+            </p>
+          </div>
+        )}
+        <form
+          onSubmit={handleSubmit}
+          className='grid grid-cols-2 gap-4 md:grid-cols-4 md:items-start'
+        >
+          <div className='col-span-2'>
+            <CustomMultiSelectField
+              name='tickers'
+              control={form.control}
+              options={tickerOptions}
+              labelText='Tickere'
+              min={2}
+              max={10}
+            />
+          </div>
 
-        <CustomNumberField
-          name='portfolio_value'
-          control={form.control}
-          labelText='Valoarea portofoliului'
-          currency='USD'
-        />
-        <CustomIncrementalFormField
-          name='estimation_window_days'
-          control={form.control}
-          labelText='Fereastra de estimare (zile)'
-          step={21}
-          min={30}
-          max={756}
-        />
-        <div className='col-span-2 flex items-end md:col-span-4'>
-          <Button
-            type='submit'
-            disabled={isSubmitting}
-            data-umami-event='mr-form-click'
-          >
-            {isSubmitting ? 'Se analizează…' : 'Analizează'}
-          </Button>
-        </div>
-      </form>
+          <CustomNumberField
+            name='portfolio_value'
+            control={form.control}
+            labelText='Valoarea portofoliului'
+            currency='USD'
+          />
+          <CustomIncrementalFormField
+            name='estimation_window_days'
+            control={form.control}
+            labelText='Fereastra de estimare (zile)'
+            step={21}
+            min={30}
+            max={756}
+          />
+          <div className='col-span-2 flex items-end justify-end gap-2 md:col-span-4'>
+            {hasResult && (
+              <Button
+                type='button'
+                variant='outline'
+                onClick={handleReset}
+                data-umami-event='mr-form-reset-click'
+              >
+                Reia de la început
+              </Button>
+            )}
+            <Button
+              type='submit'
+              disabled={
+                isSubmitting || (hasResult && !form.formState.isDirty)
+              }
+              data-umami-event='mr-form-click'
+              className='w-40'
+            >
+              {isSubmitting ? 'Se analizează…' : 'Analizează'}
+            </Button>
+          </div>
+        </form>
+      </div>
     </Form>
   );
 }

@@ -428,6 +428,7 @@ export const StressTestResultSchema = z.object({
   pnl_pct: z.number(),
   status: StressStatusSchema,
   shocks_applied: z.record(z.string(), z.number()).nullable().optional(),
+  annualized_volatility: z.number().nullable().optional(),
 });
 export type StressTestResult = z.infer<typeof StressTestResultSchema>;
 
