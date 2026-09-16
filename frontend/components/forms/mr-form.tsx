@@ -48,6 +48,10 @@ export function MarketRiskForm({
 
   return (
     <Form {...form}>
+      <p className='text-muted-foreground mb-4 text-sm'>
+        Pentru a iniția analiza, adaugă active în portofoliu, setează
+        valoarea și durata ferestrei de estimare.
+      </p>
       <form
         onSubmit={handleSubmit}
         className='grid grid-cols-2 gap-4 md:grid-cols-4 md:items-start'

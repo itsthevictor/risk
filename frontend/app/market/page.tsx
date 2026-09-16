@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -70,7 +70,7 @@ export default function MarketRiskPage() {
   const [baseParams, setBaseParams] =
     useState<MarketRiskAnalyzeRequestParsed | null>(null);
 
-  const [stressOpen, setStressOpen] = useState(false);
+  const [stressOpen, setStressOpen] = useState(true);
   const [stressScenario, setStressScenario] = useState<StressScenario>('2020');
   const [shocks, setShocks] = useState<Record<string, number>>(
     PRESET_SHOCKS['2020'],
@@ -163,6 +163,15 @@ export default function MarketRiskPage() {
     }
   };
 
+  // Stress testing is shown by default (no click needed) — as soon as a fresh
+  // analysis lands, run the default scenario automatically instead of waiting
+  // for the user to open the section.
+  useEffect(() => {
+    if (!baseParams) return;
+    handleScenarioChange(stressScenario);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [baseParams]);
+
   const handleShockChange = (assetClass: string, value: number) => {
     setShocks((prev) => ({ ...prev, [assetClass]: value }));
   };
@@ -229,10 +238,7 @@ export default function MarketRiskPage() {
             </TabsList>
           </Tabs>
 
-          <MarketRiskKpiStrip
-            data={analysis.data}
-            confidenceLevel={confidenceLevel}
-          />
+          <MarketRiskKpiStrip data={analysis.data} />
 
           <VarComparisonTable
             varComparison={analysis.data.var_comparison}
@@ -283,10 +289,7 @@ export default function MarketRiskPage() {
                 type='button'
                 variant='outline'
                 size='sm'
-                onClick={() => {
-                  setStressOpen((open) => !open);
-                  if (!stressOpen) handleScenarioChange(stressScenario);
-                }}
+                onClick={() => setStressOpen((open) => !open)}
               >
                 {stressOpen ? 'Ascunde' : 'Arată'}
               </Button>

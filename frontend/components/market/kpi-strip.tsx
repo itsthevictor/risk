@@ -1,41 +1,47 @@
-import type {
-  MarketRiskAnalyzeResponse,
-  MethodBacktest,
-  TrafficLight,
-} from '@/lib/definitions';
+import type { MarketRiskAnalyzeResponse } from '@/lib/definitions';
 import { formatPercent, formatUsd } from '@/lib/utils';
-import { BacktestChart } from './backtest-chart';
 import { DiversificationChart } from './diversification-chart';
 import { DrawdownChart } from './drawdown-chart';
 import { KpiCard } from './kpi-card';
 import { VolatilityForecastChart } from './volatility-forecast-chart';
-import { worstTrafficLight } from './traffic-light-badge';
-
-const TRAFFIC_LIGHT_VALUE_LABELS: Record<TrafficLight, string> = {
-  green: 'VERDE',
-  yellow: 'GALBEN',
-  red: 'ROȘU',
-};
 
 export interface MarketRiskKpiStripProps {
   data: MarketRiskAnalyzeResponse;
-  confidenceLevel: number;
 }
 
-export function MarketRiskKpiStrip({
-  data,
-  confidenceLevel,
-}: MarketRiskKpiStripProps) {
+export function MarketRiskKpiStrip({ data }: MarketRiskKpiStripProps) {
+  const latestEwmaVol =
+    data.volatility_forecast.ewma[data.volatility_forecast.ewma.length - 1];
   const latestGarchVol =
     data.volatility_forecast.garch[data.volatility_forecast.garch.length - 1];
 
-  const methodKeys = Object.keys(data.backtest) as (keyof MethodBacktest)[];
-  const worstStatus = worstTrafficLight(
-    methodKeys.map((method) => data.backtest[method].traffic_light),
-  );
-
   return (
     <div className='grid grid-cols-2 gap-4 md:grid-cols-4'>
+      <KpiCard
+        label='Volatilitate (EWMA)'
+        value={
+          latestEwmaVol !== undefined ? formatPercent(latestEwmaVol) : '—'
+        }
+        chart={{
+          title: 'Prognoza Volatilității',
+          description: 'Volatilitatea condiționată EWMA vs. GARCH în timp.',
+          content: (
+            <VolatilityForecastChart data={data.volatility_forecast} />
+          ),
+        }}
+        info={{
+          title: 'Prognoza Volatilității (EWMA)',
+          definition:
+            'Volatilitatea estimată a portofoliului printr-o medie ponderată exponențial a randamentelor pătratice trecute, care acordă greutate mai mare șocurilor recente.',
+          equation:
+            '\\sigma_t^2 = \\lambda \\, \\sigma_{t-1}^2 + (1-\\lambda) \\, r_{t-1}^2',
+          implementation: [
+            'Se inițializează varianța cu deviația standard pe fereastra de seed (252 zile)',
+            'Se actualizează recursiv varianța cu factorul de decădere λ = 0.94',
+            'Se exprimă ca procent (rădăcina varianței)',
+          ],
+        }}
+      />
       <KpiCard
         label='Volatilitate (GARCH)'
         value={
@@ -104,32 +110,6 @@ export function MarketRiskKpiStrip({
             'Se calculează VaR-ul individual pentru fiecare poziție, izolat',
             'Se calculează VaR-ul portofoliului diversificat, folosind structura completă de covarianță/corelație',
             'Se calculează diferența (și ca procent din suma VaR-urilor individuale)',
-          ],
-        }}
-      />
-      <KpiCard
-        label='Stare Backtest'
-        value={TRAFFIC_LIGHT_VALUE_LABELS[worstStatus]}
-        status={worstStatus}
-        chart={{
-          title: 'Backtest — Depășiri pe Metodă',
-          description:
-            'Depășirile VaR observate față de numărul estimat la nivelul de încredere ales, colorate după statusul traffic-light.',
-          content: (
-            <BacktestChart
-              data={data.backtest}
-              confidenceLevel={confidenceLevel}
-            />
-          ),
-        }}
-        info={{
-          title: 'Stare Backtest',
-          definition:
-            'O evaluare de tip traffic-light a acurateței modelului de VaR, bazată pe frecvența cu care pierderile realizate au depășit VaR-ul estimat, comparativ cu numărul așteptat la nivelul de încredere ales (conform cadrului traffic-light Basel).',
-          implementation: [
-            'Se contorizează depășirile VaR (zilele în care pierderea realizată depășește VaR-ul estimat) pentru fiecare metodă',
-            'Se compară numărul de depășiri cu numărul așteptat pentru nivelul de încredere și dimensiunea eșantionului',
-            'Se clasifică fiecare metodă ca verde / galben / roșu și se raportează cea mai severă stare dintre metode',
           ],
         }}
       />
