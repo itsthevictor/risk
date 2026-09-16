@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { IconLoader2 } from '@tabler/icons-react';
+import { IconInfoOctagon, IconLoader2 } from '@tabler/icons-react';
 import InfoDrawer from '@/components/custom/info-drawer';
 import { MarketRiskForm } from '@/components/forms/mr-form';
 import { MarketRiskKpiStrip } from '@/components/market/kpi-strip';
@@ -232,10 +232,25 @@ export default function MarketRiskPage() {
         </p>
       )}
 
+      {!analysis.isPending && !analysis.data && (
+        <div className='text-foreground bg-accent mx-auto flex w-fit flex-row items-center gap-4 rounded-lg p-4 text-sm'>
+          <IconInfoOctagon className='shrink-0' />
+          <div className='max-w-sm'>
+            <p>
+              Pentru a iniția analiza selectează activele, valoarea
+              portofoliului și durata ferestrei de estimare.
+            </p>
+            <p className='text-muted-foreground mt-2 text-xs'>
+              Pentru simplitate, portofoliul va fi calculat cu ponderi egale.
+            </p>
+          </div>
+        </div>
+      )}
+
       {analysis.isPending && (
         <div className='text-foreground bg-accent mx-auto flex w-fit flex-row items-center gap-4 rounded-lg p-4 text-sm'>
           <IconLoader2 className='text-muted-foreground h-5 w-5 shrink-0 animate-spin' />
-          <div>
+          <div className='max-w-sm'>
             <p className='font-medium'>Se rulează analiza…</p>
             <p className='text-muted-foreground text-xs'>
               Se descarcă istoricul de preț și se calibrează modelele
@@ -412,7 +427,7 @@ export default function MarketRiskPage() {
                     )}
                     {hypotheticalStress.data && (
                       <StressResultCard
-                        title='Scenariu parametric'
+                        title='Scenariu aplicat'
                         description='Șoc pe clase de active, ponderat cu compoziția portofoliului'
                         result={hypotheticalStress.data}
                       />

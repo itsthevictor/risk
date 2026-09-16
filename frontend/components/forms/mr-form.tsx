@@ -16,7 +16,7 @@ import {
   type MarketRiskAnalyzeRequest,
   type MarketRiskAnalyzeRequestParsed,
 } from '@/lib/definitions';
-import { IconInfoOctagon } from '@tabler/icons-react';
+import { IconReload } from '@tabler/icons-react';
 
 export interface MarketRiskFormProps {
   tickerOptions: MultiSelectOption[];
@@ -59,17 +59,6 @@ export function MarketRiskForm({
   return (
     <Form {...form}>
       <div className='flex flex-col w-full gap-y-4'>
-        {!hasResult && !isSubmitting && (
-          <div className='text-foreground mb-4 text-sm p-4 bg-accent flex flex-row items-center justify-start gap-4'>
-            <IconInfoOctagon />
-            <p>
-              Pentru a iniția analiza selectează activele, valoarea
-              portofoliului și durata ferestrei de estimare. Pentru simplitate,
-              portofoliul va fi calculat cu ponderi egale pentru fiecare activ
-              selectat.
-            </p>
-          </div>
-        )}
         <form
           onSubmit={handleSubmit}
           className='grid grid-cols-2 gap-4 md:grid-cols-4 md:items-start'
@@ -107,14 +96,12 @@ export function MarketRiskForm({
                 onClick={handleReset}
                 data-umami-event='mr-form-reset-click'
               >
-                Reia de la început
+                <IconReload />
               </Button>
             )}
             <Button
               type='submit'
-              disabled={
-                isSubmitting || (hasResult && !form.formState.isDirty)
-              }
+              disabled={isSubmitting || (hasResult && !form.formState.isDirty)}
               data-umami-event='mr-form-click'
               className='w-40'
             >
