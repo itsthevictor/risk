@@ -81,7 +81,7 @@ export function CalibrationChart({ data }: CalibrationChartProps) {
               }
               formatter={(value, name) => [
                 formatPercent(Number(value), 2),
-                name === 'pd_predicted' ? 'PD prezis' : 'Rată reală',
+                name === 'pd_predicted' ? 'PD calibrat' : 'Rată reală',
               ]}
             />
           }

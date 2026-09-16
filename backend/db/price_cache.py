@@ -95,13 +95,19 @@ def _read_cached_series(
 
 def _fetch_from_yfinance(ticker: str, start: date, end: date) -> pd.Series:
     """`end` aici este inclusiv; parametrul `end` al yfinance este exclusiv, de aceea se adaugă +1 zi."""
-    raw = yf.download(
-        ticker,
-        start=start,
-        end=end + timedelta(days=1),
-        auto_adjust=True,
-        progress=False,
-    )
+    try:
+        raw = yf.download(
+            ticker,
+            start=start,
+            end=end + timedelta(days=1),
+            auto_adjust=True,
+            progress=False,
+        )
+    except Exception:
+        # yfinance can raise (rather than just returning an empty frame) for a
+        # narrow/no-data range, e.g. a single missing trading day. Treat it the
+        # same as "nothing new to cache" instead of failing the whole request.
+        return pd.Series(dtype=float)
     if raw.empty:
         return pd.Series(dtype=float)
     close = raw["Close"]

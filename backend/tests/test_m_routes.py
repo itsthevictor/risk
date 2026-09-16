@@ -94,7 +94,7 @@ def test_crisis_window_does_not_change_fetch_range_or_todays_var(fetch_calls):
         f"expected a single fetch shared across crisis_window values, got {fetch_calls}"
     )
     fetched_start, fetched_end = fetch_calls[0]
-    assert fetched_end == date.today()
+    assert fetched_end == date.today() - timedelta(days=1)
     assert fetched_start == date.today() - timedelta(days=7 * 365)
 
     body_none = resp_none.json()

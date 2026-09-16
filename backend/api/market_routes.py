@@ -95,7 +95,11 @@ def _compute_bundle(req: MarketRiskAnalyzeRequest, session: Session) -> dict:
     crisis_window — every method's Kupiec/Christoffersen/CC score is computed over the
     entire available sample, matching the notebook's `estimation_window` reference run."""
     fetch_start = date.today() - timedelta(days=FULL_HISTORY_YEARS * 365)
-    fetch_end = date.today()
+    # Never chase today's still-in-progress session: yfinance's data for it is
+    # unpublished/flaky until the market closes, and every cache-key miss (e.g.
+    # switching estimation_window_days) would otherwise re-attempt that same
+    # unreliable single-day gap.
+    fetch_end = date.today() - timedelta(days=1)
 
     try:
         adj_close = get_adj_close(session, req.tickers, fetch_start, fetch_end)
@@ -304,7 +308,7 @@ def stress_test(
             label = STRESS_SCENARIO_LABELS[req.window.value]
 
         fetch_start = date.today() - timedelta(days=FULL_HISTORY_YEARS * 365)
-        fetch_end = date.today()
+        fetch_end = date.today() - timedelta(days=1)
         try:
             adj_close = get_adj_close(session, req.tickers, fetch_start, fetch_end)
         except TickerNotFoundError as exc:
