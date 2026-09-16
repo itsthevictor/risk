@@ -85,6 +85,9 @@ export default function MarketRiskPage() {
   const analysis = useMutation({
     mutationFn: (values: MarketRiskAnalyzeRequestParsed) =>
       analyzeMarketRisk(values),
+    onError: (error) => {
+      console.error('[market-risk] analysis mutation error', error);
+    },
   });
 
   const historicalStress = useMutation({
@@ -117,6 +120,7 @@ export default function MarketRiskPage() {
   }, [baseParams, tickersQuery.data]);
 
   const handleInitialSubmit = (values: MarketRiskAnalyzeRequestParsed) => {
+    console.debug('[market-risk] form submit', values);
     setBaseParams(values);
     analysis.mutate(values);
   };

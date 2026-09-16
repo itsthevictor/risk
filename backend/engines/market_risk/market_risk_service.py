@@ -94,8 +94,15 @@ def run_backtest(
 
     rng = np.random.default_rng(seed)
     n = len(returns)
-    dates = returns.index[estimation_window_days:]
-    actual_pnl = (returns.iloc[estimation_window_days:] * portfolio_value).to_numpy()
+    # ewma_vol/garch_vol are only defined from their own warm-up point onward
+    # (e.g. EWMA needs `seed_window` days before its first estimate) — that can
+    # be later than `estimation_window_days` when a short window is requested,
+    # so the backtest must never start before both models have real values.
+    ewma_first_valid = ewma_vol.index.get_loc(ewma_vol.first_valid_index())
+    garch_first_valid = garch_vol.index.get_loc(garch_vol.first_valid_index())
+    start = max(estimation_window_days, ewma_first_valid, garch_first_valid)
+    dates = returns.index[start:]
+    actual_pnl = (returns.iloc[start:] * portfolio_value).to_numpy()
 
     series = {
         cf: {
@@ -105,7 +112,7 @@ def run_backtest(
         for cf in confidence_levels
     }
 
-    for t in range(estimation_window_days, n):
+    for t in range(start, n):
         window = returns.iloc[t - estimation_window_days : t]
         window_dollar = window.to_numpy() * portfolio_value
         mu, sigma = window.mean(), window.std()

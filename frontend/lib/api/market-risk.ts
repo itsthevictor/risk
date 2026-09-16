@@ -52,18 +52,28 @@ async function toApiError(response: Response): Promise<MarketRiskApiError> {
 export async function analyzeMarketRisk(
   payload: MarketRiskAnalyzeRequest,
 ): Promise<MarketRiskAnalyzeResponse> {
+  console.debug('[market-risk] analyze request', payload);
   const response = await fetch(`${API_BASE_URL}/market-risk/analyze`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
+  console.debug('[market-risk] analyze response status', response.status);
 
   if (!response.ok) {
-    throw await toApiError(response);
+    const err = await toApiError(response);
+    console.error('[market-risk] analyze error', err);
+    throw err;
   }
 
   const data = await response.json();
-  return MarketRiskAnalyzeResponseSchema.parse(data);
+  console.debug('[market-risk] analyze response body', data);
+  const parsed = MarketRiskAnalyzeResponseSchema.safeParse(data);
+  if (!parsed.success) {
+    console.error('[market-risk] analyze response failed schema validation', parsed.error);
+    throw parsed.error;
+  }
+  return parsed.data;
 }
 
 export async function runStressTest(

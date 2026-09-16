@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import time
 from datetime import date, timedelta
 
@@ -50,6 +51,13 @@ from api.schemas.market_models import TickerListResponse
 from api.ticker_registry import TICKER_REGISTRY
 
 router = APIRouter(prefix="/api/market-risk", tags=["market-risk"])
+logger = logging.getLogger("market_risk.debug")
+logger.setLevel(logging.INFO)
+if not logger.handlers:
+    _handler = logging.StreamHandler()
+    _handler.setFormatter(logging.Formatter("[market-risk] %(message)s"))
+    logger.addHandler(_handler)
+    logger.propagate = False
 
 
 @router.get("/tickers", response_model=TickerListResponse)
@@ -215,7 +223,9 @@ def _get_bundle(req: MarketRiskAnalyzeRequest, session: Session) -> dict:
     cache_key = _cache_key(req)
     cached = _CACHE.get(cache_key)
     if cached and (time.time() - cached[0]) < _CACHE_TTL_SECONDS:
+        logger.info("bundle cache HIT key=%s", cache_key)
         return cached[1]
+    logger.info("bundle cache MISS key=%s", cache_key)
     bundle = _compute_bundle(req, session)
     _CACHE[cache_key] = (time.time(), bundle)
     return bundle
@@ -225,7 +235,18 @@ def _get_bundle(req: MarketRiskAnalyzeRequest, session: Session) -> dict:
 def analyze_market_risk(
     req: MarketRiskAnalyzeRequest, session: Session = Depends(get_session)
 ) -> MarketRiskAnalyzeResponse:
+    logger.info(
+        "analyze request tickers=%s window=%s confidence=%s",
+        req.tickers,
+        req.estimation_window_days,
+        req.confidence_levels,
+    )
     bundle = _get_bundle(req, session)
+    logger.info(
+        "bundle ready adj_close_range=%s..%s",
+        bundle["adj_close_start"],
+        bundle["adj_close_end"],
+    )
     dates: pd.DatetimeIndex = bundle["dates"]
     actual_pnl: np.ndarray = bundle["actual_pnl"]
 
@@ -243,7 +264,7 @@ def analyze_market_risk(
 
     drawdown_raw = bundle["drawdown"]
 
-    return MarketRiskAnalyzeResponse(
+    response = MarketRiskAnalyzeResponse(
         portfolio=PortfolioSummary(
             tickers=req.tickers,
             weights=bundle["weights"].tolist(),
@@ -263,6 +284,12 @@ def analyze_market_risk(
         diversification=DiversificationResult(**bundle["diversification"]),
         correlation_matrix=CorrelationMatrix(**bundle["correlation"]),
     )
+    logger.info(
+        "analyze response actual_pnl_points=%d portfolio_end=%s",
+        len(actual_pnl_chart.dates),
+        response.portfolio.end_date,
+    )
+    return response
 
 
 # ---------------------------------------------------------------------------

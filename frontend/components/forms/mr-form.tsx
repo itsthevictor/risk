@@ -37,9 +37,14 @@ export function MarketRiskForm({
     },
   });
 
-  const handleSubmit = form.handleSubmit((values) => {
-    onSubmit(values as unknown as MarketRiskAnalyzeRequestParsed);
-  });
+  const handleSubmit = form.handleSubmit(
+    (values) => {
+      onSubmit(values as unknown as MarketRiskAnalyzeRequestParsed);
+    },
+    (errors) => {
+      console.error('[market-risk] form validation failed', errors);
+    },
+  );
 
   return (
     <Form {...form}>
