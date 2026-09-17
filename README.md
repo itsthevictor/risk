@@ -163,8 +163,7 @@ ieșirile de stres. Toate ratele sunt configurabile în același fișier
   en-gros → extrabilanțier → intrări), cu validare la navigare între pași și
   salvare automată a draft-ului în `sessionStorage`, ca să nu se piardă la
   refresh accidental.
-- **Pas de revizuire** — recapitulează toate elementele introduse înainte de
-  calcul, cu etichete în limba română pentru fiecare categorie/nivel.
-- **Card de rezultat** — LCR-ul calculat, cu un status vizual (sub minim /
+
+- **Card de rezultat** — Recapitulează toate elementele introduse și afișează LCR-ul calculat, cu un status vizual (sub minim /
   marginal / confortabil, în funcție de prag: <100%, 100–120%, ≥120%) și
   detalierea HQLA total, intrări plafonate, ieșiri totale și ieșiri nete.
