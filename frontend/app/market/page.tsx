@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { IconInfoOctagon, IconLoader2 } from '@tabler/icons-react';
+import { IconInfoCircle, IconLoader2 } from '@tabler/icons-react';
 import InfoDrawer from '@/components/custom/info-drawer';
 import { MarketRiskForm } from '@/components/forms/mr-form';
 import { MarketRiskKpiStrip } from '@/components/market/kpi-strip';
@@ -19,7 +19,10 @@ import { VarComparisonTable } from '@/components/market/var-table';
 import { BacktestScorecardTable } from '@/components/market/backtest-table';
 import { PnlExceptionsChart } from '@/components/market/pnl-exceptions-chart';
 import { StressResultCard } from '@/components/market/stress-result-card';
-import { ShockInputs, ASSET_CLASS_LABELS } from '@/components/market/shock-inputs';
+import {
+  ShockInputs,
+  ASSET_CLASS_LABELS,
+} from '@/components/market/shock-inputs';
 import { formatDateRo, formatPercent } from '@/lib/utils';
 import {
   analyzeMarketRisk,
@@ -136,6 +139,31 @@ export default function MarketRiskPage() {
     console.debug('[market-risk] form submit', values);
     setBaseParams(values);
     analysis.mutate(values);
+
+    const byTicker = new Map(
+      (tickersQuery.data?.tickers ?? []).map((t) => [t.symbol, t.asset_class]),
+    );
+    const assetClasses = Array.from(
+      new Set(values.tickers.map((t) => byTicker.get(t) ?? 'equity')),
+    );
+    const initialShocks =
+      stressScenario === 'custom'
+        ? Object.fromEntries(assetClasses.map((c) => [c, -0.15]))
+        : PRESET_SHOCKS[stressScenario];
+    setShocks(initialShocks);
+
+    if (stressScenario === '2020' || stressScenario === '2022') {
+      historicalStress.mutate({
+        tickers: values.tickers,
+        portfolio_value: values.portfolio_value,
+        mode: 'historical',
+        window: stressScenario,
+      });
+      runHypothetical(values, initialShocks);
+    } else {
+      historicalStress.reset();
+      hypotheticalStress.reset();
+    }
   };
 
   const handleReset = () => {
@@ -186,15 +214,6 @@ export default function MarketRiskPage() {
     }
   };
 
-  // Stress testing is shown by default (no click needed) — as soon as a fresh
-  // analysis lands, run the default scenario automatically instead of waiting
-  // for the user to open the section.
-  useEffect(() => {
-    if (!baseParams) return;
-    handleScenarioChange(stressScenario);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [baseParams]);
-
   const handleShockChange = (assetClass: string, value: number) => {
     setShocks((prev) => ({ ...prev, [assetClass]: value }));
   };
@@ -234,14 +253,14 @@ export default function MarketRiskPage() {
 
       {!analysis.isPending && !analysis.data && (
         <div className='text-foreground bg-accent mx-auto flex w-fit flex-row items-center gap-4 rounded-lg p-4 text-sm'>
-          <IconInfoOctagon className='shrink-0' />
+          <IconInfoCircle className='shrink-0' />
           <div className='max-w-sm'>
             <p>
               Pentru a iniția analiza selectează activele, valoarea
               portofoliului și durata ferestrei de estimare.
             </p>
             <p className='text-muted-foreground mt-2 text-xs'>
-              Pentru simplitate, portofoliul va fi calculat cu ponderi egale.
+              Pentru simplitate, portofoliul va avea ponderi egale.
             </p>
           </div>
         </div>
@@ -253,8 +272,8 @@ export default function MarketRiskPage() {
           <div className='max-w-sm'>
             <p className='font-medium'>Se rulează analiza…</p>
             <p className='text-muted-foreground text-xs'>
-              Se descarcă istoricul de preț și se calibrează modelele
-              (EWMA, GARCH, Monte Carlo, backtest)…
+              Se descarcă istoricul de preț și se calibrează modelele (EWMA,
+              GARCH, Monte Carlo, backtest)…
             </p>
           </div>
         </div>

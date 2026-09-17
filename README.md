@@ -106,3 +106,65 @@ rulat automat imediat ce analiza principală se termină.
 - **Carduri de rezultat stress test** — impact în dolari/procent față de
   valoarea curentă a portofoliului, separat pentru replay istoric și
   scenariul ipotetic.
+
+## Risc de Lichiditate — LCR
+
+Modul de calcul al Liquidity Coverage Ratio (LCR): raportul dintre activele
+lichide de calitate ridicată (HQLA) și ieșirile nete de numerar estimate pe
+un orizont de stres de 30 de zile calendaristice. Datele de intrare sunt
+introduse manual, printr-un formular de tip wizard cu 6 pași (HQLA, depozite
+retail, depozite en-gros, angajamente extrabilanțiere, intrări, rezultat).
+
+```
+LCR = HQLA / Ieșiri nete × 100%
+Ieșiri nete = Ieșiri totale − min(Intrări, 75% × Ieșiri totale)
+```
+
+### Clasificarea HQLA
+
+Fiecare activ este clasificat pe niveluri (L1/L2A/L2B/ineligibil) în funcție
+de tipul emitentului și, unde e cazul, de banda de rating — de exemplu
+suveranul propriu și numerarul la banca centrală sunt L1 necondiționat, o
+obligațiune corporativă AAA-AA e L2A, iar una A/BBB e L2B. Maparea completă
+issuer_type × rating_band → nivel e configurabilă în
+`backend/engines/liquidity_risk/config/lcr_params.json`, nu hardcodată în
+motorul de calcul.
+
+Pe fiecare nivel se aplică un haircut asupra valorii activului:
+
+| Nivel | Haircut |
+| ----- | ------- |
+| L1    | 0%      |
+| L2A   | 15%     |
+| L2B   | 25%     |
+
+După haircut, se aplică plafoanele reglementare, în ordine:
+
+1. **Plafon L2B** — L2B este limitat la 15% din (L1 + L2A).
+2. **Plafon L2 combinat** — L2A + L2B (după plafonul de mai sus) este limitat
+   la 40% din HQLA total; dacă e depășit, L2B e redus primul, iar dacă tot nu
+   ajunge, se reduce și L2A.
+
+### Ieșiri și intrări de numerar
+
+Pentru depozitele retail, en-gros și angajamentele extrabilanțiere se aplică
+o rată de run-off pe categorie (ex. 5% retail stabil, 10% retail mai puțin
+stabil/IMM, 25% depozit operațional, 40% neoperațional corporativ, 100%
+neoperațional interbancar). Intrările (rambursări de împrumuturi, lending
+garantat) au propriile rate pe categorie (0–100%, în funcție de tipul
+colateralului/contrapărții) și sunt plafonate global la 75% din ieșirile
+totale — o bancă nu se poate baza pe intrări pentru a-și acoperi integral
+ieșirile de stres. Toate ratele sunt configurabile în același fișier
+`lcr_params.json`.
+
+### Cum sunt afișate rezultatele (UI)
+
+- **Formular wizard** — datele se introduc pas cu pas (HQLA → retail →
+  en-gros → extrabilanțier → intrări), cu validare la navigare între pași și
+  salvare automată a draft-ului în `sessionStorage`, ca să nu se piardă la
+  refresh accidental.
+- **Pas de revizuire** — recapitulează toate elementele introduse înainte de
+  calcul, cu etichete în limba română pentru fiecare categorie/nivel.
+- **Card de rezultat** — LCR-ul calculat, cu un status vizual (sub minim /
+  marginal / confortabil, în funcție de prag: <100%, 100–120%, ≥120%) și
+  detalierea HQLA total, intrări plafonate, ieșiri totale și ieșiri nete.

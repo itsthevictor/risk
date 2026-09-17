@@ -25,6 +25,8 @@ import { cn } from '@/lib/utils';
 import { ReviewStep, formatAmount } from './review-step';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import InfoDrawer from '@/components/custom/info-drawer';
+import { IconInfoCircle } from '@tabler/icons-react';
 
 const LCR_STATUS = {
   below_minimum: {
@@ -173,9 +175,32 @@ export default function CalculateLcrForm() {
         onSubmit={form.handleSubmit(onSubmit)}
         className='flex min-h-screen flex-col justify-between'
       >
-        <h1 className='text-2xl font-bold mb-4'>
-          Indicatorul de acoperire a lichidității (LCR)
-        </h1>
+        <div className='flex items-center gap-1 mb-4'>
+          <h1 className='text-2xl font-bold'>
+            Indicatorul de acoperire a lichidității (LCR)
+          </h1>
+          <InfoDrawer
+            title='Metodologie LCR'
+            definition='Liquidity Coverage Ratio: raportul dintre activele lichide de calitate ridicată (HQLA) și ieșirile nete de numerar estimate pe un orizont de stres de 30 de zile calendaristice. Un LCR ≥ 100% arată că banca deține suficiente active lichide pentru a acoperi ieșirile nete într-un scenariu de criză de o lună.'
+            equation='LCR = \frac{HQLA}{\text{Iesiri nete}} \times 100\%, \quad \text{Iesiri nete} = \text{Iesiri totale} - \min(\text{Intrari}, 0{,}75 \times \text{Iesiri totale})'
+            implementation={[
+              'HQLA — activele sunt clasificate L1/L2A/L2B în funcție de tipul emitentului și banda de rating, apoi li se aplică un haircut (0% / 15% / 25%).',
+              'Plafoane L2 — L2B este plafonat la 15% din (L1 + L2A), iar L2A + L2B combinat este plafonat la 40% din HQLA total, aplicate în această ordine.',
+              'Ieșiri — se aplică o rată de run-off pe fiecare categorie de depozit retail, en-gros și extrabilanțier (ex. 5% retail stabil, 100% neoperațional interbancar).',
+              'Intrări — se aplică o rată de intrare pe fiecare categorie (ex. 50% rambursări retail/corporate, 100% interbancar), iar totalul este plafonat la 75% din ieșirile totale.',
+            ]}
+          />
+        </div>
+
+        <div className='text-foreground bg-accent mx-auto mb-6 flex w-full flex-row items-start gap-3 rounded-lg p-4 text-sm'>
+          <IconInfoCircle className='shrink-0 mt-0.5' />
+          <p>
+            Completează pe rând activele lichide (HQLA) deținute, apoi sursele
+            de finanțare care pot ieși din bancă (depozite retail, en-gros și
+            angajamente extrabilanțiere) și, în final, intrările de numerar
+            așteptate.
+          </p>
+        </div>
 
         {/* step indicator — stays pinned to the top as the form scrolls */}
         <div className='bg-background sticky top-0 z-10 -mx-4 border-b px-4 py-3 sm:mx-0 sm:px-0 w-full'>
