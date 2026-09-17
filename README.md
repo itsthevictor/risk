@@ -1,4 +1,4 @@
-# Portofoliu instrumente analiză de risc - proiect personal Victor Alexa
+# Portofoliu instrumente analiză de risc - proiect personal
 
 #### Tehnologii utilizate
 
@@ -210,14 +210,14 @@ Se calculează sub cele 6 scenarii standard de șoc IRRBB, plus scenariul de
 bază — curba de randament e interpolată liniar pe ancore de maturitate
 (0–20 ani), fără extrapolare (plată în afara domeniului):
 
-| Scenariu       | Șoc aplicat                                             |
-| -------------- | -------------------------------------------------------- |
-| Paralel sus     | +200 bps pe toată curba                                   |
-| Paralel jos     | -200 bps pe toată curba                                   |
-| Steepener      | -100 bps la capătul scurt, +150 bps la capătul lung (interpolat liniar) |
-| Flattener      | curbă de randament alternativă, mai plată, predefinită    |
-| Short-end sus  | +250 bps la capătul scurt, descrescător exponențial spre capătul lung |
-| Short-end jos  | -250 bps la capătul scurt, descrescător exponențial spre capătul lung |
+| Scenariu      | Șoc aplicat                                                             |
+| ------------- | ----------------------------------------------------------------------- |
+| Paralel sus   | +200 bps pe toată curba                                                 |
+| Paralel jos   | -200 bps pe toată curba                                                 |
+| Steepener     | -100 bps la capătul scurt, +150 bps la capătul lung (interpolat liniar) |
+| Flattener     | curbă de randament alternativă, mai plată, predefinită                  |
+| Short-end sus | +250 bps la capătul scurt, descrescător exponențial spre capătul lung   |
+| Short-end jos | -250 bps la capătul scurt, descrescător exponențial spre capătul lung   |
 
 ΔEVE se calculează față de scenariul de bază pentru fiecare din cele 6
 scenarii de șoc.
@@ -308,25 +308,25 @@ RWA = K × 12,5 × EAD
 
 ### Rezultate
 
-| Metrică                      | Valoare        |
-| ----------------------------- | -------------- |
-| EAD total                     | $733,5M        |
-| Expected Loss (anual)         | $43,4M (5,92% din EAD) |
-| RWA total                     | $1,04B         |
-| Densitate capital (RWA/EAD)   | 141,5%         |
+| Metrică                     | Valoare                |
+| --------------------------- | ---------------------- |
+| EAD total                   | $733,5M                |
+| Expected Loss (anual)       | $43,4M (5,92% din EAD) |
+| RWA total                   | $1,04B                 |
+| Densitate capital (RWA/EAD) | 141,5%                 |
 
 Densitate pe grad de risc, crescătoare monoton (validare a coerenței
 interne a modelului):
 
 | Grad | PD anual | LGD   | Densitate capital |
-| ---- | -------- | ----- | ------------------ |
-| A    | 3,30%    | 90,6% | 124,6%              |
-| B    | 5,48%    | 91,0% | 136,1%              |
-| C    | 7,43%    | 90,8% | 144,1%              |
-| D    | 8,85%    | 90,5% | 150,2%              |
-| E    | 9,89%    | 90,7% | 155,1%              |
-| F    | 11,28%   | 90,4% | 161,2%              |
-| G    | 12,18%   | 90,5% | 163,7%              |
+| ---- | -------- | ----- | ----------------- |
+| A    | 3,30%    | 90,6% | 124,6%            |
+| B    | 5,48%    | 91,0% | 136,1%            |
+| C    | 7,43%    | 90,8% | 144,1%            |
+| D    | 8,85%    | 90,5% | 150,2%            |
+| E    | 9,89%    | 90,7% | 155,1%            |
+| F    | 11,28%   | 90,4% | 161,2%            |
+| G    | 12,18%   | 90,5% | 163,7%            |
 
 ### Validare
 
