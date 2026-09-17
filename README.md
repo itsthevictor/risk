@@ -11,7 +11,7 @@ GARCH).
 validare), TanStack Query (fetching/cache pe client), Recharts (grafice),
 componente shadcn/ui pe bază de Radix/Base UI + Tailwind CSS.
 
-## Risc de Piață (Market Risk)
+## 1. Risc de Piață (Market Risk)
 
 Modul de analiză a riscului de piață pentru un portofoliu de active (acțiuni, ETF-uri
 etc.), cu VaR/ES calculat prin 5 metode diferite, backtesting istoric al fiecărei
@@ -107,7 +107,7 @@ rulat automat imediat ce analiza principală se termină.
   valoarea curentă a portofoliului, separat pentru replay istoric și
   scenariul ipotetic.
 
-## Risc de Lichiditate — LCR
+## 2. Risc de Lichiditate — LCR
 
 Modul de calcul al Liquidity Coverage Ratio (LCR): raportul dintre activele
 lichide de calitate ridicată (HQLA) și ieșirile nete de numerar estimate pe
