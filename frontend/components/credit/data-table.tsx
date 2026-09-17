@@ -9,7 +9,9 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-
+import { IconArrowLeft } from '@tabler/icons-react';
+import Link from 'next/link';
+import { Button } from '../ui/button';
 // ---------------------------------------------------------------------------
 // All 151 raw columns of "Lending Club Loan Data 2007-2018 Q4.csv" (verified
 // via df.columns.tolist() on the untouched file — see credit.ipynb, cell 2).
@@ -1153,6 +1155,17 @@ export default function DatasetColumnsTable() {
     <div className='w-full font-sans text-slate-900'>
       <div className='mb-4 flex flex-wrap items-center justify-between gap-3'>
         <div>
+          <Button
+            variant='outline'
+            className='mb-4 text-muted-foreground hover:text-foreground'
+          >
+            <Link
+              href='/credit'
+              className='text-sm  undeline flex items-center gap-2'
+            >
+              <IconArrowLeft /> {'Înapoi la rezultate'}
+            </Link>
+          </Button>
           <h2 className='text-base font-semibold'>
             Coloane sursă — set de date & procesare
           </h2>
@@ -1180,7 +1193,7 @@ export default function DatasetColumnsTable() {
         </div>
       </div>
 
-      <div className='overflow-auto rounded-md border border-slate-200 max-h-[720px]'>
+      <div className='overflow-auto rounded-md border border-slate-200 max-h-180'>
         <Table>
           <TableHeader className='sticky top-0 z-10 bg-slate-50'>
             <TableRow>

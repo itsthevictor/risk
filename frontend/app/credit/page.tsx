@@ -6,7 +6,9 @@ import { densityStatus, GradeChart } from '@/components/credit/grade-chart';
 import { GradeTable } from '@/components/credit/grade-table';
 import { CalibrationChart } from '@/components/credit/calibration-chart';
 import { formatPercent, formatUsd } from '@/lib/utils';
-
+import { Button } from '@/components/ui/button';
+import { IconArrowRight } from '@tabler/icons-react';
+import Link from 'next/link';
 interface PortfolioSummary {
   n_loans: number;
   ead_total: number;
@@ -155,25 +157,72 @@ export default function CreditRiskPage() {
         </p>
       </div>
 
-      <div className='flex flex-wrap items-end justify-between gap-2'>
-        <div className='space-y-1'>
-          <h1 className='text-xl font-bold'>Date și metodologie</h1>
-        </div>
+      <div className='flex flex-wrap items-center justify-between gap-2'>
         <p className='text-muted-foreground text-sm'>
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Fugiat
-          impedit vel nesciunt quos! Inventore aliquid facilis laboriosam
-          reprehenderit! Suscipit reiciendis nam cum ipsum.
+          Analiza utilizează setul de date
+          <a
+            href='https://www.kaggle.com/datasets/wordsforthewise/lending-club?resource=download'
+            className='text-sm text-blue-500 underline ml-2'
+          >
+            Lending Club 2007 - 2018
+          </a>
         </p>
+        <Button
+          variant='outline'
+          className='text-muted-foreground hover:text-foreground'
+        >
+          <Link
+            href='/credit/data'
+            className='text-sm  flex items-center gap-2'
+          >
+            {'Date și metodologie'} <IconArrowRight />
+          </Link>
+        </Button>
       </div>
 
       <div className='grid grid-cols-2 gap-4 md:grid-cols-4'>
-        <KpiCard label='EAD total' value={formatUsd(portfolio.ead_total)} />
+        <KpiCard
+          label='EAD total'
+          value={formatUsd(portfolio.ead_total)}
+          info={{
+            title: 'EAD (Exposure at Default)',
+            definition:
+              'Expunerea la momentul default-ului, calculată consecvent pe tot portofoliul din valoarea finanțată a creditului — indiferent de statusul curent al acestuia.',
+            equation: 'EAD = \\text{funded\\_amnt}',
+            implementation: [
+              'Pentru creditele intrate în default, expunerea reală la momentul respectiv (funded_amnt - total_rec_prncp) e folosită separat, la calculul LGD empiric.',
+            ],
+          }}
+        />
         <KpiCard
           label='Pierdere așteptată (EL)'
           value={formatUsd(portfolio.el_total)}
           subValue={`${formatPercent(portfolio.el_pct, 2)} din EAD`}
+          info={{
+            title: 'EL (Expected Loss)',
+            definition:
+              'Pierderea așteptată anuală, rezultată din produsul dintre probabilitatea de default anualizată, severitatea pierderii (LGD) și expunerea la default (EAD).',
+            equation: 'EL = PD_{anual} \\times LGD \\times EAD',
+            implementation: [
+              'PD anualizat printr-o conversie hazard-rate constant din PD lifetime (regresie logistică, AUC 0,706).',
+              'LGD calculat empiric din raportul recuperări/expunere la default (recoveries - collection_recovery_fee), pe subsetul creditelor charged-off.',
+            ],
+          }}
         />
-        <KpiCard label='RWA total' value={formatUsd(portfolio.rwa_total)} />
+        <KpiCard
+          label='RWA total'
+          value={formatUsd(portfolio.rwa_total)}
+          info={{
+            title: 'RWA (Risk-Weighted Assets)',
+            definition:
+              'Cerința de capital reglementar sub abordarea IRB avansată pentru expuneri retail, derivată din funcția de capital K (model Vasicek single-factor, corelație R dependentă de PD, percentila de încredere reglementară 99,9%).',
+            equation: 'RWA = K \\times 12{,}5 \\times EAD',
+            implementation: [
+              'Funcția de capital K urmează formula IRB avansată Basel II/III pentru expuneri retail (fără maturity adjustment).',
+              'Densitatea de capital rezultată (RWA/EAD) crește monoton de la gradul A la G, în linie cu creșterea PD.',
+            ],
+          }}
+        />
         <KpiCard
           label='Densitate capital'
           value={formatPercent(portfolio.capital_density, 1)}

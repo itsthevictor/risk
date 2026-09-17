@@ -29,6 +29,6 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts"
-, "app/credit/page.jsx", "app/credit/data-and-methodology"  ],
+, "app/credit/page.jsx", "app/credit/data"  ],
   "exclude": ["node_modules"]
 }
