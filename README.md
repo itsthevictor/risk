@@ -333,7 +333,7 @@ interne a modelului):
 EL anual (5,92%) e consistent cu un benchmark extern de referință (6–7%).
 Calculul inițial, pe bază de PD lifetime necorectat, dăduse 23% din
 expunere — discrepanța a fost investigată sistematic (nu ignorată) și
-atribuită mismatch-ului de orizont temporal dintre PD-ul modelului (calibrat
+atribuită discordanței de orizont temporal dintre PD-ul modelului (calibrat
 implicit pe un target lifetime) și convenția reglementară de PD pe 12 luni,
 nu unei erori de calcul a EAD/LGD. Corecția prin anualizare hazard-rate a
 adus rezultatul în linia benchmark-ului.
