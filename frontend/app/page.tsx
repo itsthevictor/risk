@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { IconArrowUpRight } from '@tabler/icons-react';
 import Link from 'next/link';
 
 export default function Home() {
@@ -23,17 +24,17 @@ export default function Home() {
           pentru luarea deciziilor de investiții. Utilizarea acestui software se
           face pe propriul risc.
         </p>
-        <p className='text-xs text-muted-foreground mt-2'>
-          Pentru mai multe informații, vă rugăm să vizitați{' '}
-          <a
+        <p className='text-xs text-muted-foreground mt-2 inline-flex gap-2'>
+          Pentru mai multe informații, vă rugăm să vizitați proiectul pe{' '}
+          <Link
             href='https://github.com/itsthevictor/risk'
-            className='hover:underline hover:text-foreground'
+            className='hover:underline hover:text-foreground underline flex items-center'
             data-umami-event='homepage-github-link'
             target='_blank'
             rel='noopener noreferrer'
           >
-            repository-ul GitHub
-          </a>
+            GitHub
+          </Link>
         </p>
         <div className='md:flex md:flex-row flex flex-col max-w-3xl gap-x-4 gap-y-2 mt-4'>
           <Button variant='outline' className='w-fit'>
