@@ -1,0 +1,1226 @@
+'use client';
+
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+
+// ---------------------------------------------------------------------------
+// All 151 raw columns of "Lending Club Loan Data 2007-2018 Q4.csv" (verified
+// via df.columns.tolist() on the untouched file — see credit.ipynb, cell 2).
+// Order matches the CSV header exactly.
+//
+// Status legend:
+//   inclusa   -> ends up directly in FEATURE_COLS_v2 (PD model) or is used
+//                directly in an LGD/EAD/EL formula
+//   indirecta -> consumed only to build another feature/target/filter,
+//                never appears by itself as a model input
+//   ignorata  -> never used in the final pipeline — either never loaded at
+//                all (most of these), loaded but never processed, or
+//                explored for correlation in the early exploratory notebook
+//                (credit.ipynb) and then dropped before the production
+//                version (PD.ipynb)
+// ---------------------------------------------------------------------------
+
+type Status = 'inclusa' | 'indirecta' | 'ignorata';
+
+interface ColumnRow {
+  nr: number;
+  column: string;
+  meaning: string;
+  processing: string;
+  status: Status;
+}
+
+const rows: ColumnRow[] = [
+  {
+    nr: 1,
+    column: 'id',
+    meaning: 'ID unic al creditului',
+    processing:
+      'Identificator fără valoare predictivă; niciodată încărcat în pipeline-ul final.',
+    status: 'ignorata',
+  },
+  {
+    nr: 2,
+    column: 'member_id',
+    meaning: 'ID unic al debitorului',
+    processing: 'Identificator fără valoare predictivă; niciodată încărcat.',
+    status: 'ignorata',
+  },
+  {
+    nr: 3,
+    column: 'loan_amnt',
+    meaning: 'Suma solicitată inițial a creditului',
+    processing:
+      'Încărcată, dar toate calculele folosesc `funded_amnt`, nu `loan_amnt`.',
+    status: 'ignorata',
+  },
+  {
+    nr: 4,
+    column: 'funded_amnt',
+    meaning: 'Suma efectiv finanțată',
+    processing:
+      'Folosită direct în calculul EAD (`funded_amnt - total_rec_prncp`).',
+    status: 'inclusa',
+  },
+  {
+    nr: 5,
+    column: 'funded_amnt_inv',
+    meaning: 'Suma finanțată de investitori (poate diferi de funded_amnt)',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 6,
+    column: 'term',
+    meaning: 'Durata creditului (36 / 60 luni)',
+    processing:
+      'Convertit în flag binar `term_60m`; folosit ulterior și la anualizarea PD.',
+    status: 'inclusa',
+  },
+  {
+    nr: 7,
+    column: 'int_rate',
+    meaning: 'Rata dobânzii',
+    processing: 'Niciodată încărcată în pipeline-ul final.',
+    status: 'ignorata',
+  },
+  {
+    nr: 8,
+    column: 'installment',
+    meaning: 'Rata lunară de plată',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 9,
+    column: 'grade',
+    meaning: 'Grad de risc Lending Club (A–G)',
+    processing:
+      'Folosit pentru segmentarea rezultatelor (PD/LGD/RWA pe grad); nu e predictor în regresie.',
+    status: 'inclusa',
+  },
+  {
+    nr: 10,
+    column: 'sub_grade',
+    meaning: 'Subgrad de risc (A1–G5)',
+    processing: 'Încărcată, dar neutilizată în nicio analiză.',
+    status: 'ignorata',
+  },
+  {
+    nr: 11,
+    column: 'emp_title',
+    meaning: 'Titlul postului (text liber)',
+    processing:
+      'Niciodată încărcată — text liber, greu de procesat sistematic.',
+    status: 'ignorata',
+  },
+  {
+    nr: 12,
+    column: 'emp_length',
+    meaning: 'Vechimea în muncă (text, "< 1 year"…"10+ years")',
+    processing:
+      'Mapată numeric (`emp_length_numeric`) + flag `emp_length_missing`.',
+    status: 'inclusa',
+  },
+  {
+    nr: 13,
+    column: 'home_ownership',
+    meaning: 'Regim de proprietate a locuinței (RENT / OWN / MORTGAGE…)',
+    processing:
+      'One-hot encoding (`home_OWN`, `home_RENT`; MORTGAGE = referință).',
+    status: 'inclusa',
+  },
+  {
+    nr: 14,
+    column: 'annual_inc',
+    meaning: 'Venitul anual declarat al debitorului',
+    processing: 'Transformare log (`log1p`) → `annual_inc_log`.',
+    status: 'inclusa',
+  },
+  {
+    nr: 15,
+    column: 'verification_status',
+    meaning: 'Statusul verificării venitului',
+    processing: 'One-hot encoding (`verif_Source Verified`, `verif_Verified`).',
+    status: 'inclusa',
+  },
+  {
+    nr: 16,
+    column: 'issue_d',
+    meaning: 'Data emiterii creditului',
+    processing:
+      'Combinată cu `earliest_cr_line` pentru a deriva `credit_history_years`.',
+    status: 'indirecta',
+  },
+  {
+    nr: 17,
+    column: 'loan_status',
+    meaning: 'Statusul curent al creditului (Fully Paid / Charged Off etc.)',
+    processing:
+      'Folosită exclusiv pentru a construi variabila țintă `default`.',
+    status: 'indirecta',
+  },
+  {
+    nr: 18,
+    column: 'pymnt_plan',
+    meaning: 'Are/nu are plan de plată activ',
+    processing:
+      'Verificată o dată în explorare (`value_counts`), apoi abandonată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 19,
+    column: 'url',
+    meaning: 'Link către pagina creditului',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 20,
+    column: 'desc',
+    meaning: 'Descriere text liber a creditului',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 21,
+    column: 'purpose',
+    meaning: 'Scopul declarat al creditului',
+    processing: 'Categorii rare grupate în "other", apoi one-hot encoding.',
+    status: 'inclusa',
+  },
+  {
+    nr: 22,
+    column: 'title',
+    meaning: 'Titlu text liber al cererii de credit',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 23,
+    column: 'zip_code',
+    meaning: 'Cod poștal (parțial, primele 3 cifre)',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 24,
+    column: 'addr_state',
+    meaning: 'Statul (US) al debitorului',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 25,
+    column: 'dti',
+    meaning: 'Debt-to-Income ratio',
+    processing: 'Folosită neschimbată.',
+    status: 'inclusa',
+  },
+  {
+    nr: 26,
+    column: 'delinq_2yrs',
+    meaning: 'Nr. de întârzieri la plată în ultimii 2 ani',
+    processing: 'Grupat (0 / 1-2 / 3+), one-hot encoding.',
+    status: 'inclusa',
+  },
+  {
+    nr: 27,
+    column: 'earliest_cr_line',
+    meaning: 'Data primei linii de credit deschise',
+    processing: 'Combinată cu `issue_d` → `credit_history_years`.',
+    status: 'indirecta',
+  },
+  {
+    nr: 28,
+    column: 'fico_range_low',
+    meaning: 'Limita inferioară a scorului FICO',
+    processing: 'Mediată cu `fico_range_high` → `fico_avg`.',
+    status: 'indirecta',
+  },
+  {
+    nr: 29,
+    column: 'fico_range_high',
+    meaning: 'Limita superioară a scorului FICO',
+    processing: 'Mediată cu `fico_range_low` → `fico_avg`.',
+    status: 'indirecta',
+  },
+  {
+    nr: 30,
+    column: 'inq_last_6mths',
+    meaning: 'Nr. interogări de credit în ultimele 6 luni',
+    processing: 'Folosită neschimbată.',
+    status: 'inclusa',
+  },
+  {
+    nr: 31,
+    column: 'mths_since_last_delinq',
+    meaning: 'Luni de la ultima întârziere',
+    processing:
+      'Flag `never_delinquent` + valoare imputată `mths_since_last_delinq_filled`.',
+    status: 'inclusa',
+  },
+  {
+    nr: 32,
+    column: 'mths_since_last_record',
+    meaning: 'Luni de la ultima înregistrare publică negativă',
+    processing: 'Flag `never_public_record` + valoare imputată.',
+    status: 'inclusa',
+  },
+  {
+    nr: 33,
+    column: 'open_acc',
+    meaning: 'Nr. de conturi de credit deschise',
+    processing: 'Transformare log.',
+    status: 'inclusa',
+  },
+  {
+    nr: 34,
+    column: 'pub_rec',
+    meaning: 'Nr. de înregistrări publice negative',
+    processing: 'Grupat (0 / 1 / 2+), one-hot encoding.',
+    status: 'inclusa',
+  },
+  {
+    nr: 35,
+    column: 'revol_bal',
+    meaning: 'Sold revolving (card de credit)',
+    processing: 'Transformare log.',
+    status: 'inclusa',
+  },
+  {
+    nr: 36,
+    column: 'revol_util',
+    meaning: 'Grad de utilizare a liniei revolving',
+    processing: 'Valori lipsă imputate cu media.',
+    status: 'inclusa',
+  },
+  {
+    nr: 37,
+    column: 'total_acc',
+    meaning: 'Nr. total de conturi de credit',
+    processing: 'Transformare log.',
+    status: 'inclusa',
+  },
+  {
+    nr: 38,
+    column: 'initial_list_status',
+    meaning: 'Statusul inițial de listare (whole/fractional)',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 39,
+    column: 'out_prncp',
+    meaning: 'Principal rămas neplătit la momentul extragerii',
+    processing:
+      'Doar verificată existența în cod; EAD/LGD folosesc `funded_amnt - total_rec_prncp`.',
+    status: 'ignorata',
+  },
+  {
+    nr: 40,
+    column: 'out_prncp_inv',
+    meaning: 'Principal rămas, partea investitorilor',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 41,
+    column: 'total_pymnt',
+    meaning: 'Total plătit până acum (principal + dobândă)',
+    processing: 'Niciodată încărcată — risc de data leakage post-originare.',
+    status: 'ignorata',
+  },
+  {
+    nr: 42,
+    column: 'total_pymnt_inv',
+    meaning: 'Total plătit, partea investitorilor',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 43,
+    column: 'total_rec_prncp',
+    meaning: 'Principal deja rambursat',
+    processing:
+      'Folosită direct în EAD (`funded_amnt - total_rec_prncp`), la portofoliu și la momentul default-ului.',
+    status: 'inclusa',
+  },
+  {
+    nr: 44,
+    column: 'total_rec_int',
+    meaning: 'Dobândă deja încasată',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 45,
+    column: 'total_rec_late_fee',
+    meaning: 'Penalizări de întârziere încasate',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 46,
+    column: 'recoveries',
+    meaning: 'Suma recuperată din credite intrate în default',
+    processing:
+      'Folosită direct: `net_recovery = recoveries - collection_recovery_fee` → LGD.',
+    status: 'inclusa',
+  },
+  {
+    nr: 47,
+    column: 'collection_recovery_fee',
+    meaning: 'Comisionul de colectare reținut din recuperări',
+    processing: 'Folosită direct, scăzută din `recoveries` la calculul LGD.',
+    status: 'inclusa',
+  },
+  {
+    nr: 48,
+    column: 'last_pymnt_d',
+    meaning: 'Data ultimei plăți',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 49,
+    column: 'last_pymnt_amnt',
+    meaning: 'Suma ultimei plăți',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 50,
+    column: 'next_pymnt_d',
+    meaning: 'Data următoarei plăți programate',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 51,
+    column: 'last_credit_pull_d',
+    meaning: 'Data ultimei verificări de credit de către Lending Club',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 52,
+    column: 'last_fico_range_high',
+    meaning: 'Ultimul scor FICO cunoscut (limita superioară)',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 53,
+    column: 'last_fico_range_low',
+    meaning: 'Ultimul scor FICO cunoscut (limita inferioară)',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 54,
+    column: 'collections_12_mths_ex_med',
+    meaning: 'Nr. colectări în ultimele 12 luni (exclus medical)',
+    processing: 'Redusă la flag binar `has_collections`.',
+    status: 'inclusa',
+  },
+  {
+    nr: 55,
+    column: 'mths_since_last_major_derog',
+    meaning: 'Luni de la cel mai grav incident de credit',
+    processing:
+      'Explorată pentru corelație în notebook-ul inițial, exclusă din pipeline-ul final.',
+    status: 'ignorata',
+  },
+  {
+    nr: 56,
+    column: 'policy_code',
+    meaning: 'Cod intern de politică (practic constant)',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 57,
+    column: 'application_type',
+    meaning: 'Tip aplicație (Individual / Joint)',
+    processing:
+      'Folosită doar ca filtru (păstrate doar creditele "Individual"); nu devine feature.',
+    status: 'indirecta',
+  },
+  {
+    nr: 58,
+    column: 'annual_inc_joint',
+    meaning: 'Venit anual comun (cereri Joint)',
+    processing:
+      'Niciodată încărcată — aplicabil doar Joint, oricum exclus prin filtrare.',
+    status: 'ignorata',
+  },
+  {
+    nr: 59,
+    column: 'dti_joint',
+    meaning: 'DTI comun (cereri Joint)',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 60,
+    column: 'verification_status_joint',
+    meaning: 'Statusul verificării venitului comun (Joint)',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 61,
+    column: 'acc_now_delinq',
+    meaning: 'Nr. de conturi curent restante',
+    processing:
+      'Încărcată, dar neprocesată și absentă din lista finală de feature-uri.',
+    status: 'ignorata',
+  },
+  {
+    nr: 62,
+    column: 'tot_coll_amt',
+    meaning: 'Suma totală trimisă la colectare',
+    processing: 'Flag `has_tot_coll` + transformare log `tot_coll_amt_log`.',
+    status: 'inclusa',
+  },
+  {
+    nr: 63,
+    column: 'tot_cur_bal',
+    meaning: 'Soldul curent total pe toate conturile',
+    processing:
+      'Log-transformată, dar exclusă explicit din feature-urile finale.',
+    status: 'ignorata',
+  },
+  {
+    nr: 64,
+    column: 'open_acc_6m',
+    meaning: 'Conturi deschise în ultimele 6 luni',
+    processing: 'Încărcată, dar neprocesată/neinclusă.',
+    status: 'ignorata',
+  },
+  {
+    nr: 65,
+    column: 'open_act_il',
+    meaning: 'Conturi de credit instalment active',
+    processing: 'Încărcată, dar neprocesată/neinclusă.',
+    status: 'ignorata',
+  },
+  {
+    nr: 66,
+    column: 'open_il_12m',
+    meaning: 'Conturi instalment deschise în ultimele 12 luni',
+    processing: 'Încărcată, dar neprocesată/neinclusă.',
+    status: 'ignorata',
+  },
+  {
+    nr: 67,
+    column: 'open_il_24m',
+    meaning: 'Conturi instalment deschise în ultimele 24 luni',
+    processing: 'Încărcată, dar neprocesată/neinclusă.',
+    status: 'ignorata',
+  },
+  {
+    nr: 68,
+    column: 'mths_since_rcnt_il',
+    meaning: 'Luni de la cel mai recent cont instalment',
+    processing: 'Flag `never_had_il` + transformare log a valorii imputate.',
+    status: 'inclusa',
+  },
+  {
+    nr: 69,
+    column: 'total_bal_il',
+    meaning: 'Sold total pe conturile instalment',
+    processing:
+      'Log-transformată, dar eliminată din setul final (prea multe valori lipsă).',
+    status: 'ignorata',
+  },
+  {
+    nr: 70,
+    column: 'il_util',
+    meaning: 'Grad de utilizare a creditelor instalment',
+    processing: 'Valori lipsă imputate cu media.',
+    status: 'inclusa',
+  },
+  {
+    nr: 71,
+    column: 'open_rv_12m',
+    meaning: 'Conturi revolving deschise în ultimele 12 luni',
+    processing:
+      'Inclusă inițial, eliminată din setul final (prea multe valori lipsă).',
+    status: 'ignorata',
+  },
+  {
+    nr: 72,
+    column: 'open_rv_24m',
+    meaning: 'Conturi revolving deschise în ultimele 24 luni',
+    processing: 'Idem — eliminată din setul final.',
+    status: 'ignorata',
+  },
+  {
+    nr: 73,
+    column: 'max_bal_bc',
+    meaning: 'Soldul maxim pe carduri bancare',
+    processing: 'Log-transformată, dar eliminată din setul final.',
+    status: 'ignorata',
+  },
+  {
+    nr: 74,
+    column: 'all_util',
+    meaning: 'Grad de utilizare pe toate liniile de credit',
+    processing: 'Niciodată încărcată în pipeline-ul final.',
+    status: 'ignorata',
+  },
+  {
+    nr: 75,
+    column: 'total_rev_hi_lim',
+    meaning: 'Limita totală de credit revolving',
+    processing: 'Transformare log.',
+    status: 'inclusa',
+  },
+  {
+    nr: 76,
+    column: 'inq_fi',
+    meaning: 'Interogări de la instituții financiare',
+    processing: 'Grupat (0 / 1-2 / 3+), one-hot encoding.',
+    status: 'inclusa',
+  },
+  {
+    nr: 77,
+    column: 'total_cu_tl',
+    meaning: 'Nr. conturi de credit tip "credit union"',
+    processing: 'Grupat (0 / 1-3 / 4+), one-hot encoding.',
+    status: 'inclusa',
+  },
+  {
+    nr: 78,
+    column: 'inq_last_12m',
+    meaning: 'Interogări de credit în ultimele 12 luni',
+    processing: 'Log-transformată, dar eliminată din setul final.',
+    status: 'ignorata',
+  },
+  {
+    nr: 79,
+    column: 'acc_open_past_24mths',
+    meaning: 'Conturi deschise în ultimele 24 luni',
+    processing: 'Folosită neschimbată.',
+    status: 'inclusa',
+  },
+  {
+    nr: 80,
+    column: 'avg_cur_bal',
+    meaning: 'Soldul curent mediu pe conturi',
+    processing: 'Log-transformată, dar nu apare în setul final de feature-uri.',
+    status: 'ignorata',
+  },
+  {
+    nr: 81,
+    column: 'bc_open_to_buy',
+    meaning: 'Credit disponibil rămas pe carduri bancare',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 82,
+    column: 'bc_util',
+    meaning: 'Grad de utilizare a cardurilor bancare',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 83,
+    column: 'chargeoff_within_12_mths',
+    meaning: 'Nr. de charge-off-uri în ultimele 12 luni',
+    processing: 'Folosită neschimbată.',
+    status: 'inclusa',
+  },
+  {
+    nr: 84,
+    column: 'delinq_amnt',
+    meaning: 'Suma restantă curentă',
+    processing: 'Redusă la flag binar `has_delinq_amnt`.',
+    status: 'inclusa',
+  },
+  {
+    nr: 85,
+    column: 'mo_sin_old_il_acct',
+    meaning: 'Vechimea celui mai vechi cont instalment (luni)',
+    processing: 'Valori lipsă imputate cu maxim+1.',
+    status: 'inclusa',
+  },
+  {
+    nr: 86,
+    column: 'mo_sin_old_rev_tl_op',
+    meaning: 'Vechimea celui mai vechi cont revolving (luni)',
+    processing: 'Explorată pentru corelație, exclusă din pipeline-ul final.',
+    status: 'ignorata',
+  },
+  {
+    nr: 87,
+    column: 'mo_sin_rcnt_rev_tl_op',
+    meaning: 'Vechimea celui mai recent cont revolving (luni)',
+    processing: 'Explorată pentru corelație, exclusă din pipeline-ul final.',
+    status: 'ignorata',
+  },
+  {
+    nr: 88,
+    column: 'mo_sin_rcnt_tl',
+    meaning: 'Vechimea celui mai recent cont, orice tip (luni)',
+    processing: 'Transformare log.',
+    status: 'inclusa',
+  },
+  {
+    nr: 89,
+    column: 'mort_acc',
+    meaning: 'Nr. de conturi ipotecare',
+    processing: 'Transformare log.',
+    status: 'inclusa',
+  },
+  {
+    nr: 90,
+    column: 'mths_since_recent_bc',
+    meaning: 'Luni de la cel mai recent card bancar deschis',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 91,
+    column: 'mths_since_recent_bc_dlq',
+    meaning: 'Luni de la ultima întârziere pe card bancar',
+    processing: 'Explorată pentru corelație, exclusă din pipeline-ul final.',
+    status: 'ignorata',
+  },
+  {
+    nr: 92,
+    column: 'mths_since_recent_inq',
+    meaning: 'Luni de la ultima interogare de credit',
+    processing: 'Flag `never_inquired` + valoare imputată.',
+    status: 'inclusa',
+  },
+  {
+    nr: 93,
+    column: 'mths_since_recent_revol_delinq',
+    meaning: 'Luni de la ultima întârziere pe cont revolving',
+    processing: 'Explorată pentru corelație, exclusă din pipeline-ul final.',
+    status: 'ignorata',
+  },
+  {
+    nr: 94,
+    column: 'num_accts_ever_120_pd',
+    meaning: 'Nr. conturi cu întârziere de 120+ zile vreodată',
+    processing: 'Redusă la flag binar `has_120pd_ever`.',
+    status: 'inclusa',
+  },
+  {
+    nr: 95,
+    column: 'num_actv_bc_tl',
+    meaning: 'Nr. carduri bancare active',
+    processing: 'Explorată pentru corelație, exclusă din pipeline-ul final.',
+    status: 'ignorata',
+  },
+  {
+    nr: 96,
+    column: 'num_actv_rev_tl',
+    meaning: 'Nr. conturi revolving active',
+    processing: 'Explorată pentru corelație, exclusă din pipeline-ul final.',
+    status: 'ignorata',
+  },
+  {
+    nr: 97,
+    column: 'num_bc_sats',
+    meaning: 'Nr. carduri bancare cu status "satisfăcător"',
+    processing: 'Folosită neschimbată.',
+    status: 'inclusa',
+  },
+  {
+    nr: 98,
+    column: 'num_bc_tl',
+    meaning: 'Nr. total de carduri bancare',
+    processing: 'Explorată pentru corelație, exclusă din pipeline-ul final.',
+    status: 'ignorata',
+  },
+  {
+    nr: 99,
+    column: 'num_il_tl',
+    meaning: 'Nr. total de conturi instalment',
+    processing: 'Explorată pentru corelație, exclusă din pipeline-ul final.',
+    status: 'ignorata',
+  },
+  {
+    nr: 100,
+    column: 'num_op_rev_tl',
+    meaning: 'Nr. conturi revolving deschise',
+    processing: 'Explorată pentru corelație, exclusă din pipeline-ul final.',
+    status: 'ignorata',
+  },
+  {
+    nr: 101,
+    column: 'num_rev_accts',
+    meaning: 'Nr. total de conturi revolving',
+    processing: 'Explorată pentru corelație, exclusă din pipeline-ul final.',
+    status: 'ignorata',
+  },
+  {
+    nr: 102,
+    column: 'num_rev_tl_bal_gt_0',
+    meaning: 'Nr. conturi revolving cu sold > 0',
+    processing: 'Folosită neschimbată.',
+    status: 'inclusa',
+  },
+  {
+    nr: 103,
+    column: 'num_sats',
+    meaning: 'Nr. total de conturi cu status "satisfăcător"',
+    processing: 'Explorată pentru corelație, exclusă din pipeline-ul final.',
+    status: 'ignorata',
+  },
+  {
+    nr: 104,
+    column: 'num_tl_120dpd_2m',
+    meaning: 'Conturi cu 120+ zile întârziere (ultimele 2 luni)',
+    processing: 'Explorată pentru corelație, exclusă din pipeline-ul final.',
+    status: 'ignorata',
+  },
+  {
+    nr: 105,
+    column: 'num_tl_30dpd',
+    meaning: 'Conturi cu 30+ zile întârziere curentă',
+    processing: 'Explorată pentru corelație, exclusă din pipeline-ul final.',
+    status: 'ignorata',
+  },
+  {
+    nr: 106,
+    column: 'num_tl_90g_dpd_24m',
+    meaning: 'Conturi cu 90+ zile întârziere (ultimele 24 luni)',
+    processing: 'Explorată pentru corelație, exclusă din pipeline-ul final.',
+    status: 'ignorata',
+  },
+  {
+    nr: 107,
+    column: 'num_tl_op_past_12m',
+    meaning: 'Conturi deschise în ultimele 12 luni',
+    processing: 'Explorată pentru corelație, exclusă din pipeline-ul final.',
+    status: 'ignorata',
+  },
+  {
+    nr: 108,
+    column: 'pct_tl_nvr_dlq',
+    meaning: '% din conturi fără nicio întârziere vreodată',
+    processing: 'Folosită neschimbată.',
+    status: 'inclusa',
+  },
+  {
+    nr: 109,
+    column: 'percent_bc_gt_75',
+    meaning: '% carduri bancare utilizate peste 75% din limită',
+    processing: 'Explorată pentru corelație, exclusă din pipeline-ul final.',
+    status: 'ignorata',
+  },
+  {
+    nr: 110,
+    column: 'pub_rec_bankruptcies',
+    meaning: 'Nr. de falimente înregistrate',
+    processing: 'Grupat (0 / 1 / 2+), one-hot encoding.',
+    status: 'inclusa',
+  },
+  {
+    nr: 111,
+    column: 'tax_liens',
+    meaning: 'Nr. de sechestre fiscale',
+    processing: 'Explorată pentru corelație, exclusă din pipeline-ul final.',
+    status: 'ignorata',
+  },
+  {
+    nr: 112,
+    column: 'tot_hi_cred_lim',
+    meaning: 'Limita totală de credit acordată',
+    processing: 'Transformare log.',
+    status: 'inclusa',
+  },
+  {
+    nr: 113,
+    column: 'total_bal_ex_mort',
+    meaning: 'Sold total, exclusiv creditele ipotecare',
+    processing: 'Explorată pentru corelație, exclusă din pipeline-ul final.',
+    status: 'ignorata',
+  },
+  {
+    nr: 114,
+    column: 'total_bc_limit',
+    meaning: 'Limita totală pe carduri bancare',
+    processing: 'Explorată pentru corelație, exclusă din pipeline-ul final.',
+    status: 'ignorata',
+  },
+  {
+    nr: 115,
+    column: 'total_il_high_credit_limit',
+    meaning: 'Limita totală pe credite instalment',
+    processing: 'Transformare log.',
+    status: 'inclusa',
+  },
+  {
+    nr: 116,
+    column: 'revol_bal_joint',
+    meaning: 'Sold revolving comun (cereri Joint)',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 117,
+    column: 'sec_app_fico_range_low',
+    meaning: 'Scor FICO co-aplicant (limita inferioară)',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 118,
+    column: 'sec_app_fico_range_high',
+    meaning: 'Scor FICO co-aplicant (limita superioară)',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 119,
+    column: 'sec_app_earliest_cr_line',
+    meaning: 'Prima linie de credit a co-aplicantului',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 120,
+    column: 'sec_app_inq_last_6mths',
+    meaning: 'Interogări co-aplicant (ultimele 6 luni)',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 121,
+    column: 'sec_app_mort_acc',
+    meaning: 'Conturi ipotecare co-aplicant',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 122,
+    column: 'sec_app_open_acc',
+    meaning: 'Conturi deschise co-aplicant',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 123,
+    column: 'sec_app_revol_util',
+    meaning: 'Grad utilizare revolving co-aplicant',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 124,
+    column: 'sec_app_open_act_il',
+    meaning: 'Conturi instalment active co-aplicant',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 125,
+    column: 'sec_app_num_rev_accts',
+    meaning: 'Conturi revolving co-aplicant',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 126,
+    column: 'sec_app_chargeoff_within_12_mths',
+    meaning: 'Charge-off-uri co-aplicant (12 luni)',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 127,
+    column: 'sec_app_collections_12_mths_ex_med',
+    meaning: 'Colectări co-aplicant (12 luni)',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 128,
+    column: 'sec_app_mths_since_last_major_derog',
+    meaning: 'Luni de la incident major, co-aplicant',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 129,
+    column: 'hardship_flag',
+    meaning: 'Flag: creditul a intrat într-un program de hardship',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 130,
+    column: 'hardship_type',
+    meaning: 'Tipul programului de hardship',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 131,
+    column: 'hardship_reason',
+    meaning: 'Motivul hardship-ului',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 132,
+    column: 'hardship_status',
+    meaning: 'Statusul programului de hardship',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 133,
+    column: 'deferral_term',
+    meaning: 'Durata amânării de plată (luni)',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 134,
+    column: 'hardship_amount',
+    meaning: 'Suma ajustată în programul de hardship',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 135,
+    column: 'hardship_start_date',
+    meaning: 'Data începerii hardship-ului',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 136,
+    column: 'hardship_end_date',
+    meaning: 'Data încheierii hardship-ului',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 137,
+    column: 'payment_plan_start_date',
+    meaning: 'Data începerii planului de plată',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 138,
+    column: 'hardship_length',
+    meaning: 'Durata programului de hardship (luni)',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 139,
+    column: 'hardship_dpd',
+    meaning: 'Zile de întârziere în timpul hardship-ului',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 140,
+    column: 'hardship_loan_status',
+    meaning: 'Statusul creditului în timpul hardship-ului',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 141,
+    column: 'orig_projected_additional_accrued_interest',
+    meaning: 'Dobândă suplimentară proiectată din hardship',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 142,
+    column: 'hardship_payoff_balance_amount',
+    meaning: 'Sold de achitare la finalul hardship-ului',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 143,
+    column: 'hardship_last_payment_amount',
+    meaning: 'Ultima plată efectuată în hardship',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 144,
+    column: 'disbursement_method',
+    meaning: 'Metoda de plată a sumei creditului',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 145,
+    column: 'debt_settlement_flag',
+    meaning: 'Flag: creditul a intrat în settlement de datorie',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 146,
+    column: 'debt_settlement_flag_date',
+    meaning: 'Data la care s-a activat flag-ul de settlement',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 147,
+    column: 'settlement_status',
+    meaning: 'Statusul settlement-ului de datorie',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 148,
+    column: 'settlement_date',
+    meaning: 'Data settlement-ului',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 149,
+    column: 'settlement_amount',
+    meaning: 'Suma agreată în settlement',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 150,
+    column: 'settlement_percentage',
+    meaning: 'Procentul din datorie acoperit de settlement',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+  {
+    nr: 151,
+    column: 'settlement_term',
+    meaning: 'Durata planului de settlement (luni)',
+    processing: 'Neutilizată.',
+    status: 'ignorata',
+  },
+];
+
+const STATUS_CONFIG: Record<
+  Status,
+  { label: string; badgeClass: string; idClass: string }
+> = {
+  inclusa: {
+    label: 'Inclusă',
+    badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    idClass: 'text-emerald-700',
+  },
+  indirecta: {
+    label: 'Indirectă',
+    badgeClass: 'bg-slate-100 text-slate-600 border-slate-200',
+    idClass: 'text-slate-500',
+  },
+  ignorata: {
+    label: 'Ignorată',
+    badgeClass: 'bg-red-50 text-red-700 border-red-200',
+    idClass: 'text-red-700',
+  },
+};
+
+export default function DatasetColumnsTable() {
+  const counts = rows.reduce(
+    (acc, r) => {
+      acc[r.status] += 1;
+      return acc;
+    },
+    { inclusa: 0, indirecta: 0, ignorata: 0 } as Record<Status, number>,
+  );
+
+  return (
+    <div className='w-full font-sans text-slate-900'>
+      <div className='mb-4 flex flex-wrap items-center justify-between gap-3'>
+        <div>
+          <h2 className='text-base font-semibold'>
+            Coloane sursă — set de date & procesare
+          </h2>
+          <p className='text-sm text-slate-500'>
+            Toate cele {rows.length} coloane ale fișierului sursă, mapate la
+            utilizarea lor efectivă în pipeline-ul PD/LGD/EAD.
+          </p>
+        </div>
+        <div className='flex gap-2 text-xs'>
+          <Badge variant='outline' className={STATUS_CONFIG.inclusa.badgeClass}>
+            {counts.inclusa} incluse
+          </Badge>
+          <Badge
+            variant='outline'
+            className={STATUS_CONFIG.indirecta.badgeClass}
+          >
+            {counts.indirecta} indirecte
+          </Badge>
+          <Badge
+            variant='outline'
+            className={STATUS_CONFIG.ignorata.badgeClass}
+          >
+            {counts.ignorata} ignorate
+          </Badge>
+        </div>
+      </div>
+
+      <div className='overflow-auto rounded-md border border-slate-200 max-h-[720px]'>
+        <Table>
+          <TableHeader className='sticky top-0 z-10 bg-slate-50'>
+            <TableRow>
+              <TableHead className='w-12'>Nr.</TableHead>
+              <TableHead className='w-52 font-mono'>Coloană</TableHead>
+              <TableHead>Ce reprezintă</TableHead>
+              <TableHead>Procesare aplicată</TableHead>
+              <TableHead className='w-28 text-right'>Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {rows.map((r) => (
+              <TableRow key={r.nr}>
+                <TableCell className='font-mono text-slate-500'>
+                  {r.nr}
+                </TableCell>
+                <TableCell
+                  className={`font-mono text-xs font-medium ${STATUS_CONFIG[r.status].idClass}`}
+                >
+                  {r.column}
+                </TableCell>
+                <TableCell className='max-w-md whitespace-normal text-sm text-slate-700'>
+                  {r.meaning}
+                </TableCell>
+                <TableCell className='max-w-xl whitespace-normal text-sm text-slate-600'>
+                  {r.processing}
+                </TableCell>
+                <TableCell className='text-right'>
+                  <Badge
+                    variant='outline'
+                    className={STATUS_CONFIG[r.status].badgeClass}
+                  >
+                    {STATUS_CONFIG[r.status].label}
+                  </Badge>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+}
