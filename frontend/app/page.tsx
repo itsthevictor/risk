@@ -1,4 +1,3 @@
-
 import { Badge } from '@/components/ui/badge';
 import { IconArrowUpRight } from '@tabler/icons-react';
 import Link from 'next/link';
@@ -48,7 +47,7 @@ export default function Home() {
           </span>
 
           <Badge variant='secondary'>
-            VaR · ES · Volatilitate · Backtest · Stress Testing
+            VaR · ES · Volatilitate · Backtesting · Stress Testing
           </Badge>
         </div>
         <div className='flex flex-col gap-y-2'>
@@ -81,7 +80,7 @@ export default function Home() {
             Date mockup
           </span>
 
-          <Badge variant='secondary'>EVE · NII · Socuri de dobândă</Badge>
+          <Badge variant='secondary'>EVE · NII · Șocuri de dobândă</Badge>
         </div>
         <div className='flex flex-col gap-y-2'>
           {/* <Button variant='ghost' className='w-fit'> */}
