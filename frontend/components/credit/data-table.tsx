@@ -12,22 +12,6 @@ import { Badge } from '@/components/ui/badge';
 import { IconArrowLeft } from '@tabler/icons-react';
 import Link from 'next/link';
 import { Button } from '../ui/button';
-// ---------------------------------------------------------------------------
-// All 151 raw columns of "Lending Club Loan Data 2007-2018 Q4.csv" (verified
-// via df.columns.tolist() on the untouched file — see credit.ipynb, cell 2).
-// Order matches the CSV header exactly.
-//
-// Status legend:
-//   inclusa   -> ends up directly in FEATURE_COLS_v2 (PD model) or is used
-//                directly in an LGD/EAD/EL formula
-//   indirecta -> consumed only to build another feature/target/filter,
-//                never appears by itself as a model input
-//   ignorata  -> never used in the final pipeline — either never loaded at
-//                all (most of these), loaded but never processed, or
-//                explored for correlation in the early exploratory notebook
-//                (credit.ipynb) and then dropped before the production
-//                version (PD.ipynb)
-// ---------------------------------------------------------------------------
 
 type Status = 'inclusa' | 'indirecta' | 'ignorata';
 
@@ -1161,7 +1145,8 @@ export default function DatasetColumnsTable() {
           >
             <Link
               href='/credit'
-              className='text-sm  undeline flex items-center gap-2'
+              className='text-sm   flex items-center gap-2'
+              data-umami-event='data-back-to-credit-link'
             >
               <IconArrowLeft /> {'Înapoi la rezultate'}
             </Link>

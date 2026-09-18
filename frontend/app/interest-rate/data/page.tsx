@@ -20,6 +20,7 @@ export default function InterestRateDataPage() {
         <Link
           href='/interest-rate'
           className='text-muted-foreground text-sm hover:underline'
+          data-umami-event='interest-rate-data-back-link'
         >
           ← Risc de dobândă — IRRBB
         </Link>

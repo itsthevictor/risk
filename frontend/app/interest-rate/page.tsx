@@ -50,6 +50,7 @@ export default function InterestRatePage() {
         <Link
           href='/interest-rate/data'
           className='text-muted-foreground text-sm hover:underline'
+          data-umami-event='interest-rate-data-link'
         >
           Date și metodologie →
         </Link>

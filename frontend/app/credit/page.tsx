@@ -174,6 +174,7 @@ export default function CreditRiskPage() {
           <Link
             href='/credit/data'
             className='text-sm  flex items-center gap-2'
+            data-umami-event='credit-data-link'
           >
             {'Date și metodologie'} <IconArrowRight />
           </Link>
