@@ -13,8 +13,9 @@ export default function Home() {
         </p>
         <p className='text-sm text-foreground mt-2'>
           Acest portofoliu cuprinde instrumente bazate pe tehnicile fundamentale
-          de analiză a riscului de lichiditate, riscului de piață și riscului de
-          credit și a fost construit folosind Python și Next.js.
+          de analiză a riscului de piață, riscului de lichiditate, riscului de
+          dobândă și riscului de credit și a fost construit folosind Python și
+          Next.js.
         </p>
         <p className='text-xs text-muted-foreground mt-2'>
           Proiect de portofoliu personal — nedestinat producției, raportării
