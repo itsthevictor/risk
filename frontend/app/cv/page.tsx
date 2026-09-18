@@ -213,9 +213,19 @@ export default function Page() {
         </p>
         <div className='mt-3 flex flex-col gap-1 text-sm text-muted-foreground'>
           <span>Bucharest, România</span>
-          <a href='tel:+40747937967'>+40747937967</a>
-          <a href='mailto:victor.d.alexa@gmail.com'>victor.d.alexa@gmail.com</a>
-          <a href='https://www.linkedin.com/in/victor-alexa/'>
+          <a href='tel:+40747937967' data-umami-event='cv-phone-header-link'>
+            +40747937967
+          </a>
+          <a
+            href='mailto:victor.d.alexa@gmail.com'
+            data-umami-event='cv-email-header-link'
+          >
+            victor.d.alexa@gmail.com
+          </a>
+          <a
+            href='https://www.linkedin.com/in/victor-alexa/'
+            data-umami-event='cv-linkedin-header-link'
+          >
             linkedin.com/in/victor-alexa
           </a>
         </div>
@@ -248,6 +258,7 @@ export default function Page() {
               <a
                 href='tel:+40747937967'
                 className='flex items-center gap-2 transition-colors hover:text-foreground'
+                data-umami-event='cv-phone-btn'
               >
                 <IconPhone className='h-4 w-4' />
                 +40 747.937.967
@@ -256,6 +267,7 @@ export default function Page() {
               <a
                 href='mailto:victor.d.alexa@gmail.com'
                 className='flex items-center gap-2 transition-colors hover:text-foreground'
+                data-umami-event='cv-email-btn'
               >
                 <IconMail className='h-4 w-4' />
                 Email
@@ -266,6 +278,7 @@ export default function Page() {
                 target='_blank'
                 rel='noreferrer'
                 className='flex items-center gap-2 transition-colors hover:text-foreground'
+                data-umami-event='cv-linkedin-btn'
               >
                 <IconBrandLinkedin className='h-4 w-4' />
                 LinkedIn
@@ -333,7 +346,12 @@ export default function Page() {
               </p>
 
               <div className='mt-7 flex flex-wrap gap-3 print:hidden'>
-                <Button nativeButton={false} render={<Link href='/' />}>
+                <Button
+                  nativeButton={false}
+                  render={
+                    <Link href='/' data-umami-event='cv-portfolio-link' />
+                  }
+                >
                   Vezi portofoliul de risc
                   <IconArrowUpRight className='ml-2 h-4 w-4' />
                 </Button>
@@ -342,12 +360,17 @@ export default function Page() {
                   variant='outline'
                   nativeButton={false}
                   render={<a href='mailto:victor.d.alexa@gmail.com' />}
+                  data-umami-event='cv-email-btn'
                 >
                   Contact
                   <IconMail className='ml-2 h-4 w-4' />
                 </Button>
 
-                <Button variant='outline' onClick={handlePrint}>
+                <Button
+                  variant='outline'
+                  onClick={handlePrint}
+                  data-umami-event='cv-download-btn'
+                >
                   Descarcă CV-ul
                   <IconDownload className='ml-2 h-4 w-4' />
                 </Button>
@@ -385,6 +408,7 @@ export default function Page() {
                     key={project.href}
                     href={project.href}
                     className='group'
+                    data-umami-event={`cv-${project.href}-link`}
                   >
                     <Card className='h-full transition-colors hover:border-foreground/30'>
                       <CardHeader>
@@ -624,6 +648,7 @@ export default function Page() {
               <a
                 href='mailto:victor.d.alexa@gmail.com'
                 className='hover:text-foreground'
+                data-umami-event='cv-footer-email-btn'
               >
                 <IconMail className='h-4 w-4' />
                 <span className='sr-only'>Email</span>
@@ -634,6 +659,7 @@ export default function Page() {
                 target='_blank'
                 rel='noreferrer'
                 className='hover:text-foreground'
+                data-umami-event='cv-footer-linkedin-btn'
               >
                 <IconBrandLinkedin className='h-4 w-4' />
                 <span className='sr-only'>LinkedIn</span>
