@@ -37,9 +37,9 @@ export default function Home() {
           <Link
             href='/market'
             data-umami-event='homepage-market-link'
-            className='hover:underline hover:text-foreground  flex items-center'
+            className='group flex items-center hover:text-foreground hover:underline'
           >
-            Risc de piață <IconArrowUpRight size={16} className='ml-1' />
+            Risc de piață <IconArrowUpRight size={16} className='ml-1 ' />
           </Link>
           {/* </Button> */}
 
