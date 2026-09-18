@@ -42,13 +42,17 @@ export default function Home() {
             Risc de piață <IconArrowUpRight size={16} className='ml-1' />
           </Link>
           {/* </Button> */}
+
+          <div className='flex items-center gap-2'>
+            <Badge variant='secondary'>VaR</Badge>
+            <Badge variant='secondary'>ES</Badge>
+            <Badge variant='secondary'>Volatilitate</Badge>
+            <Badge variant='secondary'>Backtesting</Badge>
+            <Badge variant='secondary'>Stress Testing</Badge>
+          </div>
           <span className='text-xs text-muted-foreground bg-transparent italic'>
             Date live din piață.
           </span>
-
-          <Badge variant='secondary'>
-            VaR · ES · Volatilitate · Backtesting · Stress Testing
-          </Badge>
         </div>
         <div className='flex flex-col gap-y-2'>
           {/* <Button variant='ghost' className='w-fit'> */}
@@ -60,11 +64,16 @@ export default function Home() {
             Risc de lichiditate <IconArrowUpRight size={16} className='ml-1' />
           </Link>
           {/* </Button> */}
+
+          {/* <Badge variant='secondary'>HQLA · Ieșiri nete · LCR</Badge> */}
+          <div className='flex items-center gap-2'>
+            <Badge variant='secondary'>HQLA</Badge>
+            <Badge variant='secondary'>Ieșiri nete</Badge>
+            <Badge variant='secondary'>LCR</Badge>
+          </div>
           <span className='text-xs text-muted-foreground bg-transparent italic'>
             Formular LCR
           </span>
-
-          <Badge variant='secondary'>HQLA · Ieșiri nete · LCR</Badge>
         </div>
         <div className='flex flex-col gap-y-2'>
           {/* <Button variant='ghost' className='w-fit'> */}
@@ -76,11 +85,15 @@ export default function Home() {
             Risc de dobândă <IconArrowUpRight size={16} className='ml-1' />
           </Link>
           {/* </Button> */}
+
+          <div className='flex items-center gap-2'>
+            <Badge variant='secondary'>EVE</Badge>
+            <Badge variant='secondary'>NII</Badge>
+            <Badge variant='secondary'>Șocuri de dobândă</Badge>
+          </div>
           <span className='text-xs text-muted-foreground bg-transparent italic'>
             Date mockup
           </span>
-
-          <Badge variant='secondary'>EVE · NII · Șocuri de dobândă</Badge>
         </div>
         <div className='flex flex-col gap-y-2'>
           {/* <Button variant='ghost' className='w-fit'> */}
@@ -92,11 +105,17 @@ export default function Home() {
             Risc de credit <IconArrowUpRight size={16} className='ml-1' />
           </Link>
           {/* </Button> */}
+
+          <div className='flex items-center gap-2'>
+            <Badge variant='secondary'>PD</Badge>
+            <Badge variant='secondary'>LGD</Badge>
+            <Badge variant='secondary'>EAD</Badge>
+            <Badge variant='secondary'>EL</Badge>
+            <Badge variant='secondary'>RWA</Badge>
+          </div>
           <span className='text-xs text-muted-foreground bg-transparent italic'>
             Dataset Lending Club 2007-2018 (Kaggle)
           </span>
-
-          <Badge variant='secondary'>PD · LGD · EAD · EL · RWA</Badge>
         </div>
       </div>
     </div>
