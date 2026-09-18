@@ -128,3 +128,23 @@
     @apply font-mono;
   }
 }
+
+@media print {
+  @page {
+    margin: 2cm;
+    padding:1cm;
+  }
+
+  body {
+    background: white;
+  }
+
+  main {
+    min-height: auto;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+}

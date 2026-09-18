@@ -33,7 +33,7 @@ const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className='header flex flex-row items-center justify-between p-4 border-b border-muted-foreground'>
+    <div className='header print:hidden flex flex-row items-center justify-between p-4 border-b border-muted-foreground'>
       <Link href='/' className='text-lg font-bold'>
         RISK
       </Link>
