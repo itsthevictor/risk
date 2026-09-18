@@ -160,7 +160,7 @@ const experience = [
 
 const education = [
   {
-    period: '2026 — Present',
+    period: '2026 — Prezent',
     title: 'Master - DOFIN (Doctoral School of Finance)',
     institution: 'Academia de Studii Economice din București',
   },
@@ -171,7 +171,7 @@ const education = [
   },
   {
     period: '2006 — 2009',
-    title: 'Litere și Lingvistică · Română și Engleză',
+    title: 'Litere · Română și Engleză',
     institution: 'Universitatea din București',
   },
 ];
