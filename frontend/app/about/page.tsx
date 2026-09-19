@@ -143,7 +143,7 @@ export default function AboutPage() {
         <h1 className='text-xl font-bold sm:text-2xl'>
           Portofoliu instrumente analiză de risc — proiect personal
         </h1>
-        <div className='space-y-2 text-sm leading-relaxed text-muted-foreground'>
+        <div className='space-y-2 text-sm leading-relaxed text-muted-foreground mt-6'>
           <p>
             <strong className='text-foreground'>Backend</strong> — FastAPI +
             Pydantic (API și validare), SQLModel/SQLAlchemy peste Postgres
