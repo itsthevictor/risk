@@ -11,7 +11,7 @@ import {
 
 function Code({ children }: { children: React.ReactNode }) {
   return (
-    <code className='rounded bg-muted px-1 py-0.5 font-mono text-[0.8em]'>
+    <code className='break-all rounded bg-muted px-1 py-0.5 font-mono text-[0.8em]'>
       {children}
     </code>
   );
@@ -138,7 +138,7 @@ const CREDIT_BY_GRADE = [
 
 export default function AboutPage() {
   return (
-    <div className='mx-auto max-w-4xl space-y-8 p-4 sm:space-y-10 sm:p-6'>
+    <div className='mx-auto max-w-4xl space-y-8 overflow-x-hidden p-4 sm:space-y-10 sm:p-6'>
       <div className='space-y-2'>
         <h1 className='text-xl font-bold sm:text-2xl'>
           Portofoliu instrumente analiză de risc — proiect personal
