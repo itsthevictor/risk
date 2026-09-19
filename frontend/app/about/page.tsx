@@ -138,9 +138,9 @@ const CREDIT_BY_GRADE = [
 
 export default function AboutPage() {
   return (
-    <div className='mx-auto max-w-4xl space-y-10 p-6'>
+    <div className='mx-auto max-w-4xl space-y-8 p-4 sm:space-y-10 sm:p-6'>
       <div className='space-y-2'>
-        <h1 className='text-2xl font-bold'>
+        <h1 className='text-xl font-bold sm:text-2xl'>
           Portofoliu instrumente analiză de risc — proiect personal
         </h1>
         <div className='space-y-2 text-sm leading-relaxed text-muted-foreground'>
@@ -175,15 +175,17 @@ export default function AboutPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className='w-44'>Metodă</TableHead>
+                <TableHead className='w-32 sm:w-44'>Metodă</TableHead>
                 <TableHead>Logică</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {VAR_METHODS.map((m) => (
                 <TableRow key={m.method}>
-                  <TableCell className='font-medium'>{m.method}</TableCell>
-                  <TableCell className='text-muted-foreground'>
+                  <TableCell className='font-medium whitespace-nowrap'>
+                    {m.method}
+                  </TableCell>
+                  <TableCell className='whitespace-normal text-muted-foreground'>
                     {m.logic}
                   </TableCell>
                 </TableRow>
@@ -501,15 +503,17 @@ Ieșiri nete = Ieșiri totale − min(Intrări, 75% × Ieșiri totale)`}
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className='w-40'>Scenariu</TableHead>
+                <TableHead className='w-28 sm:w-40'>Scenariu</TableHead>
                 <TableHead>Șoc aplicat</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {IRRBB_SCENARIOS.map((s) => (
                 <TableRow key={s.scenario}>
-                  <TableCell className='font-medium'>{s.scenario}</TableCell>
-                  <TableCell className='text-muted-foreground'>
+                  <TableCell className='font-medium whitespace-nowrap'>
+                    {s.scenario}
+                  </TableCell>
+                  <TableCell className='whitespace-normal text-muted-foreground'>
                     {s.shock}
                   </TableCell>
                 </TableRow>
