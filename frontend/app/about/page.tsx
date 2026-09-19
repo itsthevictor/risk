@@ -138,7 +138,7 @@ const CREDIT_BY_GRADE = [
 
 export default function AboutPage() {
   return (
-    <div className='mx-auto max-w-4xl space-y-8 overflow-x-hidden p-4 sm:space-y-10 sm:p-6'>
+    <div className='mx-auto w-full max-w-4xl space-y-8 overflow-x-hidden p-4 sm:space-y-10 sm:p-6'>
       <div className='space-y-2'>
         <h1 className='text-xl font-bold sm:text-2xl'>
           Portofoliu instrumente analiză de risc — proiect personal

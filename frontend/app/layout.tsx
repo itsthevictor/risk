@@ -59,7 +59,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
           <CleanUtmUrl />
           <Header />
           <QueryProvider>
-            <div className='flex flex-col flex-1'>{children}</div>
+            <div className='flex min-w-0 flex-1 flex-col'>{children}</div>
             {process.env.NODE_ENV === 'production' && (
               <Script
                 src='https://analytics.oncaworks.com/script.js'
