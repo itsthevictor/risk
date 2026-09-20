@@ -97,6 +97,7 @@ function InfoDrawer({
               'rounded-full text-muted-foreground',
               triggerClassName,
             )}
+            data-umami-event={`info-drawer-${title}`}
           />
         }
       >

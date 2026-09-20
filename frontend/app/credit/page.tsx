@@ -163,6 +163,9 @@ export default function CreditRiskPage() {
           <a
             href='https://www.kaggle.com/datasets/wordsforthewise/lending-club?resource=download'
             className='text-sm text-blue-500 underline ml-2'
+            target='_blank'
+            rel='noopener noreferrer'
+            data-umami-event='credit-kaggle-dataset-link'
           >
             Lending Club 2007 - 2018
           </a>
