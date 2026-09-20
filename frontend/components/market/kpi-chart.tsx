@@ -33,7 +33,11 @@ function KpiChart({
           <Button
             variant='ghost'
             size='icon-xs'
-            className={cn('rounded-full text-muted-foreground', triggerClassName)}
+            className={cn(
+              'rounded-full text-muted-foreground',
+              triggerClassName,
+            )}
+            data-umami-event={`kpi-chart-${title}`}
           />
         }
       >
