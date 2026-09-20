@@ -244,7 +244,7 @@ scenarii de șoc.
 
 Spre deosebire de celelalte module, analiza de risc de credit nu rulează
 live — a fost făcută offline, pe un set de date real (nu sintetic), iar
-rezultatele sunt afișate ca atare în UI. Nu are sens recalculul la fiecare
+rezultatele sunt afișate ca atare în UI. Nu are sens recalcularea la fiecare
 request: calibrarea modelului PD durează, iar datele sursă (Lending Club)
 nu se schimbă.
 
