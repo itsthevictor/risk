@@ -44,7 +44,7 @@ function KpiChart({
         <ChartBarIcon />
         <span className='sr-only'>Vezi grafic</span>
       </DialogTrigger>
-      <DialogContent className='sm:max-w-[70rem]'>
+      <DialogContent className='sm:max-w-280'>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}

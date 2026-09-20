@@ -33,7 +33,7 @@ const Footer = () => {
           className='hover:underline hover:text-foreground'
           data-umami-event='footer-cv-link'
         >
-          Curriculum Vitae
+          CV
         </a>
       </div>
     </footer>

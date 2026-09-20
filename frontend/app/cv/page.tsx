@@ -44,7 +44,7 @@ const riskProjects = [
     description:
       'Evaluarea poziției de lichiditate și calcularea indicatorilor utilizați pentru monitorizarea riscului.',
     metrics: ['LCR', 'HQLA', 'Ieșiri nete de numerar'],
-    source: 'Model de analiză',
+    source: 'Formular tip wizard',
   },
   {
     title: 'Risc de dobândă',
