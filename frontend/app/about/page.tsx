@@ -278,7 +278,7 @@ export default function AboutPage() {
           </li>
         </ul>
 
-        <SubHeading>Alte metrici (independente de metoda VaR)</SubHeading>
+        <SubHeading>Alți indicatori (independenți de metoda VaR)</SubHeading>
         <ul className='list-disc space-y-2 pl-5 text-muted-foreground'>
           <li>
             <strong className='text-foreground'>Drawdown maxim</strong> — cea
@@ -647,7 +647,7 @@ Ieșiri nete = Ieșiri totale − min(Intrări, 75% × Ieșiri totale)`}
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Metrică</TableHead>
+                <TableHead>Indicator</TableHead>
                 <TableHead>Valoare</TableHead>
               </TableRow>
             </TableHeader>
@@ -749,7 +749,7 @@ Ieșiri nete = Ieșiri totale − min(Intrări, 75% × Ieșiri totale)`}
           </li>
           <li>
             <strong className='text-foreground'>Tabel pe grad de credit</strong>{' '}
-            — aceleași metrici, în format tabelar.
+            — aceiași indicatori, în format tabelar.
           </li>
           <li>
             <strong className='text-foreground'>Grafic de calibrare</strong> —

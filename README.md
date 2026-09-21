@@ -68,7 +68,7 @@ efectivă realizată. Din asta rezultă:
   compară numărul de depășiri cu pragurile binomiale (generalizate la orice nivel
   de încredere ales, nu fixate la pragurile oficiale 4/9 de la 99%).
 
-### Alte metrici (independente de metoda VaR)
+### Alți indicatori (independenți de metoda VaR)
 
 - **Drawdown maxim** — cea mai mare scădere vârf-minim a valorii portofoliului,
   calculată o singură dată pe tot istoricul, din randamentele efective realizate.
@@ -308,7 +308,7 @@ RWA = K × 12,5 × EAD
 
 ### Rezultate
 
-| Metrică                     | Valoare                |
+| Indicator                   | Valoare                |
 | --------------------------- | ---------------------- |
 | EAD total                   | $733,5M                |
 | Expected Loss (anual)       | $43,4M (5,92% din EAD) |
@@ -361,6 +361,6 @@ adus rezultatul în linia benchmark-ului.
 - **Grafic pe grad de credit** — densitatea de capital per grad (A–G), cu
   linie de referință la 100%; tooltip cu PD mediu, LGD, număr de credite și
   EAD pe grad.
-- **Tabel pe grad de credit** — aceleași metrici, în format tabelar.
+- **Tabel pe grad de credit** — aceiași indicatori, în format tabelar.
 - **Grafic de calibrare** — PD calibrat vs. rata de default observată, pe
   decile, cu linia de calibrare perfectă ca referință.
