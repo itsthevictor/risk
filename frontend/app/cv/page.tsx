@@ -72,7 +72,7 @@ const experience = [
     role: 'Fondator · Product Manager · Web Developer',
     company: 'ONCA Digital Works',
     description:
-      'Lucrez end-to-end la produse digitale și aplicații web, de la definirea problemei și modelarea fluxurilor până la dezvoltare, implementare și îmbunătățire continuă.',
+      'Construiesc produse digitale și aplicații web de la cap la coadă: pornesc de la problema reală, gândesc fluxurile, apoi dezvolt, lansez și continui să le îmbunătățesc.',
     highlights: [
       'Am proiectat și dezvoltat aplicații web, platforme interne și instrumente de automatizare pentru companii din România.',
       'Am lucrat cu baze de date SQL și NoSQL, API-uri, integrări externe și procese de automatizare.',
