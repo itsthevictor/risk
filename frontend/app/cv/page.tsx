@@ -93,7 +93,7 @@ const experience = [
     role: 'Product Manager',
     company: 'Imobiliare.ro',
     description:
-      'Product Management în zona B2B, cu focus pe analiză de performanță, optimizarea proceselor comerciale și colaborarea dintre business, sales și technology.',
+      'Product Management în zona B2B, cu accent pe analiză de performanță, optimizarea proceselor comerciale și colaborarea dintre business, sales și dezvoltare web.',
     highlights: [
       'Am lucrat la îmbunătățirea performanței ofertei B2B, urmărind engagement-ul, costul de achiziție și valoarea clienților.',
       'Am contribuit la definirea OKR-urilor pentru migrarea tehnologică la nivelul companiei.',
@@ -119,7 +119,7 @@ const experience = [
     highlights: [
       'Am fost implicat în proiect încă din etapa inițială și am contribuit la dezvoltarea strategiei, bugetului și structurii operaționale.',
       'Am coordonat planificarea și monitorizarea operațiunilor, urmărind indicatorii de performanță și îmbunătățirea proceselor.',
-      'Am dezvoltat și ajustat strategia comercială pentru atât pentru Anticafe, cât și pentru editură.',
+      'Am dezvoltat și ajustat strategia comercială atât pentru Anticafe, cât și pentru editură.',
       'Am construit și implementat aplicații web de tip CRM/ERP și instrumente interne pentru companii din România, inclusiv proiecte din zona de consultanță și finanțare.',
       'Am lucrat la automatizarea proceselor, integrări API, procesare de documente și integrarea procesatorilor de plăți.',
     ],
@@ -332,7 +332,7 @@ export default function Page() {
               </Badge>
 
               <h2 className='text-4xl font-semibold tracking-tight sm:text-5xl print:text-2xl'>
-                Construiesc produse și analize bazate pe date, cu focus pe
+                Construiesc produse și analize bazate pe date, cu accent pe
                 managementul riscului financiar.
               </h2>
 
