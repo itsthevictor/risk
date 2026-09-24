@@ -49,7 +49,14 @@ const Header = () => {
         </div>
 
         <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-          <DropdownMenuTrigger render={<Button variant='outline' />}>
+          <DropdownMenuTrigger
+            render={
+              <Button
+                variant='outline'
+                className='min-w-32 flex justify-between'
+              />
+            }
+          >
             {currentLabel}
             {isOpen ? (
               <IconChevronUp className='ml-2 h-4 w-4' />
