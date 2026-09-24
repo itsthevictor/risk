@@ -55,7 +55,7 @@ const en: Dictionary = {
   home: {
     title: 'Risk analysis portfolio',
     disclaimer:
-      'A portfolio of risk analysis tools - personal project by Victor Alexa (DOFIN · 2026). Not intended for commercial use.',
+      'Fundamental risk analysis techniques portfolio, personal project by Victor Alexa (DOFIN · 2026). Not intended for commercial use.',
     intro:
       'This portfolio contains tools built on the fundamental techniques for analysing market risk, liquidity risk, interest rate risk and credit risk. It was built with Python and Next.js.',
     note: 'Personal portfolio project — not intended for production use, regulatory reporting or informing investment decisions. For more information, see the project on',
