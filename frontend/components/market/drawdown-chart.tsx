@@ -17,16 +17,18 @@ import {
 } from '@/components/ui/chart';
 import { formatPercent } from '@/lib/utils';
 import type { DrawdownResult } from '@/lib/definitions';
-
-const chartConfig: ChartConfig = {
-  drawdown: { label: 'Scădere', color: 'var(--destructive)' },
-};
+import { useDictionary } from '@/providers/i18n-provider';
+import { fmt } from '@/lib/i18n/config';
 
 export interface DrawdownChartProps {
   data: DrawdownResult;
 }
 
 export function DrawdownChart({ data }: DrawdownChartProps) {
+  const { charts } = useDictionary().market;
+  const chartConfig: ChartConfig = {
+    drawdown: { label: charts.drawdown, color: 'var(--destructive)' },
+  };
   const rows = data.dates.map((date, i) => ({
     date,
     drawdown: data.values[i],
@@ -50,7 +52,10 @@ export function DrawdownChart({ data }: DrawdownChartProps) {
         <ChartTooltip
           content={
             <ChartTooltipContent
-              formatter={(value) => [formatPercent(Number(value)), 'Scădere']}
+              formatter={(value) => [
+                formatPercent(Number(value)),
+                charts.drawdown,
+              ]}
             />
           }
         />
@@ -70,7 +75,9 @@ export function DrawdownChart({ data }: DrawdownChartProps) {
             fill='var(--color-drawdown)'
             stroke='none'
             label={{
-              value: `Maxim ${formatPercent(data.max_drawdown)}`,
+              value: fmt(charts.drawdownMax, {
+                value: formatPercent(data.max_drawdown),
+              }),
               position: 'bottom',
               fontSize: 10,
             }}

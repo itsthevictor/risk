@@ -16,6 +16,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from '@/components/ui/drawer';
+import { useDictionary } from '@/providers/i18n-provider';
 
 type InfoDrawerProps = {
   title: string;
@@ -41,6 +42,7 @@ function InfoDrawer({
   triggerClassName,
   contentClassName,
 }: InfoDrawerProps) {
+  const dict = useDictionary();
   const equationWrapperRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [wideDrawerWidthPx, setWideDrawerWidthPx] = useState<number | null>(
@@ -102,7 +104,7 @@ function InfoDrawer({
         }
       >
         <InfoIcon />
-        <span className='sr-only'>Mai multe informații</span>
+        <span className='sr-only'>{dict.common.moreInfo}</span>
       </DrawerTrigger>
       <DrawerContent
         className={cn('flex flex-col gap-8', contentClassName)}
@@ -134,7 +136,7 @@ function InfoDrawer({
           {implementation && implementation.length > 0 && (
             <div className='flex flex-col gap-1.5 '>
               <span className='font-heading text-xs font-medium text-foreground'>
-                Implementare
+                {dict.common.implementation}
               </span>
               <ul className='flex flex-col gap-1 text-xs/relaxed text-muted-foreground'>
                 {implementation.map((item, index) => (
@@ -149,7 +151,7 @@ function InfoDrawer({
         </div>
         <DrawerFooter>
           <DrawerClose render={<Button variant='outline' />}>
-            Închide
+            {dict.common.close}
           </DrawerClose>
         </DrawerFooter>
       </DrawerContent>

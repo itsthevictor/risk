@@ -8,7 +8,9 @@ import { CalibrationChart } from '@/components/credit/calibration-chart';
 import { formatPercent, formatUsd } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { IconArrowRight } from '@tabler/icons-react';
-import Link from 'next/link';
+import Link from '@/components/locale-link';
+import { fmt } from '@/lib/i18n/config';
+import { useDictionary, useIntlLocale } from '@/providers/i18n-provider';
 interface PortfolioSummary {
   n_loans: number;
   ead_total: number;
@@ -130,6 +132,8 @@ const MOCK_RESPONSE: CreditRiskSummary = {
 };
 
 export default function CreditRiskPage() {
+  const { credit: t } = useDictionary();
+  const intlLocale = useIntlLocale();
   const [data] = useState<CreditRiskSummary>(MOCK_RESPONSE);
   const [loading, setLoading] = useState(true);
 
@@ -144,22 +148,20 @@ export default function CreditRiskPage() {
     <div className='space-y-6 p-6 max-w-6xl mx-auto'>
       <div className='flex flex-wrap items-end justify-between gap-2'>
         <div className='space-y-1'>
-          <h1 className='text-2xl font-bold'>
-            Risc de credit — Portofoliu retail
-          </h1>
-          <p className='text-muted-foreground text-sm'>
-            PD (regresie logistică) · LGD empiric · RWA IRB avansat
-          </p>
+          <h1 className='text-2xl font-bold'>{t.title}</h1>
+          <p className='text-muted-foreground text-sm'>{t.subtitle}</p>
         </div>
         <p className='text-muted-foreground text-sm'>
-          {portfolio.n_loans.toLocaleString('ro-RO')} credite
-          {loading ? ' · se actualizează…' : ''}
+          {fmt(t.loanCount, {
+            count: portfolio.n_loans.toLocaleString(intlLocale),
+          })}
+          {loading ? t.updating : ''}
         </p>
       </div>
 
       <div className='flex flex-wrap items-center justify-between gap-2'>
         <p className='text-muted-foreground text-sm'>
-          Analiza utilizează setul de date
+          {t.datasetIntro}
           <a
             href='https://www.kaggle.com/datasets/wordsforthewise/lending-club?resource=download'
             className='text-sm text-blue-500 underline ml-2'
@@ -179,56 +181,47 @@ export default function CreditRiskPage() {
             className='text-sm  flex items-center gap-2'
             data-umami-event='credit-data-link'
           >
-            {'Date și metodologie'} <IconArrowRight />
+            {t.dataLink} <IconArrowRight />
           </Link>
         </Button>
       </div>
 
       <div className='grid grid-cols-2 gap-4 md:grid-cols-4'>
         <KpiCard
-          label='EAD total'
+          label={t.kpis.ead.label}
           value={formatUsd(portfolio.ead_total)}
           info={{
-            title: 'EAD (Exposure at Default)',
-            definition:
-              'Expunerea la momentul default-ului, calculată consecvent pe tot portofoliul din valoarea finanțată a creditului — indiferent de statusul curent al acestuia.',
+            title: t.kpis.ead.infoTitle,
+            definition: t.kpis.ead.definition,
             equation: 'EAD = \\text{funded\\_amnt}',
-            implementation: [
-              'Pentru creditele intrate în default, expunerea reală la momentul respectiv (funded_amnt - total_rec_prncp) e folosită separat, la calculul LGD empiric.',
-            ],
+            implementation: t.kpis.ead.steps,
           }}
         />
         <KpiCard
-          label='Pierdere așteptată (EL)'
+          label={t.kpis.el.label}
           value={formatUsd(portfolio.el_total)}
-          subValue={`${formatPercent(portfolio.el_pct, 2)} din EAD`}
+          subValue={fmt(t.kpis.el.subValue, {
+            pct: formatPercent(portfolio.el_pct, 2),
+          })}
           info={{
-            title: 'EL (Expected Loss)',
-            definition:
-              'Pierderea așteptată anuală, rezultată din produsul dintre probabilitatea de default anualizată, severitatea pierderii (LGD) și expunerea la default (EAD).',
-            equation: 'EL = PD_{anual} \\times LGD \\times EAD',
-            implementation: [
-              'PD anualizat printr-o conversie hazard-rate constant din PD lifetime (regresie logistică, AUC 0,706).',
-              'LGD calculat empiric din raportul recuperări/expunere la default (recoveries - collection_recovery_fee), pe subsetul creditelor charged-off.',
-            ],
+            title: t.kpis.el.infoTitle,
+            definition: t.kpis.el.definition,
+            equation: t.kpis.el.equation,
+            implementation: t.kpis.el.steps,
           }}
         />
         <KpiCard
-          label='RWA total'
+          label={t.kpis.rwa.label}
           value={formatUsd(portfolio.rwa_total)}
           info={{
-            title: 'RWA (Risk-Weighted Assets)',
-            definition:
-              'Cerința de capital reglementar sub abordarea IRB avansată pentru expuneri retail, derivată din funcția de capital K (model Vasicek single-factor, corelație R dependentă de PD, percentila de încredere reglementară 99,9%).',
-            equation: 'RWA = K \\times 12{,}5 \\times EAD',
-            implementation: [
-              'Funcția de capital K urmează formula IRB avansată Basel II/III pentru expuneri retail (fără maturity adjustment).',
-              'Densitatea de capital rezultată (RWA/EAD) crește monoton de la gradul A la G, în linie cu creșterea PD.',
-            ],
+            title: t.kpis.rwa.infoTitle,
+            definition: t.kpis.rwa.definition,
+            equation: t.kpis.rwa.equation,
+            implementation: t.kpis.rwa.steps,
           }}
         />
         <KpiCard
-          label='Densitate capital'
+          label={t.kpis.density.label}
           value={formatPercent(portfolio.capital_density, 1)}
           subValue='RWA / EAD'
           status={densityStatus(portfolio.capital_density)}
@@ -237,10 +230,9 @@ export default function CreditRiskPage() {
 
       <div className='space-y-3 border-t pt-6'>
         <div className='space-y-1'>
-          <h2 className='text-lg font-semibold'>Risc pe grad de credit</h2>
+          <h2 className='text-lg font-semibold'>{t.byGrade.title}</h2>
           <p className='text-muted-foreground text-sm'>
-            PD crește progresiv de la A la G, în timp ce LGD rămâne relativ
-            constant, în jur de 90%.
+            {t.byGrade.description}
           </p>
         </div>
         <GradeChart data={by_grade} />
@@ -249,11 +241,9 @@ export default function CreditRiskPage() {
 
       <div className='space-y-3 border-t pt-6'>
         <div className='space-y-1'>
-          <h2 className='text-lg font-semibold'>Calibrare model PD</h2>
+          <h2 className='text-lg font-semibold'>{t.calibration.title}</h2>
           <p className='text-muted-foreground text-sm'>
-            PD calibrat vs. rata de default observată, pe decile — linia
-            punctată marchează calibrarea perfectă (PD calibrat = rată
-            observată).
+            {t.calibration.description}
           </p>
         </div>
         <CalibrationChart data={calibration} />

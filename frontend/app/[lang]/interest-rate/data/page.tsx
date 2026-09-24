@@ -1,14 +1,16 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import Link from 'next/link';
+import Link from '@/components/locale-link';
 import { PositionsTable } from '@/components/interest-rate/positions-table';
 import {
   fetchPositions,
   InterestRateRiskApiError,
 } from '@/lib/api/interest-rate-risk';
+import { useDictionary } from '@/providers/i18n-provider';
 
 export default function InterestRateDataPage() {
+  const { data: t } = useDictionary().interestRate;
   const positionsQuery = useQuery({
     queryKey: ['irrbb-positions'],
     queryFn: fetchPositions,
@@ -22,28 +24,21 @@ export default function InterestRateDataPage() {
           className='text-muted-foreground text-sm hover:underline'
           data-umami-event='interest-rate-data-back-link'
         >
-          ← Risc de dobândă — IRRBB
+          {t.back}
         </Link>
-        <h1 className='text-2xl font-bold'>Date și metodologie</h1>
-        <p className='text-muted-foreground text-sm'>
-          Încât scopul portofoliului este acela de a exemplifica implementarea
-          corectă a algoritmilor de calcul IRRBB, am generat și folosit 100 de
-          rânduri de poziții fictive (mockaroo). În prepararea datelor am
-          asigurat coerența între datele de repricing și maturitate pentru
-          fiecare categorie de poziții, cât și între diferitele categorii de
-          poziții.
-        </p>
+        <h1 className='text-2xl font-bold'>{t.title}</h1>
+        <p className='text-muted-foreground text-sm'>{t.description}</p>
       </div>
 
       {positionsQuery.isPending && (
-        <p className='text-muted-foreground text-sm'>Se încarcă…</p>
+        <p className='text-muted-foreground text-sm'>{t.loading}</p>
       )}
 
       {positionsQuery.isError && (
         <p className='text-destructive text-sm'>
           {positionsQuery.error instanceof InterestRateRiskApiError
             ? positionsQuery.error.message
-            : 'A apărut o eroare la încărcarea datelor.'}
+            : t.error}
         </p>
       )}
 

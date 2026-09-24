@@ -10,25 +10,17 @@ import {
   CustomFormField,
   CustomNumberField,
   CustomFormSelectLabel,
-  SelectOption,
 } from '@/components/forms/form-components';
 
 import { Button } from '@/components/ui/button';
 import { IconTrash, IconPlus } from '@tabler/icons-react';
+import { useDictionary } from '@/providers/i18n-provider';
+import { fmt } from '@/lib/i18n/config';
 
-const OFF_BALANCE_SHEET_CATEGORY_OPTIONS: SelectOption[] = [
-  {
-    value: OFF_BALANCE_SHEET_CATEGORY.RETAIL_SME_FACILITY,
-    label: 'Facilitate retail / IMM',
-  },
-  {
-    value: OFF_BALANCE_SHEET_CATEGORY.CORPORATE_FACILITY,
-    label: 'Facilitate corporativă',
-  },
-  {
-    value: OFF_BALANCE_SHEET_CATEGORY.BANK_FI_FACILITY,
-    label: 'Facilitate bancă / instituție financiară',
-  },
+const OFF_BALANCE_SHEET_CATEGORIES = [
+  OFF_BALANCE_SHEET_CATEGORY.RETAIL_SME_FACILITY,
+  OFF_BALANCE_SHEET_CATEGORY.CORPORATE_FACILITY,
+  OFF_BALANCE_SHEET_CATEGORY.BANK_FI_FACILITY,
 ];
 
 const emptyOffBalanceSheetItem: LCRCalculationRequest['off_balance_sheet'][number] =
@@ -47,6 +39,11 @@ function OffBalanceSheetRow({
   index: number;
   onRemove: () => void;
 }) {
+  const { fields, labels } = useDictionary().liquidity;
+  const categoryOptions = OFF_BALANCE_SHEET_CATEGORIES.map((value) => ({
+    value,
+    label: labels[value],
+  }));
   return (
     <div className='bg-sidebar/40 relative grid grid-cols-1 gap-4 rounded-lg border p-4 md:grid-cols-2 lg:grid-cols-3'>
       <Button
@@ -55,7 +52,7 @@ function OffBalanceSheetRow({
         size='icon'
         className='absolute top-2 right-2 h-7 w-7'
         onClick={onRemove}
-        aria-label={`Elimină elementul ${index + 1}`}
+        aria-label={fmt(fields.removeItem, { n: index + 1 })}
       >
         <IconTrash className='h-4 w-4' />
       </Button>
@@ -64,21 +61,21 @@ function OffBalanceSheetRow({
         <CustomFormField
           control={control}
           name={`off_balance_sheet.${index}.description`}
-          labelText='Descriere'
+          labelText={fields.description}
         />
       </div>
 
       <CustomNumberField
         control={control}
         name={`off_balance_sheet.${index}.amount`}
-        labelText='Sumă'
+        labelText={fields.amount}
       />
 
       <CustomFormSelectLabel
         control={control}
         name={`off_balance_sheet.${index}.category`}
-        labelText='Categorie'
-        items={OFF_BALANCE_SHEET_CATEGORY_OPTIONS}
+        labelText={fields.category}
+        items={categoryOptions}
       />
     </div>
   );
@@ -89,6 +86,7 @@ export function OffBalanceSheetStep({
 }: {
   form: UseFormReturn<LCRCalculationRequest>;
 }) {
+  const { fields: t, steps } = useDictionary().liquidity;
   const { control } = form;
   const { fields, append, remove } = useFieldArray({
     control,
@@ -98,17 +96,15 @@ export function OffBalanceSheetStep({
   return (
     <div className='space-y-6'>
       <div>
-        <h2 className='text-lg font-semibold'>Elemente extrabilanțiere</h2>
+        <h2 className='text-lg font-semibold'>{steps.offBalanceSheet.title}</h2>
         <p className='text-muted-foreground text-sm'>
-          Adăugați fiecare angajament sau facilitate extrabilanțieră și
-          categoria acesteia.
+          {steps.offBalanceSheet.description}
         </p>
       </div>
 
       {fields.length === 0 && (
         <p className='text-muted-foreground text-sm italic'>
-          Niciun element extrabilanțier adăugat încă. Adăugați unul pentru a
-          începe.
+          {steps.offBalanceSheet.empty}
         </p>
       )}
 
@@ -130,7 +126,7 @@ export function OffBalanceSheetStep({
         className='gap-1'
       >
         <IconPlus className='h-4 w-4' />
-        Adaugă element
+        {t.addItem}
       </Button>
     </div>
   );

@@ -8,9 +8,9 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from '@/components/ui/chart';
-import { formatRon } from '@/lib/utils';
 import type { EveAnalysisResponse } from '@/lib/definitions';
-import { EVE_SCENARIO_LABELS, EVE_SCENARIO_ORDER } from './eve-scenarios';
+import { EVE_SCENARIO_ORDER } from './eve-scenarios';
+import { useDictionary, useFormatRon } from '@/providers/i18n-provider';
 
 const chartConfig: ChartConfig = {
   delta_eve: { label: 'Delta EVE', color: 'var(--color-chart-2)' },
@@ -21,15 +21,20 @@ export interface DeltaEveChartProps {
 }
 
 export function DeltaEveChart({ data }: DeltaEveChartProps) {
+  const { scenarios } = useDictionary().interestRate;
+  const ron = useFormatRon();
   const rows = EVE_SCENARIO_ORDER.filter((scenario) => scenario !== 'base').map(
     (scenario) => ({
-      name: EVE_SCENARIO_LABELS[scenario],
+      name: scenarios[scenario],
       delta_eve: data.scenarios[scenario].delta_eve,
     }),
   );
 
   return (
-    <ChartContainer config={chartConfig} className='aspect-auto h-[22.5rem] w-full'>
+    <ChartContainer
+      config={chartConfig}
+      className='aspect-auto h-[22.5rem] w-full'
+    >
       <BarChart
         data={rows}
         margin={{ top: 12, right: 12, left: 12, bottom: 0 }}
@@ -43,14 +48,14 @@ export function DeltaEveChart({ data }: DeltaEveChartProps) {
           height={60}
         />
         <YAxis
-          tickFormatter={(v) => formatRon(v, 0)}
+          tickFormatter={(v) => ron(v, 0)}
           tick={{ fontSize: 10 }}
           width={64}
         />
         <ChartTooltip
           content={
             <ChartTooltipContent
-              formatter={(value) => [formatRon(Number(value)), 'ΔEVE']}
+              formatter={(value) => [ron(Number(value)), 'ΔEVE']}
             />
           }
         />

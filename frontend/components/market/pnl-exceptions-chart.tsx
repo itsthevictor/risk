@@ -1,7 +1,14 @@
 'use client';
 
 import { memo } from 'react';
-import { CartesianGrid, Line, LineChart, ReferenceLine, XAxis, YAxis } from 'recharts';
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ReferenceLine,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import type { DotItemDotProps } from 'recharts';
 
 import {
@@ -14,12 +21,14 @@ import {
 } from '@/components/ui/chart';
 import { formatUsd } from '@/lib/utils';
 import type { TimeSeries } from '@/lib/definitions';
+import { useDictionary } from '@/providers/i18n-provider';
+import { fmt } from '@/lib/i18n/config';
 
-const chartConfig: ChartConfig = {
-  pnl: { label: 'P&L realizat', color: 'var(--color-chart-2)' },
+const chartColors = {
+  pnl: 'var(--color-chart-2)',
   // Deliberately not --destructive: that's the breach-dot color, and a line the same
   // shade of red would visually vanish under a cluster of dots right where it matters.
-  varThreshold: { label: 'Prag VaR (zilnic)', color: 'oklch(0.77 0.16 70)' },
+  varThreshold: 'oklch(0.77 0.16 70)',
 };
 
 interface PnlRow {
@@ -60,7 +69,7 @@ export interface PnlExceptionsChartProps {
    * visibly below it.
    */
   varSeries?: TimeSeries;
-  /** e.g. "Simulare Istorică" — which method the VaR line and breach dots belong to */
+  /** e.g. "Historical Simulation" — which method the VaR line and breach dots belong to */
   methodLabel?: string;
 }
 
@@ -73,6 +82,14 @@ export const PnlExceptionsChart = memo(function PnlExceptionsChart({
   varSeries,
   methodLabel,
 }: PnlExceptionsChartProps) {
+  const { charts } = useDictionary().market;
+  const chartConfig: ChartConfig = {
+    pnl: { label: charts.pnl, color: chartColors.pnl },
+    varThreshold: {
+      label: charts.varThreshold,
+      color: chartColors.varThreshold,
+    },
+  };
   const breachSet = new Set(breachDates ?? []);
   const varByDate = new Map(
     (varSeries?.dates ?? []).map((date, i) => [date, varSeries!.values[i]]),
@@ -91,7 +108,7 @@ export const PnlExceptionsChart = memo(function PnlExceptionsChart({
     <div className='space-y-1'>
       {methodLabel && (
         <p className='text-muted-foreground text-xs'>
-          VaR și depășiri: metoda {methodLabel}
+          {fmt(charts.methodCaption, { method: methodLabel })}
         </p>
       )}
       <ChartContainer config={chartConfig} className='aspect-auto h-128 w-full'>
@@ -112,7 +129,7 @@ export const PnlExceptionsChart = memo(function PnlExceptionsChart({
                 formatter={(value, name, item) => [
                   formatUsd(Number(value)),
                   name === 'pnl' && (item.payload as PnlRow).isBreach
-                    ? 'P&L (depășire VaR)'
+                    ? charts.pnlBreach
                     : (chartConfig[name as keyof typeof chartConfig]?.label ??
                       name),
                 ]}

@@ -10,24 +10,16 @@ import {
   CustomFormField,
   CustomNumberField,
   CustomFormSelectLabel,
-  SelectOption,
 } from '@/components/forms/form-components';
 import { Button } from '@/components/ui/button';
 import { IconTrash, IconPlus } from '@tabler/icons-react';
+import { useDictionary } from '@/providers/i18n-provider';
+import { fmt } from '@/lib/i18n/config';
 
-const WHOLESALE_CATEGORY_OPTIONS: SelectOption[] = [
-  {
-    value: WHOLESALE_DEPOSIT_CATEGORY.OPERATIONAL_DEPOSIT,
-    label: 'Depozit operațional',
-  },
-  {
-    value: WHOLESALE_DEPOSIT_CATEGORY.NON_OPERATIONAL_CORPORATE,
-    label: 'Neoperațional (corporativ)',
-  },
-  {
-    value: WHOLESALE_DEPOSIT_CATEGORY.NON_OPERATIONAL_FINANCIAL_INSTITUTION,
-    label: 'Neoperațional (instituție financiară)',
-  },
+const WHOLESALE_CATEGORIES = [
+  WHOLESALE_DEPOSIT_CATEGORY.OPERATIONAL_DEPOSIT,
+  WHOLESALE_DEPOSIT_CATEGORY.NON_OPERATIONAL_CORPORATE,
+  WHOLESALE_DEPOSIT_CATEGORY.NON_OPERATIONAL_FINANCIAL_INSTITUTION,
 ];
 
 const emptyWholesaleItem: LCRCalculationRequest['wholesale_deposits'][number] =
@@ -46,6 +38,11 @@ function WholesaleDepositRow({
   index: number;
   onRemove: () => void;
 }) {
+  const { fields, labels } = useDictionary().liquidity;
+  const categoryOptions = WHOLESALE_CATEGORIES.map((value) => ({
+    value,
+    label: labels[value],
+  }));
   return (
     <div className='bg-sidebar/40 relative grid grid-cols-1 gap-4 rounded-lg border p-4 md:grid-cols-2 lg:grid-cols-3'>
       <Button
@@ -54,7 +51,7 @@ function WholesaleDepositRow({
         size='icon'
         className='absolute top-2 right-2 h-7 w-7'
         onClick={onRemove}
-        aria-label={`Elimină elementul ${index + 1}`}
+        aria-label={fmt(fields.removeItem, { n: index + 1 })}
       >
         <IconTrash className='h-4 w-4' />
       </Button>
@@ -63,21 +60,21 @@ function WholesaleDepositRow({
         <CustomFormField
           control={control}
           name={`wholesale_deposits.${index}.description`}
-          labelText='Descriere'
+          labelText={fields.description}
         />
       </div>
 
       <CustomNumberField
         control={control}
         name={`wholesale_deposits.${index}.amount`}
-        labelText='Sumă'
+        labelText={fields.amount}
       />
 
       <CustomFormSelectLabel
         control={control}
         name={`wholesale_deposits.${index}.category`}
-        labelText='Categorie'
-        items={WHOLESALE_CATEGORY_OPTIONS}
+        labelText={fields.category}
+        items={categoryOptions}
       />
     </div>
   );
@@ -88,6 +85,7 @@ export function WholesaleDepositsStep({
 }: {
   form: UseFormReturn<LCRCalculationRequest>;
 }) {
+  const { fields: t, steps } = useDictionary().liquidity;
   const { control } = form;
   const { fields, append, remove } = useFieldArray({
     control,
@@ -97,15 +95,15 @@ export function WholesaleDepositsStep({
   return (
     <div className='space-y-6'>
       <div>
-        <h2 className='text-lg font-semibold'>Depozite en-gros</h2>
+        <h2 className='text-lg font-semibold'>{steps.wholesale.title}</h2>
         <p className='text-muted-foreground text-sm'>
-          Adăugați fiecare depozit en-gros și categoria acestuia.
+          {steps.wholesale.description}
         </p>
       </div>
 
       {fields.length === 0 && (
         <p className='text-muted-foreground text-sm italic'>
-          Niciun depozit en-gros adăugat încă. Adăugați unul pentru a începe.
+          {steps.wholesale.empty}
         </p>
       )}
 
@@ -127,7 +125,7 @@ export function WholesaleDepositsStep({
         className='gap-1'
       >
         <IconPlus className='h-4 w-4' />
-        Adaugă element
+        {t.addItem}
       </Button>
     </div>
   );

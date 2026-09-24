@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import Link from 'next/link';
+import Link from '@/components/locale-link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
@@ -13,23 +13,28 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { IconChevronDown, IconChevronUp } from '@tabler/icons-react';
 import { ThemeToggle } from './theme-toggle';
+import { LanguageSwitcher } from './language-switcher';
+import { stripLocale } from '@/lib/i18n/config';
+import { useDictionary } from '@/providers/i18n-provider';
+import type { Dictionary } from '@/lib/i18n/dictionaries';
 
-const PATH_LABELS: Record<string, string> = {
-  '/liquidity': 'Risc de lichiditate',
-  '/market': 'Risc de piață',
-  '/interest-rate': 'Risc de dobândă',
-  '/credit': 'Risc de credit',
+const PATH_LABELS: Record<string, keyof Dictionary['nav']> = {
+  '/liquidity': 'liquidity',
+  '/market': 'market',
+  '/interest-rate': 'interestRate',
+  '/credit': 'credit',
 };
 
 const isActivePath = (pathname: string, href: string) =>
   pathname === href || pathname.startsWith(`${href}/`);
 
 const Header = () => {
-  const pathname = usePathname();
-  const currentLabel =
-    Object.entries(PATH_LABELS).find(([href]) =>
-      isActivePath(pathname, href),
-    )?.[1] ?? 'Navigare';
+  const pathname = stripLocale(usePathname());
+  const dict = useDictionary();
+  const currentKey = Object.entries(PATH_LABELS).find(([href]) =>
+    isActivePath(pathname, href),
+  )?.[1];
+  const currentLabel = currentKey ? dict.nav[currentKey] : dict.nav.menu;
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -38,6 +43,7 @@ const Header = () => {
         RISK
       </Link>
       <div className='flex items-center justify-between gap-x-4'>
+        <LanguageSwitcher />
         <div className='md:hidden sm:block'>
           <ThemeToggle />
         </div>
@@ -58,28 +64,28 @@ const Header = () => {
                 className='w-full'
                 data-umami-event='header-market-link'
               >
-                <DropdownMenuItem>Risc de piață</DropdownMenuItem>
+                <DropdownMenuItem>{dict.nav.market}</DropdownMenuItem>
               </Link>
               <Link
                 href='/liquidity'
                 className='w-full'
                 data-umami-event='header-liquidity-link'
               >
-                <DropdownMenuItem>Risc de lichiditate</DropdownMenuItem>
+                <DropdownMenuItem>{dict.nav.liquidity}</DropdownMenuItem>
               </Link>
               <Link
                 href='/interest-rate'
                 className='w-full'
                 data-umami-event='header-interest-rate-link'
               >
-                <DropdownMenuItem>Risc de dobândă</DropdownMenuItem>
+                <DropdownMenuItem>{dict.nav.interestRate}</DropdownMenuItem>
               </Link>
               <Link
                 href='/credit'
                 className='w-full'
                 data-umami-event='header-credit-link'
               >
-                <DropdownMenuItem>Risc de credit</DropdownMenuItem>
+                <DropdownMenuItem>{dict.nav.credit}</DropdownMenuItem>
               </Link>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
@@ -91,7 +97,7 @@ const Header = () => {
                 className='w-full'
                 data-umami-event='header-about-link'
               >
-                <DropdownMenuItem>Despre</DropdownMenuItem>
+                <DropdownMenuItem>{dict.nav.about}</DropdownMenuItem>
               </Link>
             </DropdownMenuGroup>
           </DropdownMenuContent>

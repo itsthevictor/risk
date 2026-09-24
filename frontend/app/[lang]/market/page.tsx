@@ -19,10 +19,7 @@ import { VarComparisonTable } from '@/components/market/var-table';
 import { BacktestScorecardTable } from '@/components/market/backtest-table';
 import { PnlExceptionsChart } from '@/components/market/pnl-exceptions-chart';
 import { StressResultCard } from '@/components/market/stress-result-card';
-import {
-  ShockInputs,
-  ASSET_CLASS_LABELS,
-} from '@/components/market/shock-inputs';
+import { ShockInputs } from '@/components/market/shock-inputs';
 import { formatDateRo, formatPercent } from '@/lib/utils';
 import {
   analyzeMarketRisk,
@@ -35,30 +32,16 @@ import type {
   MethodBacktest,
   StressTestRequestParsed,
 } from '@/lib/definitions';
+import { fmt } from '@/lib/i18n/config';
+import { useDictionary } from '@/providers/i18n-provider';
 
 const CONFIDENCE_LEVELS = [0.9, 0.95, 0.99] as const;
 const PRIMARY_METHOD: keyof MethodBacktest = 'historical';
-const METHOD_LABELS: Record<keyof MethodBacktest, string> = {
-  historical: 'Simulare Istorică',
-  parametric: 'Parametric',
-  ewma: 'Parametric (EWMA)',
-  garch: 'Parametric (GARCH)',
-  monte_carlo: 'Monte Carlo',
-};
 
 // Mirrors backend/api/market_routes.py — acute crash windows (not full calendar
 // years), plus the per-asset-class shocks prefilled alongside each one.
 const STRESS_SCENARIOS = ['2020', '2022', 'custom'] as const;
 type StressScenario = (typeof STRESS_SCENARIOS)[number];
-const STRESS_SCENARIO_LABELS: Record<StressScenario, string> = {
-  '2020': '2020 — COVID-19',
-  '2022': '2022 — Rate-hike sell-off',
-  custom: 'Personalizat',
-};
-const HISTORICAL_REPLAY_LABELS: Record<'2020' | '2022', string> = {
-  '2020': 'COVID-19 (19 feb – 20 mar 2020)',
-  '2022': 'Rate-hike sell-off (27 dec 2021 – 14 oct 2022)',
-};
 const PRESET_SHOCKS: Record<'2020' | '2022', Record<string, number>> = {
   '2020': {
     equity: -0.3,
@@ -77,6 +60,8 @@ const PRESET_SHOCKS: Record<'2020' | '2022', Record<string, number>> = {
 };
 
 export default function MarketRiskPage() {
+  const { market, common } = useDictionary();
+  const { page: t, stress } = market;
   const [confidenceLevel, setConfidenceLevel] = useState<number>(0.95);
   const [chartMethod, setChartMethod] =
     useState<keyof MethodBacktest>(PRIMARY_METHOD);
@@ -235,8 +220,7 @@ export default function MarketRiskPage() {
 
       {tickersQuery.isError && (
         <p className='text-destructive text-sm'>
-          Nu s-a putut încărca lista de tickere — verifică dacă backend-ul
-          rulează
+          {t.tickersError}
           {tickersQuery.error instanceof MarketRiskApiError
             ? `: ${tickersQuery.error.message}`
             : '.'}
@@ -247,7 +231,7 @@ export default function MarketRiskPage() {
         <p className='text-destructive text-sm'>
           {analysis.error instanceof MarketRiskApiError
             ? analysis.error.message
-            : 'A apărut o eroare la rularea analizei.'}
+            : t.analysisError}
         </p>
       )}
 
@@ -255,13 +239,8 @@ export default function MarketRiskPage() {
         <div className='text-foreground bg-accent mx-auto flex w-fit flex-row items-center gap-4 rounded-lg p-4 text-sm'>
           <IconInfoCircle className='shrink-0' />
           <div className='max-w-sm'>
-            <p>
-              Pentru a iniția analiza selectează activele, valoarea
-              portofoliului și durata ferestrei de estimare.
-            </p>
-            <p className='text-muted-foreground mt-2 text-xs'>
-              Pentru simplitate, portofoliul va avea ponderi egale.
-            </p>
+            <p>{t.intro}</p>
+            <p className='text-muted-foreground mt-2 text-xs'>{t.introNote}</p>
           </div>
         </div>
       )}
@@ -270,11 +249,8 @@ export default function MarketRiskPage() {
         <div className='text-foreground bg-accent mx-auto flex w-fit flex-row items-center gap-4 rounded-lg p-4 text-sm'>
           <IconLoader2 className='text-muted-foreground h-5 w-5 shrink-0 animate-spin' />
           <div className='max-w-sm'>
-            <p className='font-medium'>Se rulează analiza…</p>
-            <p className='text-muted-foreground text-xs'>
-              Se descarcă istoricul de preț și se calibrează modelele (EWMA,
-              GARCH, Monte Carlo, backtest)…
-            </p>
+            <p className='font-medium'>{t.running}</p>
+            <p className='text-muted-foreground text-xs'>{t.runningDetail}</p>
           </div>
         </div>
       )}
@@ -282,10 +258,11 @@ export default function MarketRiskPage() {
       {analysis.data && (
         <>
           <div className='space-y-1'>
-            <h2 className='text-lg font-semibold'>Risc curent</h2>
+            <h2 className='text-lg font-semibold'>{t.currentRisk}</h2>
             <p className='text-muted-foreground text-sm'>
-              Calculat la {formatDateRo(analysis.data.portfolio.end_date)}, pe
-              baza întregului istoric disponibil.
+              {fmt(t.computedAt, {
+                date: formatDateRo(analysis.data.portfolio.end_date),
+              })}
             </p>
           </div>
 
@@ -317,17 +294,19 @@ export default function MarketRiskPage() {
           <div className='space-y-3 border-t pt-6'>
             <div className='space-y-1'>
               <div className='flex items-center gap-1'>
-                <h2 className='text-lg font-semibold'>Backtest complet</h2>
+                <h2 className='text-lg font-semibold'>
+                  {market.backtest.title}
+                </h2>
                 <InfoDrawer
-                  title='Backtest complet'
-                  definition='Click pe o metodă din tabel (sau pe iconița grafic din dreptul ei) pentru a actualiza graficul depășirilor de mai jos.'
+                  title={market.backtest.title}
+                  definition={market.backtest.info}
                 />
               </div>
               <p className='text-muted-foreground text-sm'>
-                Kupiec, Christoffersen și lumina de semafor pentru fiecare
-                metodă, calculate pe tot istoricul disponibil (
-                {analysis.data.backtest[PRIMARY_METHOD].total_observations}{' '}
-                observații).
+                {fmt(market.backtest.description, {
+                  count:
+                    analysis.data.backtest[PRIMARY_METHOD].total_observations,
+                })}
               </p>
             </div>
             <BacktestScorecardTable
@@ -339,18 +318,17 @@ export default function MarketRiskPage() {
               pnl={analysis.data.actual_pnl}
               breachDates={analysis.data.backtest[chartMethod].breach_dates}
               varSeries={analysis.data.backtest[chartMethod].var_series}
-              methodLabel={METHOD_LABELS[chartMethod]}
+              methodLabel={market.methods[chartMethod]}
             />
           </div>
 
           <div className='space-y-3 border-t pt-6'>
             <div className='flex items-center justify-between gap-2'>
               <div className='space-y-1'>
-                <h2 className='text-lg font-semibold'>Stress Testing</h2>
+                <h2 className='text-lg font-semibold'>{stress.title}</h2>
                 <p className='text-muted-foreground text-sm'>
-                  Impactul asupra portofoliului de <strong>azi</strong> — nu cum
-                  s-a comportat modelul de VaR, ci ce s-ar întâmpla cu valoarea
-                  curentă dacă s-ar repeta un scenariu de criză.
+                  {stress.descriptionBefore} <strong>{stress.today}</strong>{' '}
+                  {stress.descriptionAfter}
                 </p>
               </div>
               <Button
@@ -359,27 +337,29 @@ export default function MarketRiskPage() {
                 size='sm'
                 onClick={() => setStressOpen((open) => !open)}
               >
-                {stressOpen ? 'Ascunde' : 'Arată'}
+                {stressOpen ? stress.hide : stress.show}
               </Button>
             </div>
 
             {stressOpen && (
               <div className='space-y-4'>
                 <div className='space-y-1'>
-                  <label className='text-sm font-medium'>Scenariu</label>
+                  <label className='text-sm font-medium'>
+                    {stress.scenario}
+                  </label>
                   <Select
                     value={stressScenario}
                     onValueChange={handleScenarioChange}
                   >
                     <SelectTrigger className='w-56'>
                       <SelectValue>
-                        {(v: StressScenario) => STRESS_SCENARIO_LABELS[v]}
+                        {(v: StressScenario) => stress.scenarios[v]}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {STRESS_SCENARIOS.map((s) => (
                         <SelectItem key={s} value={s}>
-                          {STRESS_SCENARIO_LABELS[s]}
+                          {stress.scenarios[s]}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -388,13 +368,11 @@ export default function MarketRiskPage() {
 
                 {stressScenario !== 'custom' && (
                   <div className='text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-sm'>
-                    <span className='font-medium'>
-                      Scădere presupusă per clasă de active:
-                    </span>
+                    <span className='font-medium'>{stress.presetShocks}</span>
                     {Object.entries(PRESET_SHOCKS[stressScenario]).map(
                       ([cls, shock]) => (
                         <span key={cls} className='tabular-nums'>
-                          {ASSET_CLASS_LABELS[cls] ?? cls}:{' '}
+                          {market.assetClasses[cls] ?? cls}:{' '}
                           {formatPercent(shock)}
                         </span>
                       ),
@@ -409,19 +387,19 @@ export default function MarketRiskPage() {
                         <p className='text-destructive text-sm'>
                           {historicalStress.error instanceof MarketRiskApiError
                             ? historicalStress.error.message
-                            : 'A apărut o eroare la calculul replay-ului istoric.'}
+                            : stress.historicalError}
                         </p>
                       )}
                       {historicalStress.isPending && (
                         <p className='text-muted-foreground text-sm'>
-                          Se calculează…
+                          {common.calculating}
                         </p>
                       )}
                       {historicalStress.data && (
                         <StressResultCard
-                          title='Replay istoric'
+                          title={stress.historicalReplay}
                           description={
-                            HISTORICAL_REPLAY_LABELS[
+                            stress.replayWindows[
                               stressScenario as '2020' | '2022'
                             ]
                           }
@@ -436,18 +414,18 @@ export default function MarketRiskPage() {
                       <p className='text-destructive text-sm'>
                         {hypotheticalStress.error instanceof MarketRiskApiError
                           ? hypotheticalStress.error.message
-                          : 'A apărut o eroare la calculul scenariului.'}
+                          : stress.hypotheticalError}
                       </p>
                     )}
                     {hypotheticalStress.isPending && (
                       <p className='text-muted-foreground text-sm'>
-                        Se calculează…
+                        {common.calculating}
                       </p>
                     )}
                     {hypotheticalStress.data && (
                       <StressResultCard
-                        title='Scenariu aplicat'
-                        description='Șoc pe clase de active, ponderat cu compoziția portofoliului'
+                        title={stress.appliedScenario}
+                        description={stress.appliedScenarioDescription}
                         result={hypotheticalStress.data}
                       />
                     )}
@@ -457,7 +435,7 @@ export default function MarketRiskPage() {
                 {stressScenario === 'custom' && (
                   <div className='space-y-2'>
                     <label className='text-sm font-medium'>
-                      Șocuri per clasă de active
+                      {stress.customShocks}
                     </label>
                     <ShockInputs
                       assetClasses={portfolioAssetClasses}
@@ -471,7 +449,7 @@ export default function MarketRiskPage() {
                       disabled={hypotheticalStress.isPending}
                       onClick={handleRecalculateShocks}
                     >
-                      Recalculează
+                      {stress.recalculate}
                     </Button>
                   </div>
                 )}

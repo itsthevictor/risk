@@ -1,6 +1,6 @@
 import { ThemeToggle } from '@/components/theme-toggle';
 // import { Separator } from '@/components/ui/separator';
-// import Link from 'next/link';
+import Link from '@/components/locale-link';
 const Footer = () => {
   return (
     <footer className='print:hidden text-xs text-muted-foreground py-3 md:flex flex-row items-center justify-between gap-y-2  bg-transparent border-t border-muted-foreground hidden px-4'>
@@ -28,13 +28,13 @@ const Footer = () => {
         >
           LinkedIn
         </a>
-        <a
+        <Link
           href='/cv'
           className='hover:underline hover:text-foreground'
           data-umami-event='footer-cv-link'
         >
           CV
-        </a>
+        </Link>
       </div>
     </footer>
   );

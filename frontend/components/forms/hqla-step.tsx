@@ -18,41 +18,36 @@ import {
   CustomFormField,
   CustomNumberField,
   CustomFormSelectLabel,
-  SelectOption,
 } from '@/components/forms/form-components';
 import { Button } from '@/components/ui/button';
 import InfoDrawer from '@/components/custom/info-drawer';
 import { IconTrash, IconPlus } from '@tabler/icons-react';
+import { useDictionary } from '@/providers/i18n-provider';
+import { fmt } from '@/lib/i18n/config';
 
 const RATING_EXEMPT_ISSUER_TYPES_SET = new Set<string>(
   Object.values(RATING_EXEMPT_ISSUER_TYPES),
 );
 
-const ISSUER_TYPE_OPTIONS: SelectOption[] = [
-  {
-    value: ISSUER_TYPE.SOVEREIGN_OWN_COUNTRY,
-    label: 'Suveran (țara proprie)',
-  },
-  { value: ISSUER_TYPE.CENTRAL_BANK_CASH, label: 'Numerar bancă centrală' },
-  { value: ISSUER_TYPE.SOVEREIGN_FOREIGN, label: 'Suveran (străin)' },
-  {
-    value: ISSUER_TYPE.MULTILATERAL_DEV_BANK,
-    label: 'Bancă multilaterală de dezvoltare',
-  },
-  { value: ISSUER_TYPE.COVERED_BOND, label: 'Obligațiune garantată' },
-  { value: ISSUER_TYPE.CORPORATE_BOND, label: 'Obligațiune corporativă' },
-  { value: ISSUER_TYPE.EQUITY_INDEX_LISTED, label: 'Acțiuni (index listat)' },
-  { value: ISSUER_TYPE.EQUITY_OTHER, label: 'Acțiuni (altele)' },
-  { value: ISSUER_TYPE.RMBS, label: 'RMBS' },
-  { value: ISSUER_TYPE.OTHER, label: 'Altele' },
+const ISSUER_TYPES = [
+  ISSUER_TYPE.SOVEREIGN_OWN_COUNTRY,
+  ISSUER_TYPE.CENTRAL_BANK_CASH,
+  ISSUER_TYPE.SOVEREIGN_FOREIGN,
+  ISSUER_TYPE.MULTILATERAL_DEV_BANK,
+  ISSUER_TYPE.COVERED_BOND,
+  ISSUER_TYPE.CORPORATE_BOND,
+  ISSUER_TYPE.EQUITY_INDEX_LISTED,
+  ISSUER_TYPE.EQUITY_OTHER,
+  ISSUER_TYPE.RMBS,
+  ISSUER_TYPE.OTHER,
 ];
 
-const RATING_BAND_OPTIONS: SelectOption[] = [
-  { value: RATING_BAND.AAA_AA, label: 'AAA până la AA-' },
-  { value: RATING_BAND.A, label: 'A+ până la A-' },
-  { value: RATING_BAND.BBB, label: 'BBB+ până la BBB-' },
-  { value: RATING_BAND.BELOW_BBB_MINUS, label: 'Sub BBB-' },
-  { value: RATING_BAND.NOT_RATED, label: 'Fără rating' },
+const RATING_BANDS = [
+  RATING_BAND.AAA_AA,
+  RATING_BAND.A,
+  RATING_BAND.BBB,
+  RATING_BAND.BELOW_BBB_MINUS,
+  RATING_BAND.NOT_RATED,
 ];
 
 const emptyHqlaItem: LCRCalculationRequest['hqla_items'][number] = {
@@ -83,10 +78,15 @@ function HqlaItemRow({
   });
   const ratingExempt = RATING_EXEMPT_ISSUER_TYPES_SET.has(issuerType);
 
+  const { fields, labels, ratingBand } = useDictionary().liquidity;
+  const issuerTypeOptions = ISSUER_TYPES.map((value) => ({
+    value,
+    label: labels[value],
+  }));
   const allowedRatingBands = HQLA_ALLOWED_RATING_BANDS[issuerType] ?? [];
-  const filteredRatingBandOptions = RATING_BAND_OPTIONS.filter((opt) =>
-    allowedRatingBands.includes(opt.value as RATING_BAND),
-  );
+  const filteredRatingBandOptions = RATING_BANDS.filter((value) =>
+    allowedRatingBands.includes(value),
+  ).map((value) => ({ value, label: labels[value] }));
 
   // Keep rating_band in sync with issuer_type: clear it when the new
   // issuer type is exempt, and re-run validation on it either way so
@@ -120,7 +120,7 @@ function HqlaItemRow({
           <CustomFormField
             control={control}
             name={`hqla_items.${index}.description`}
-            labelText='Denumire'
+            labelText={fields.name}
           />
         </div>
 
@@ -130,7 +130,7 @@ function HqlaItemRow({
           size='sm'
           className='h-9 w-9 shrink-0 hover:text-destructive text-muted-foreground'
           onClick={onRemove}
-          aria-label={`Elimină elementul ${index + 1}`}
+          aria-label={fmt(fields.removeItem, { n: index + 1 })}
         >
           <IconTrash className='h-4 w-4 ' />
         </Button>
@@ -140,20 +140,20 @@ function HqlaItemRow({
         <CustomNumberField
           control={control}
           name={`hqla_items.${index}.amount`}
-          labelText='Sumă'
+          labelText={fields.amount}
         />
 
         <CustomFormSelectLabel
           control={control}
           name={`hqla_items.${index}.issuer_type`}
-          labelText='Tip emitent'
-          items={ISSUER_TYPE_OPTIONS}
+          labelText={fields.issuerType}
+          items={issuerTypeOptions}
         />
 
         {ratingExempt ? (
           <div className='flex flex-col justify-end pb-2'>
             <p className='text-muted-foreground text-xs'>
-              Banda de rating nu este necesară pentru acest tip de emitent.
+              {ratingBand.notRequired}
             </p>
           </div>
         ) : (
@@ -162,19 +162,14 @@ function HqlaItemRow({
               <CustomFormSelectLabel
                 control={control}
                 name={`hqla_items.${index}.rating_band`}
-                labelText='Bandă de rating'
+                labelText={fields.ratingBand}
                 items={filteredRatingBandOptions}
               />
             </div>
             <InfoDrawer
-              title='Bandă de rating'
-              definition={
-                "În practică, banda de rating se derivă din rating-ul emis de agenții precum S&P, Moody's sau Fitch, mapat conform tabelelor ESMA/EBA. Pentru simplitate, acest formular permite selectarea directă a benzii — logica de mapare rating→CQS este un proces separat de clasificare a activelor, nu face parte din calculul LCR propriu-zis."
-              }
-              implementation={[
-                'Nu este implementată preluarea rating-ului brut de la agențiile de rating și maparea sa automată la Credit Quality Steps (CQS).',
-                'Complexitatea suplimentară (surse de rating, reguli de agregare, mapări ESMA/EBA) depășește scopul acestui proiect.',
-              ]}
+              title={fields.ratingBand}
+              definition={ratingBand.infoDefinition}
+              implementation={ratingBand.infoSteps}
               triggerClassName='mb-2'
             />
           </div>
@@ -189,6 +184,7 @@ export function HqlaStep({
 }: {
   form: UseFormReturn<LCRCalculationRequest>;
 }) {
+  const { fields: t, steps } = useDictionary().liquidity;
   const { control, trigger, setValue, getValues } = form;
   const { fields, append, remove } = useFieldArray({
     control,
@@ -198,18 +194,15 @@ export function HqlaStep({
   return (
     <div className='space-y-6'>
       <div>
-        <h2 className='text-lg font-semibold'>
-          Active lichide de calitate ridicată (HQLA)
-        </h2>
+        <h2 className='text-lg font-semibold'>{steps.hqla.title}</h2>
         <p className='text-muted-foreground text-sm'>
-          Adăugați fiecare activ lichid de calitate ridicată, tipul emitentului
-          și, unde este necesar, banda de rating de credit.
+          {steps.hqla.description}
         </p>
       </div>
 
       {fields.length === 0 && (
         <p className='text-muted-foreground text-sm italic'>
-          Niciun activ HQLA adăugat încă. Adăugați unul pentru a începe.
+          {steps.hqla.empty}
         </p>
       )}
 
@@ -234,7 +227,7 @@ export function HqlaStep({
         className='gap-1'
       >
         <IconPlus className='h-4 w-4' />
-        Adaugă element
+        {t.addItem}
       </Button>
     </div>
   );

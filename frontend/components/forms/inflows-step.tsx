@@ -7,32 +7,18 @@ import {
   CustomFormField,
   CustomNumberField,
   CustomFormSelectLabel,
-  SelectOption,
 } from '@/components/forms/form-components';
 import { Button } from '@/components/ui/button';
 import { IconTrash, IconPlus } from '@tabler/icons-react';
+import { useDictionary } from '@/providers/i18n-provider';
+import { fmt } from '@/lib/i18n/config';
 
-const INFLOW_CATEGORY_OPTIONS: SelectOption[] = [
-  {
-    value: INFLOW_ITEM_CATEGORY.SECURED_LENDING_L1_COLLATERAL,
-    label: 'Împrumut garantat (garanție L1)',
-  },
-  {
-    value: INFLOW_ITEM_CATEGORY.SECURED_LENDING_L2A_COLLATERAL,
-    label: 'Împrumut garantat (garanție L2A)',
-  },
-  {
-    value: INFLOW_ITEM_CATEGORY.RETAIL_SME_LOAN_REPAYMENT,
-    label: 'Rambursare împrumut retail / IMM',
-  },
-  {
-    value: INFLOW_ITEM_CATEGORY.CORPORATE_LOAN_REPAYMENT,
-    label: 'Rambursare împrumut corporativ',
-  },
-  {
-    value: INFLOW_ITEM_CATEGORY.BANK_FI_LOAN_REPAYMENT,
-    label: 'Rambursare împrumut bancă / instituție financiară',
-  },
+const INFLOW_CATEGORIES = [
+  INFLOW_ITEM_CATEGORY.SECURED_LENDING_L1_COLLATERAL,
+  INFLOW_ITEM_CATEGORY.SECURED_LENDING_L2A_COLLATERAL,
+  INFLOW_ITEM_CATEGORY.RETAIL_SME_LOAN_REPAYMENT,
+  INFLOW_ITEM_CATEGORY.CORPORATE_LOAN_REPAYMENT,
+  INFLOW_ITEM_CATEGORY.BANK_FI_LOAN_REPAYMENT,
 ];
 
 const emptyInflowItem: LCRCalculationRequest['inflow_items'][number] = {
@@ -50,6 +36,11 @@ function InflowItemRow({
   index: number;
   onRemove: () => void;
 }) {
+  const { fields, labels } = useDictionary().liquidity;
+  const categoryOptions = INFLOW_CATEGORIES.map((value) => ({
+    value,
+    label: labels[value],
+  }));
   return (
     <div className='bg-sidebar/40 relative grid grid-cols-1 gap-4 rounded-lg border p-4 md:grid-cols-2 lg:grid-cols-3'>
       <Button
@@ -58,7 +49,7 @@ function InflowItemRow({
         size='icon'
         className='absolute top-2 right-2 h-7 w-7'
         onClick={onRemove}
-        aria-label={`Elimină elementul ${index + 1}`}
+        aria-label={fmt(fields.removeItem, { n: index + 1 })}
       >
         <IconTrash className='h-4 w-4' />
       </Button>
@@ -67,21 +58,21 @@ function InflowItemRow({
         <CustomFormField
           control={control}
           name={`inflow_items.${index}.description`}
-          labelText='Descriere'
+          labelText={fields.description}
         />
       </div>
 
       <CustomNumberField
         control={control}
         name={`inflow_items.${index}.amount`}
-        labelText='Sumă'
+        labelText={fields.amount}
       />
 
       <CustomFormSelectLabel
         control={control}
         name={`inflow_items.${index}.category`}
-        labelText='Categorie'
-        items={INFLOW_CATEGORY_OPTIONS}
+        labelText={fields.category}
+        items={categoryOptions}
       />
     </div>
   );
@@ -92,6 +83,7 @@ export function InflowsStep({
 }: {
   form: UseFormReturn<LCRCalculationRequest>;
 }) {
+  const { fields: t, steps } = useDictionary().liquidity;
   const { control } = form;
   const { fields, append, remove } = useFieldArray({
     control,
@@ -101,17 +93,15 @@ export function InflowsStep({
   return (
     <div className='space-y-6'>
       <div>
-        <h2 className='text-lg font-semibold'>Intrări de numerar</h2>
+        <h2 className='text-lg font-semibold'>{steps.inflows.title}</h2>
         <p className='text-muted-foreground text-sm'>
-          Adăugați fiecare intrare contractuală de numerar și categoria
-          acesteia.
+          {steps.inflows.description}
         </p>
       </div>
 
       {fields.length === 0 && (
         <p className='text-muted-foreground text-sm italic'>
-          Nicio intrare de numerar adăugată încă. Adăugați una pentru a
-          începe.
+          {steps.inflows.empty}
         </p>
       )}
 
@@ -133,7 +123,7 @@ export function InflowsStep({
         className='gap-1'
       >
         <IconPlus className='h-4 w-4' />
-        Adaugă element
+        {t.addItem}
       </Button>
     </div>
   );

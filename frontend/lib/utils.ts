@@ -13,8 +13,12 @@ export function formatUsd(value: number, maximumFractionDigits = 0): string {
   }).format(value);
 }
 
-export function formatRon(value: number, maximumFractionDigits = 0): string {
-  return new Intl.NumberFormat('ro-RO', {
+export function formatRon(
+  value: number,
+  maximumFractionDigits = 0,
+  locale = 'ro-RO',
+): string {
+  return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: 'RON',
     maximumFractionDigits,

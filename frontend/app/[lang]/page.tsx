@@ -1,26 +1,21 @@
 import { Badge } from '@/components/ui/badge';
 import { IconArrowUpRight } from '@tabler/icons-react';
-import Link from 'next/link';
+import Link from '@/components/locale-link';
+import { getDictionary } from '@/lib/i18n/dictionaries';
 
-export default function Home() {
+export default async function Home() {
+  const { home, nav } = await getDictionary();
+
   return (
     <div className='relative flex flex-col flex-1 justify-center min-h-full p-4 overflow-hidden items-start'>
       <div className='max-w-3xl md:mx-45 sm:mx-0 flex-col flex gap-y-4'>
-        <h1 className='text-4xl font-bold mb-4'>Portofoliu analiză de risc</h1>
+        <h1 className='text-4xl font-bold mb-4'>{home.title}</h1>
         <p className='text-lg uppercase text-red-600 dark:text-red-400 font-medium'>
-          Portofoliu de instrumente de analiză de risc - Proiect personal Victor
-          Alexa, (DOFIN · 2026). Produs nedestinat pentru uz comercial.
+          {home.disclaimer}
         </p>
-        <p className='text-sm text-foreground mt-2'>
-          Acest portofoliu cuprinde instrumente bazate pe tehnicile fundamentale
-          de analiză a riscului de piață, riscului de lichiditate, riscului de
-          dobândă și riscului de credit și a fost construit folosind Python și
-          Next.js.
-        </p>
+        <p className='text-sm text-foreground mt-2'>{home.intro}</p>
         <p className='text-xs text-muted-foreground mt-2'>
-          Proiect de portofoliu personal — nedestinat producției, raportării
-          reglementare sau informării deciziilor de investiții. Pentru mai multe
-          informații, vă rugăm să vizitați proiectul pe{' '}
+          {home.note}{' '}
           <a
             href='https://github.com/itsthevictor/risk'
             className='hover:underline hover:text-foreground underline'
@@ -40,19 +35,19 @@ export default function Home() {
             data-umami-event='homepage-market-link'
             className='group flex items-center hover:text-foreground hover:underline'
           >
-            Risc de piață <IconArrowUpRight size={16} className='ml-1 ' />
+            {nav.market} <IconArrowUpRight size={16} className='ml-1 ' />
           </Link>
           {/* </Button> */}
 
           <div className='flex items-center gap-2'>
-            <Badge variant='secondary'>VaR</Badge>
-            <Badge variant='secondary'>ES</Badge>
-            <Badge variant='secondary'>Volatilitate</Badge>
-            <Badge variant='secondary'>Backtesting</Badge>
-            <Badge variant='secondary'>Stress Testing</Badge>
+            {home.market.badges.map((badge) => (
+              <Badge key={badge} variant='secondary'>
+                {badge}
+              </Badge>
+            ))}
           </div>
           <span className='text-xs text-muted-foreground bg-transparent italic'>
-            Date live din piață.
+            {home.market.source}
           </span>
         </div>
         <div className='flex flex-col gap-y-2'>
@@ -62,18 +57,20 @@ export default function Home() {
             data-umami-event='homepage-liquidity-link'
             className='hover:underline hover:text-foreground  flex items-center'
           >
-            Risc de lichiditate <IconArrowUpRight size={16} className='ml-1' />
+            {nav.liquidity} <IconArrowUpRight size={16} className='ml-1' />
           </Link>
           {/* </Button> */}
 
           {/* <Badge variant='secondary'>HQLA · Ieșiri nete · LCR</Badge> */}
           <div className='flex items-center gap-2'>
-            <Badge variant='secondary'>HQLA</Badge>
-            <Badge variant='secondary'>Ieșiri nete</Badge>
-            <Badge variant='secondary'>LCR</Badge>
+            {home.liquidity.badges.map((badge) => (
+              <Badge key={badge} variant='secondary'>
+                {badge}
+              </Badge>
+            ))}
           </div>
           <span className='text-xs text-muted-foreground bg-transparent italic'>
-            Formular LCR
+            {home.liquidity.source}
           </span>
         </div>
         <div className='flex flex-col gap-y-2'>
@@ -83,17 +80,19 @@ export default function Home() {
             data-umami-event='homepage-interest-rate-link'
             className='hover:underline hover:text-foreground  flex items-center'
           >
-            Risc de dobândă <IconArrowUpRight size={16} className='ml-1' />
+            {nav.interestRate} <IconArrowUpRight size={16} className='ml-1' />
           </Link>
           {/* </Button> */}
 
           <div className='flex items-center gap-2'>
-            <Badge variant='secondary'>EVE</Badge>
-            <Badge variant='secondary'>NII</Badge>
-            <Badge variant='secondary'>Șocuri de dobândă</Badge>
+            {home.interestRate.badges.map((badge) => (
+              <Badge key={badge} variant='secondary'>
+                {badge}
+              </Badge>
+            ))}
           </div>
           <span className='text-xs text-muted-foreground bg-transparent italic'>
-            Date mockup
+            {home.interestRate.source}
           </span>
         </div>
         <div className='flex flex-col gap-y-2'>
@@ -103,19 +102,19 @@ export default function Home() {
             data-umami-event='homepage-credit-link'
             className='hover:underline hover:text-foreground  flex items-center'
           >
-            Risc de credit <IconArrowUpRight size={16} className='ml-1' />
+            {nav.credit} <IconArrowUpRight size={16} className='ml-1' />
           </Link>
           {/* </Button> */}
 
           <div className='flex items-center gap-2'>
-            <Badge variant='secondary'>PD</Badge>
-            <Badge variant='secondary'>LGD</Badge>
-            <Badge variant='secondary'>EAD</Badge>
-            <Badge variant='secondary'>EL</Badge>
-            <Badge variant='secondary'>RWA</Badge>
+            {home.credit.badges.map((badge) => (
+              <Badge key={badge} variant='secondary'>
+                {badge}
+              </Badge>
+            ))}
           </div>
           <span className='text-xs text-muted-foreground bg-transparent italic'>
-            Dataset Lending Club 2007-2018 (Kaggle)
+            {home.credit.source}
           </span>
         </div>
       </div>

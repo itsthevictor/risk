@@ -4,12 +4,14 @@ import { DiversificationChart } from './diversification-chart';
 import { DrawdownChart } from './drawdown-chart';
 import { KpiCard } from './kpi-card';
 import { VolatilityForecastChart } from './volatility-forecast-chart';
+import { useDictionary } from '@/providers/i18n-provider';
 
 export interface MarketRiskKpiStripProps {
   data: MarketRiskAnalyzeResponse;
 }
 
 export function MarketRiskKpiStrip({ data }: MarketRiskKpiStripProps) {
+  const { kpis } = useDictionary().market;
   const latestEwmaVol =
     data.volatility_forecast.ewma[data.volatility_forecast.ewma.length - 1];
   const latestGarchVol =
@@ -18,99 +20,71 @@ export function MarketRiskKpiStrip({ data }: MarketRiskKpiStripProps) {
   return (
     <div className='grid grid-cols-2 gap-4 md:grid-cols-4'>
       <KpiCard
-        label='Volatilitate (EWMA)'
-        value={
-          latestEwmaVol !== undefined ? formatPercent(latestEwmaVol) : '—'
-        }
+        label={kpis.ewma.label}
+        value={latestEwmaVol !== undefined ? formatPercent(latestEwmaVol) : '—'}
         chart={{
-          title: 'Prognoza Volatilității',
-          description: 'Volatilitatea condiționată EWMA vs. GARCH în timp.',
-          content: (
-            <VolatilityForecastChart data={data.volatility_forecast} />
-          ),
+          title: kpis.volatilityChart.title,
+          description: kpis.volatilityChart.description,
+          content: <VolatilityForecastChart data={data.volatility_forecast} />,
         }}
         info={{
-          title: 'Prognoza Volatilității (EWMA)',
-          definition:
-            'Volatilitatea estimată a portofoliului printr-o medie ponderată exponențial a randamentelor pătratice trecute, care acordă greutate mai mare șocurilor recente.',
+          title: kpis.ewma.infoTitle,
+          definition: kpis.ewma.definition,
           equation:
             '\\sigma_t^2 = \\lambda \\, \\sigma_{t-1}^2 + (1-\\lambda) \\, r_{t-1}^2',
-          implementation: [
-            'Se inițializează varianța cu deviația standard pe fereastra de seed (252 zile)',
-            'Se actualizează recursiv varianța cu factorul de decădere λ = 0.94',
-            'Se exprimă ca procent (rădăcina varianței)',
-          ],
+          implementation: kpis.ewma.steps,
         }}
       />
       <KpiCard
-        label='Volatilitate (GARCH)'
+        label={kpis.garch.label}
         value={
           latestGarchVol !== undefined ? formatPercent(latestGarchVol) : '—'
         }
         chart={{
-          title: 'Prognoza Volatilității',
-          description: 'Volatilitatea condiționată EWMA vs. GARCH în timp.',
-          content: (
-            <VolatilityForecastChart data={data.volatility_forecast} />
-          ),
+          title: kpis.volatilityChart.title,
+          description: kpis.volatilityChart.description,
+          content: <VolatilityForecastChart data={data.volatility_forecast} />,
         }}
         info={{
-          title: 'Prognoza Volatilității (GARCH)',
-          definition:
-            'Volatilitatea condiționată estimată a portofoliului pentru perioada următoare, care permite șocurilor recente să crească sau să reducă riscul față de media pe termen lung.',
+          title: kpis.garch.infoTitle,
+          definition: kpis.garch.definition,
           equation:
             '\\sigma_t^2 = \\omega + \\alpha \\, \\varepsilon_{t-1}^2 + \\beta \\, \\sigma_{t-1}^2',
-          implementation: [
-            'Se calibrează un model GARCH(1,1) pe seria istorică de randamente',
-            'Se estimează varianța condiționată pentru perioada următoare din parametrii calibrați',
-            'Se anualizează și se exprimă ca procent',
-          ],
+          implementation: kpis.garch.steps,
         }}
       />
       <KpiCard
-        label='Drawdown Maxim'
+        label={kpis.drawdown.label}
         value={formatPercent(data.drawdown.max_drawdown)}
         chart={{
-          title: 'Drawdown',
-          description:
-            'Scăderea de la vârf la minim a valorii portofoliului în timp.',
+          title: kpis.drawdown.chartTitle,
+          description: kpis.drawdown.chartDescription,
           content: <DrawdownChart data={data.drawdown} />,
         }}
         info={{
-          title: 'Drawdown Maxim',
-          definition:
-            'Cea mai mare scădere de la un vârf la un minim al valorii portofoliului, observată pe perioada analizată.',
+          title: kpis.drawdown.infoTitle,
+          definition: kpis.drawdown.definition,
           equation:
             'MDD = \\min_t \\left( \\frac{V_t - \\max_{s \\le t} V_s}{\\max_{s \\le t} V_s} \\right)',
-          implementation: [
-            'Se calculează maximul acumulat al seriei valorii portofoliului',
-            'Se măsoară scăderea fiecărui punct față de maximul acumulat',
-            'Se raportează cea mai negativă scădere observată',
-          ],
+          implementation: kpis.drawdown.steps,
         }}
       />
       <KpiCard
-        label='Beneficiu de Diversificare'
+        label={kpis.diversification.label}
         value={formatUsd(data.diversification.diversification_benefit)}
         subValue={formatPercent(
           data.diversification.diversification_benefit_pct,
         )}
         chart={{
-          title: 'Beneficiu de Diversificare',
-          description:
-            'VaR individual per poziție, comparativ cu VaR-ul diversificat al portofoliului.',
+          title: kpis.diversification.chartTitle,
+          description: kpis.diversification.chartDescription,
           content: <DiversificationChart data={data.diversification} />,
         }}
         info={{
-          title: 'Beneficiu de Diversificare',
-          definition:
-            'Reducerea riscului obținută dintr-un portofoliu diversificat, față de suma riscurilor individuale ale pozițiilor, generată de corelația imperfectă dintre poziții.',
+          title: kpis.diversification.infoTitle,
+          definition: kpis.diversification.definition,
           equation: 'DB = \\sum_i VaR_i - VaR_{portfolio}',
-          implementation: [
-            'Se calculează VaR-ul individual pentru fiecare poziție, izolat',
-            'Se calculează VaR-ul portofoliului diversificat, folosind structura completă de covarianță/corelație',
-            'Se calculează diferența (și ca procent din suma VaR-urilor individuale)',
-          ],
+          implementation: kpis.diversification.steps,
         }}
       />
     </div>

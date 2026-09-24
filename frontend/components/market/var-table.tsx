@@ -14,16 +14,16 @@ import type {
 import { formatPercent, formatUsd } from '@/lib/utils';
 import KpiChart from './kpi-chart';
 import { VarHistogramChart } from './var-histogram-chart';
+import { useDictionary } from '@/providers/i18n-provider';
+import { fmt } from '@/lib/i18n/config';
 
-const METHOD_LABELS: Record<keyof MethodResults, string> = {
-  historical: 'Simulare Istorică',
-  parametric: 'Parametric (deviație standard eșantion)',
-  ewma: 'Parametric (EWMA)',
-  garch: 'Parametric (GARCH)',
-  monte_carlo: 'Monte Carlo',
-};
-
-const METHOD_ORDER = Object.keys(METHOD_LABELS) as (keyof MethodResults)[];
+const METHOD_ORDER: (keyof MethodResults)[] = [
+  'historical',
+  'parametric',
+  'ewma',
+  'garch',
+  'monte_carlo',
+];
 
 export interface VarComparisonTableProps {
   varComparison: ConfidenceLevelResult[];
@@ -36,6 +36,11 @@ export function VarComparisonTable({
   confidenceLevel,
   actualPnl,
 }: VarComparisonTableProps) {
+  const { market } = useDictionary();
+  const methodLabel = (method: keyof MethodResults) =>
+    method === 'parametric'
+      ? market.methods.parametricSampleStd
+      : market.methods[method];
   const result = varComparison.find(
     (c) => c.confidence_level === confidenceLevel,
   );
@@ -43,8 +48,9 @@ export function VarComparisonTable({
   if (!result) {
     return (
       <p className='text-muted-foreground text-sm'>
-        Nu există date pentru nivelul de încredere{' '}
-        {formatPercent(confidenceLevel, 0)}.
+        {fmt(market.varTable.noData, {
+          level: formatPercent(confidenceLevel, 0),
+        })}
       </p>
     );
   }
@@ -53,7 +59,7 @@ export function VarComparisonTable({
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Metodă</TableHead>
+          <TableHead>{market.varTable.method}</TableHead>
           <TableHead className='text-right'>VaR</TableHead>
           <TableHead className='text-right'>ES</TableHead>
           <TableHead className='w-8' />
@@ -65,7 +71,7 @@ export function VarComparisonTable({
           return (
             <TableRow key={method}>
               <TableCell className='font-medium'>
-                {METHOD_LABELS[method]}
+                {methodLabel(method)}
               </TableCell>
               <TableCell className='text-right tabular-nums'>
                 {formatUsd(pair.var)}
@@ -81,8 +87,10 @@ export function VarComparisonTable({
               </TableCell>
               <TableCell>
                 <KpiChart
-                  title={`Distribuția P&L — ${METHOD_LABELS[method]}`}
-                  description='Histograma P&L-ului zilnic realizat, cu pragurile de pierdere VaR și ES marcate.'
+                  title={fmt(market.varTable.distributionTitle, {
+                    method: methodLabel(method),
+                  })}
+                  description={market.varTable.distributionDescription}
                 >
                   <VarHistogramChart
                     pnl={actualPnl}

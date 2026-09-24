@@ -10,7 +10,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import type { Position } from '@/lib/definitions';
-import { cn, formatDateRo, formatRon } from '@/lib/utils';
+import { cn, formatDateRo } from '@/lib/utils';
+import { useDictionary, useFormatRon } from '@/providers/i18n-provider';
 
 export interface PositionsTableProps {
   data: Position[];
@@ -29,17 +30,20 @@ type SortColumn = keyof Pick<
 
 type SortDirection = 'asc' | 'desc';
 
-const COLUMNS: { key: SortColumn; label: string; align?: 'right' }[] = [
-  { key: 'position_id', label: 'ID' },
-  { key: 'position_type', label: 'Tip' },
-  { key: 'category', label: 'Categorie' },
-  { key: 'principal', label: 'Principal', align: 'right' },
-  { key: 'current_rate', label: 'Rată curentă', align: 'right' },
-  { key: 'repricing_date', label: 'Data repricing' },
-  { key: 'maturity_date', label: 'Data maturitate' },
+// Header labels: dict.interestRate.data.columns
+const COLUMNS: { key: SortColumn; align?: 'right' }[] = [
+  { key: 'position_id' },
+  { key: 'position_type' },
+  { key: 'category' },
+  { key: 'principal', align: 'right' },
+  { key: 'current_rate', align: 'right' },
+  { key: 'repricing_date' },
+  { key: 'maturity_date' },
 ];
 
 export function PositionsTable({ data }: PositionsTableProps) {
+  const { columns } = useDictionary().interestRate.data;
+  const ron = useFormatRon();
   const [sortColumn, setSortColumn] = useState<SortColumn>('position_id');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
@@ -69,7 +73,7 @@ export function PositionsTable({ data }: PositionsTableProps) {
       <Table>
         <TableHeader className='bg-background sticky top-0 z-10'>
           <TableRow>
-            {COLUMNS.map(({ key, label, align }) => (
+            {COLUMNS.map(({ key, align }) => (
               <TableHead
                 key={key}
                 className={cn(align === 'right' && 'text-right')}
@@ -82,7 +86,7 @@ export function PositionsTable({ data }: PositionsTableProps) {
                     align === 'right' && 'flex-row-reverse',
                   )}
                 >
-                  {label}
+                  {columns[key]}
                   <span className='text-muted-foreground text-xs'>
                     {sortColumn === key
                       ? sortDirection === 'asc'
@@ -104,7 +108,7 @@ export function PositionsTable({ data }: PositionsTableProps) {
               <TableCell>{position.position_type}</TableCell>
               <TableCell>{position.category}</TableCell>
               <TableCell className='text-right tabular-nums'>
-                {formatRon(position.principal)}
+                {ron(position.principal)}
               </TableCell>
               <TableCell className='text-right tabular-nums'>
                 {position.current_rate.toFixed(2)}%

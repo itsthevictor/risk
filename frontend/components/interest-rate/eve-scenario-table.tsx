@@ -7,21 +7,23 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import type { EveAnalysisResponse } from '@/lib/definitions';
-import { formatRon } from '@/lib/utils';
-import { EVE_SCENARIO_LABELS, EVE_SCENARIO_ORDER } from './eve-scenarios';
+import { EVE_SCENARIO_ORDER } from './eve-scenarios';
+import { useDictionary, useFormatRon } from '@/providers/i18n-provider';
 
 export interface EveScenarioTableProps {
   data: EveAnalysisResponse;
 }
 
 export function EveScenarioTable({ data }: EveScenarioTableProps) {
+  const { table, scenarios } = useDictionary().interestRate;
+  const ron = useFormatRon();
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Scenariu</TableHead>
-          <TableHead className='text-right'>VP Active</TableHead>
-          <TableHead className='text-right'>VP Pasive</TableHead>
+          <TableHead>{table.scenario}</TableHead>
+          <TableHead className='text-right'>{table.pvAssets}</TableHead>
+          <TableHead className='text-right'>{table.pvLiabilities}</TableHead>
           <TableHead className='text-right'>EVE</TableHead>
           <TableHead className='text-right'>ΔEVE</TableHead>
         </TableRow>
@@ -32,21 +34,21 @@ export function EveScenarioTable({ data }: EveScenarioTableProps) {
           return (
             <TableRow key={scenario}>
               <TableCell className='font-medium'>
-                {EVE_SCENARIO_LABELS[scenario]}
+                {scenarios[scenario]}
               </TableCell>
               <TableCell className='text-right tabular-nums'>
-                {formatRon(result.pv_assets)}
+                {ron(result.pv_assets)}
               </TableCell>
               <TableCell className='text-right tabular-nums'>
-                {formatRon(result.pv_liabilities)}
+                {ron(result.pv_liabilities)}
               </TableCell>
               <TableCell className='text-right tabular-nums'>
-                {formatRon(result.eve_value)}
+                {ron(result.eve_value)}
               </TableCell>
               <TableCell className='text-right tabular-nums'>
                 {scenario === 'base'
                   ? '—'
-                  : `${result.delta_eve >= 0 ? '+' : ''}${formatRon(result.delta_eve)}`}
+                  : `${result.delta_eve >= 0 ? '+' : ''}${ron(result.delta_eve)}`}
               </TableCell>
             </TableRow>
           );

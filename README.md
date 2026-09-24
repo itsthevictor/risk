@@ -1,3 +1,7 @@
+<a id="romana"></a>
+
+> **Română** (English below) · [Go to English version ↓](#english)
+
 # Portofoliu instrumente analiză de risc - proiect personal
 
 #### Tehnologii utilizate
@@ -364,3 +368,374 @@ adus rezultatul în linia benchmark-ului.
 - **Tabel pe grad de credit** — aceiași indicatori, în format tabelar.
 - **Grafic de calibrare** — PD calibrat vs. rata de default observată, pe
   decile, cu linia de calibrare perfectă ca referință.
+
+---
+
+<a id="english"></a>
+
+> **English** · [Înapoi la versiunea în română ↑](#romana)
+
+# Risk Analysis Tools Portfolio - personal project
+
+#### Tech stack
+
+**Backend** — FastAPI + Pydantic (API and validation), SQLModel/SQLAlchemy on top
+of Postgres (price cache), `yfinance` (market data source), `numpy` /
+`pandas` (numerical computation), `scipy` (statistical distributions) and `arch`
+(GARCH calibration).
+
+**Frontend** — Next.js + React + TypeScript, React Hook Form + Zod (forms and
+validation), TanStack Query (client-side fetching/caching), Recharts (charts),
+shadcn/ui components built on Radix/Base UI + Tailwind CSS.
+
+## 1. Market Risk
+
+Market risk analysis module for a portfolio of assets (stocks, ETFs, etc.),
+with VaR/ES computed using 5 different methods, historical backtesting of each
+method, and stress testing on crisis scenarios (two historical scenarios and an
+option for a custom discrete scenario).
+
+### VaR/ES models
+
+| Method                    | Logic                                                                                                                                                                                                              |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Historical Simulation** | Empirical percentile of actual returns within the estimation window — no distributional assumption.                                                                                                                |
+| **Parametric (Normal)**   | `VaR = portfolio_value · σ · z_cf`, with `σ` = sample standard deviation of returns in the window (variance-covariance).                                                                                           |
+| **EWMA**                  | Exponentially weighted volatility: `σ²_t = λ·σ²_{t-1} + (1-λ)·r²_{t-1}`, `λ = 0.94`, initialised with the standard deviation of the first 252 days.                                                                |
+| **GARCH(1,1)**            | Conditional volatility calibrated with the `arch` package (`vol="Garch"`, `dist="normal"`, `mean="Zero"`); if the model fails to converge, the request fails explicitly instead of returning an unreliable result. |
+| **Monte Carlo**           | 10,000 `N(μ, σ)` simulations per day (`μ`, `σ` from the same window as the parametric method), with a fixed `seed` (42) so the result is reproducible across identical requests.                                   |
+
+Expected Shortfall (ES) is computed for each method as the mean of losses
+exceeding VaR (historical), via the closed-form normal tail formula
+`ES = σ · φ(z_cf) / (1 - cf)` (parametric/EWMA/GARCH), or as the mean of the
+simulations beyond the threshold (Monte Carlo).
+
+### Practical methodology choices
+
+- **15 years of history** downloaded via `yfinance` and cached in Postgres
+  (incremental fetch — only missing days are requested from Yahoo, not the whole
+  range every time). This long history is used **only** for backtesting,
+  drawdown and correlations — not for the displayed VaR/ES figure.
+- **Configurable estimation window** (`estimation_window_days`, 30–756 days,
+  default 252) — the "current" VaR/ES figure is computed exclusively from the
+  last N days of returns, not from the full history. This is a deliberate
+  choice: the app answers "how large is the risk _now_, given the recent
+  volatility regime", not "what was the worst tail in the entire available
+  history".
+- **1-day horizon**, with no `√t` scaling to a longer holding period — standard
+  practice in market risk management, which avoids the autocorrelation
+  introduced by cumulative returns over overlapping windows.
+- **The current day is excluded** from the estimation window (out-of-sample:
+  the risk for day `t` is estimated only from returns strictly before `t`,
+  without "seeing" that day's outcome) and from the price fetch (today's
+  session may still be in progress / not yet published on Yahoo).
+- **Equal weights** across all selected assets (2–10 tickers).
+
+### Backtesting
+
+For each method, a rolling backtest is run over the entire available history
+(not just the current window): for every past day, the model recomputes what
+the method would have said using only prior data, then compares it with the
+loss actually realised. This yields:
+
+- **Kupiec test** (unconditional coverage) — checks whether the _number_ of
+  VaR breaches matches what the chosen confidence level would imply.
+- **Christoffersen test** (independence) — checks whether breaches are
+  _clustered_ in time (a sign of a poorly calibrated model) or independent.
+- **Conditional Coverage** — the combination of the two above
+  (`LR_cc = LR_uc + LR_ind`).
+- **Basel-style traffic light** (green/yellow/red) — over the last 250 days,
+  compares the number of breaches with binomial thresholds (generalised to any
+  chosen confidence level, not fixed to the official 4/9 thresholds at 99%).
+
+### Other metrics (independent of the VaR method)
+
+- **Maximum drawdown** — the largest peak-to-trough decline in portfolio value,
+  computed once over the full history from realised returns.
+- **Diversification benefit** — the difference between the sum of individual
+  VaRs (per asset, in isolation) and the parametric VaR of the combined
+  portfolio; uses the full 15-year history, not the estimation window.
+- **Correlation matrix** — correlation of daily returns across all selected
+  assets, over the full history.
+
+### Stress Testing
+
+Independent of the analysis above (it does not reuse the GARCH fit/backtest):
+
+- **Historical replay** — applies actual returns from an acute crisis window
+  (COVID 19 Feb–20 Mar 2020, rate-hike sell-off 27 Dec 2021–14 Oct 2022, or a
+  custom interval) to the current portfolio.
+- **Hypothetical scenario** — editable percentage shocks per asset class
+  (equity/bond/commodity), requiring no market data.
+
+The section is shown expanded by default (no click needed), with the 2020
+scenario run automatically as soon as the main analysis finishes.
+
+### How results are displayed (UI)
+
+- **KPI cards** — EWMA Volatility, GARCH Volatility, Maximum Drawdown,
+  Diversification Benefit; each with a chart and an explanation (formula +
+  implementation steps) in the info drawer.
+- **VaR/ES comparison table** — all 5 methods, at the 3 confidence levels
+  (90/95/99%), in dollars and as a percentage of portfolio value.
+- **Backtest scorecard table** — traffic-light status and
+  Kupiec/Christoffersen/CC statistics per method, with interactive selection of
+  the active method for the chart below.
+- **PnL vs. VaR chart** — realised daily P&L overlaid on the VaR series of the
+  selected method, with breach days highlighted.
+- **Stress test result cards** — impact in dollars/percent relative to current
+  portfolio value, shown separately for the historical replay and the
+  hypothetical scenario.
+
+## 2. Liquidity Risk — LCR
+
+Liquidity Coverage Ratio (LCR) calculation module: the ratio between
+high-quality liquid assets (HQLA) and estimated net cash outflows over a
+30-calendar-day stress horizon. Inputs are entered manually through a 6-step
+wizard form (HQLA, retail deposits, wholesale deposits, off-balance-sheet
+commitments, inflows, result).
+
+```
+LCR = HQLA / Net outflows × 100%
+Net outflows = Total outflows − min(Inflows, 75% × Total outflows)
+```
+
+### HQLA classification
+
+Each asset is classified into levels (L1/L2A/L2B/ineligible) based on issuer
+type and, where applicable, rating band — for example, the domestic sovereign
+and central bank reserves are unconditionally L1, an AAA–AA corporate bond is
+L2A, and an A/BBB one is L2B. The full issuer_type × rating_band → level
+mapping is configurable in
+`backend/engines/liquidity_risk/config/lcr_params.json`, not hardcoded in the
+calculation engine.
+
+A haircut is applied to the asset value at each level:
+
+| Level | Haircut |
+| ----- | ------- |
+| L1    | 0%      |
+| L2A   | 15%     |
+| L2B   | 25%     |
+
+After haircuts, the regulatory caps are applied in order:
+
+1. **L2B cap** — L2B is limited to 15% of (L1 + L2A).
+2. **Combined L2 cap** — L2A + L2B (after the cap above) is limited to 40% of
+   total HQLA; if exceeded, L2B is reduced first, and if that is not enough,
+   L2A is reduced as well.
+
+### Cash outflows and inflows
+
+A run-off rate per category is applied to retail deposits, wholesale deposits
+and off-balance-sheet commitments (e.g. 5% stable retail, 10% less stable
+retail/SME, 25% operational deposits, 40% non-operational corporate, 100%
+non-operational interbank). Inflows (loan repayments, secured lending) have
+their own category rates (0–100%, depending on collateral/counterparty type)
+and are capped globally at 75% of total outflows — a bank cannot rely on
+inflows to fully cover its stress outflows. All rates are configurable in the
+same `lcr_params.json` file.
+
+### How results are displayed (UI)
+
+- **Wizard form** — data is entered step by step (HQLA → retail → wholesale →
+  off-balance-sheet → inflows), with validation when moving between steps and
+  automatic draft saving to `sessionStorage`, so nothing is lost on an
+  accidental refresh.
+
+- **Result card** — Summarises all entered items and shows the calculated LCR,
+  with a visual status (below minimum / marginal / comfortable, based on the
+  threshold: <100%, 100–120%, ≥120%) and a breakdown of total HQLA, capped
+  inflows, total outflows and net outflows.
+
+## 3. Interest Rate Risk — IRRBB (NII & EVE)
+
+Interest Rate Risk in the Banking Book module: measures the bank's sensitivity
+to interest rate changes from two complementary perspectives — NII (short-term
+impact on profitability) and EVE (long-term impact on the economic value of
+equity). Unlike Market Risk and LCR, inputs are not entered manually — the
+portfolio is generated synthetically (100 mock positions), with repricing and
+maturity profiles regenerated per category (cash near overnight, term deposits
+in the medium term, government bonds and floating-rate loans in the long term,
+etc.), reproducibly (fixed `seed`), so that it reflects a realistic maturity
+profile despite the incoherent source data (mockaroo).
+
+### NII (Net Interest Income)
+
+Expected net interest income over a 12-month horizon, under a parallel rate
+shock (default ±200 bps, configurable from the UI):
+
+```
+NII = Σ interest (ASSET) − Σ interest (LIABILITY)
+```
+
+For each position: if the repricing date falls after the end of the horizon,
+interest is calculated at the current rate over the whole horizon. Otherwise,
+pro rata — at the current rate until repricing, then at (current rate ±
+shock) from repricing to the end of the horizon. ΔNII is computed against the
+base scenario (no shock), separately for the up and down shocks.
+
+### EVE (Economic Value of Equity)
+
+Economic value of equity: the present value of assets minus the present value
+of liabilities, discounted on the yield curve up to each position's maturity
+date:
+
+```
+EVE = Σ PV (ASSET) − Σ PV (LIABILITY),   PV = principal / (1 + r/100)^t
+```
+
+It is computed under the 6 standard IRRBB shock scenarios, plus the base
+scenario — the yield curve is linearly interpolated across maturity anchors
+(0–20 years), with no extrapolation (flat outside the range):
+
+| Scenario        | Applied shock                                                               |
+| --------------- | --------------------------------------------------------------------------- |
+| Parallel up     | +200 bps across the whole curve                                             |
+| Parallel down   | -200 bps across the whole curve                                             |
+| Steepener       | -100 bps at the short end, +150 bps at the long end (linearly interpolated) |
+| Flattener       | predefined alternative, flatter yield curve                                 |
+| Short rate up   | +250 bps at the short end, decaying exponentially towards the long end      |
+| Short rate down | -250 bps at the short end, decaying exponentially towards the long end      |
+
+ΔEVE is computed against the base scenario for each of the 6 shock scenarios.
+
+### How results are displayed (UI)
+
+- **NII / EVE tabs** — the two perspectives are displayed separately, each
+  with its own set of KPI cards and scenario table.
+- **NII KPI cards** — base NII, NII under +bps and -bps shocks, with ΔNII and
+  a comparative chart across scenarios; shock size is selectable in the UI
+  (100/200/300 bps).
+- **NII scenario table** — interest income, interest expense, NII and ΔNII,
+  for the base case and both shocks.
+- **EVE KPI cards** — base EVE (with a chart of all 7 scenarios), the most
+  adverse scenario (with ΔEVE and a comparative chart), and parallel up vs.
+  down.
+- **EVE scenario table** — present value of assets/liabilities, EVE and ΔEVE,
+  for all 7 scenarios (base + 6 shocks).
+- **"Data and methodology" page** — the full table of the 100 synthetic
+  positions (type, category, principal, current rate, repricing/maturity
+  dates), sortable by any column.
+
+## 4. Credit Risk
+
+Unlike the other modules, the credit risk analysis does not run live — it was
+performed offline on a real (not synthetic) dataset, and the results are shown
+as-is in the UI. Recomputing on every request makes no sense: calibrating the
+PD model takes time, and the source data (Lending Club) does not change.
+
+**Purpose** — Estimate Expected Loss and the regulatory capital requirement
+(Risk-Weighted Assets) for a consumer loan portfolio, using the standard
+Basel II/III PD–LGD–EAD framework (IRB approach). The risk decision it
+supports: how much capital should be allocated per portfolio segment, and
+which risk grades concentrate a disproportionate share of unexpected loss
+exposure — information directly usable when setting underwriting limits or
+grade-based pricing.
+
+**Data** — A portfolio of 141,946 unsecured consumer loans (Lending Club,
+originated 2007–2018), with borrower information, loan terms (`funded_amnt`,
+`term`, `int_rate`, `grade`), current loan status and, for defaulted loans,
+recovered amounts (`recoveries`, `collection_recovery_fee`).
+
+### Methodology
+
+**PD (Probability of Default)** — Logistic regression, calibrated without
+`class_weight` to keep probabilities interpretable in magnitude, not just in
+ranking order. Performance: AUC 0.706, validated against a similar independent
+project (AUC 0.703). The model produces a lifetime probability (over the full
+life of the loan); to align with the Basel regulatory convention (12-month PD
+horizon), it is annualised using a constant hazard-rate conversion:
+
+```
+PD_annual = 1 - (1 - PD_lifetime)^(1 / maturity_years)
+```
+
+**LGD (Loss Given Default)** — Computed empirically as the ratio between
+recovered amounts and exposure at the time of default
+(`funded_amnt - total_rec_prncp`), on the subset of charged-off loans.
+Portfolio average: 90.7%. Segmentation by risk grade (A–G) shows negligible
+variation (90.4%–91.0%) — a result consistent with Basel regulatory practice,
+where under the Foundation IRB approach LGD is set uniformly by the regulator
+(45% senior / 75% subordinated) regardless of the borrower's rating, precisely
+because recovery is driven by seniority/collateral rather than initial
+creditworthiness. For unsecured credit, with no collateral differentiation
+across grades, the absence of LGD variation is theoretically expected: the
+grade effectively discriminates the probability of default, but not the
+severity of loss once default has occurred.
+
+**EAD (Exposure at Default)** — Computed consistently across the whole
+portfolio from the funded loan amount.
+
+**EL (Expected Loss)**:
+
+```
+EL = PD_annual × LGD × EAD
+```
+
+**RWA (Risk-Weighted Assets)** — Advanced IRB formula for retail exposures:
+PD-dependent correlation R (Vasicek single-factor model), capital function K
+at the 99.9% regulatory confidence level:
+
+```
+RWA = K × 12.5 × EAD
+```
+
+### Results
+
+| Metric                    | Value                 |
+| ------------------------- | --------------------- |
+| Total EAD                 | $733.5M               |
+| Expected Loss (annual)    | $43.4M (5.92% of EAD) |
+| Total RWA                 | $1.04B                |
+| Capital density (RWA/EAD) | 141.5%                |
+
+Density by risk grade, monotonically increasing (a check of the model's
+internal consistency):
+
+| Grade | Annual PD | LGD   | Capital density |
+| ----- | --------- | ----- | --------------- |
+| A     | 3.30%     | 90.6% | 124.6%          |
+| B     | 5.48%     | 91.0% | 136.1%          |
+| C     | 7.43%     | 90.8% | 144.1%          |
+| D     | 8.85%     | 90.5% | 150.2%          |
+| E     | 9.89%     | 90.7% | 155.1%          |
+| F     | 11.28%    | 90.4% | 161.2%          |
+| G     | 12.18%    | 90.5% | 163.7%          |
+
+### Validation
+
+Annual EL (5.92%) is consistent with an external reference benchmark (6–7%).
+The initial calculation, based on uncorrected lifetime PD, had produced 23% of
+exposure — the discrepancy was investigated systematically (not ignored) and
+attributed to the time-horizon mismatch between the model's PD (implicitly
+calibrated on a lifetime target) and the 12-month regulatory PD convention,
+not to an error in the EAD/LGD calculation. The hazard-rate annualisation
+correction brought the result in line with the benchmark.
+
+### Known limitations
+
+- LGD is an empirical portfolio (or per-grade) average, not a predictive model
+  per individual loan.
+- The lifetime → annual PD conversion uses a constant hazard-rate
+  approximation, not a dedicated survival analysis model.
+- The sample covers a historical period (2007–2018) that includes the 2008
+  financial crisis, which may overstate default rates relative to a normal
+  economic cycle.
+- Capital density (141.5%, above 100% even for grade A) reflects the
+  structural risk profile of unsecured consumer credit (high LGD, no
+  collateral) — it is not directly comparable with benchmarks for secured
+  portfolios (e.g. mortgages), where typical densities are significantly
+  lower.
+
+### How results are displayed (UI)
+
+- **KPI cards** — Total EAD, Expected Loss (with % of EAD), total RWA and
+  capital density, with a visual status (green/yellow/red, thresholds at 60%
+  and 100% density).
+- **Chart by credit grade** — capital density per grade (A–G), with a 100%
+  reference line; tooltip with average PD, LGD, number of loans and EAD per
+  grade.
+- **Table by credit grade** — the same metrics, in tabular form.
+- **Calibration chart** — calibrated PD vs. observed default rate, by decile,
+  with the perfect-calibration line as reference.

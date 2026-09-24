@@ -1,6 +1,8 @@
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type { TrafficLight } from '@/lib/definitions';
+import type { Dictionary } from '@/lib/i18n/dictionaries';
+import { useDictionary } from '@/providers/i18n-provider';
 
 const TRAFFIC_LIGHT_STYLES: Record<TrafficLight, string> = {
   green: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
@@ -8,10 +10,10 @@ const TRAFFIC_LIGHT_STYLES: Record<TrafficLight, string> = {
   red: 'bg-red-500/15 text-red-600 dark:text-red-400',
 };
 
-const TRAFFIC_LIGHT_LABELS: Record<TrafficLight, string> = {
-  green: 'OK',
-  yellow: 'Avertisment',
-  red: 'Depășire',
+const TRAFFIC_LIGHT_LABELS: Record<TrafficLight, keyof Dictionary['status']> = {
+  green: 'ok',
+  yellow: 'warning',
+  red: 'breach',
 };
 
 const SEVERITY: Record<TrafficLight, number> = { green: 0, yellow: 1, red: 2 };
@@ -30,6 +32,8 @@ export function TrafficLightBadge({
   status: TrafficLight;
   className?: string;
 }) {
+  const dict = useDictionary();
+
   return (
     <Badge
       variant='outline'
@@ -39,7 +43,7 @@ export function TrafficLightBadge({
         className,
       )}
     >
-      {TRAFFIC_LIGHT_LABELS[status]}
+      {dict.status[TRAFFIC_LIGHT_LABELS[status]]}
     </Badge>
   );
 }

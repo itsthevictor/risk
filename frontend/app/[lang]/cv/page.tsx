@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import Link from '@/components/locale-link';
 import {
   IconArrowUpRight,
   IconChartBar,
@@ -20,169 +20,17 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { useLocale } from '@/providers/i18n-provider';
+import { cvContent } from './content';
 
-const riskProjects = [
-  {
-    title: 'Risc de piață',
-    href: '/market',
-    icon: IconTrendingDown,
-    description:
-      'Analiza riscului de piață folosind date live și metode cantitative de măsurare și validare.',
-    metrics: [
-      'VaR',
-      'Expected Shortfall',
-      'Volatilitate',
-      'Backtesting',
-      'Stress Testing',
-    ],
-    source: 'Date live din piață',
-  },
-  {
-    title: 'Risc de lichiditate',
-    href: '/liquidity',
-    icon: IconWallet,
-    description:
-      'Evaluarea poziției de lichiditate și calcularea indicatorilor utilizați pentru monitorizarea riscului.',
-    metrics: ['LCR', 'HQLA', 'Ieșiri nete de numerar'],
-    source: 'Formular tip wizard',
-  },
-  {
-    title: 'Risc de dobândă',
-    href: '/interest-rate',
-    icon: IconChartBar,
-    description:
-      'Analiza sensibilității bilanțului la modificarea ratelor de dobândă și evaluarea impactului asupra valorii economice și venitului net din dobânzi.',
-    metrics: ['EVE', 'NII', 'Șocuri de dobândă'],
-    source: 'Date de simulare',
-  },
-  {
-    title: 'Risc de credit',
-    href: '/credit',
-    icon: IconBuildingBank,
-    description:
-      'Modelarea riscului de credit pe baza unui set de date de împrumuturi și estimarea parametrilor principali ai pierderii de credit.',
-    metrics: ['PD', 'LGD', 'EAD', 'EL', 'RWA'],
-    source: 'Lending Club 2007–2018 · Kaggle',
-  },
-];
+const projectIcons: Record<string, typeof IconChartBar> = {
+  '/market': IconTrendingDown,
+  '/liquidity': IconWallet,
+  '/interest-rate': IconChartBar,
+  '/credit': IconBuildingBank,
+};
 
-const experience = [
-  {
-    period: '2021 — prezent',
-    role: 'Fondator · Product Manager · Web Developer',
-    company: 'ONCA Digital Works',
-    description:
-      'Construiesc produse digitale și aplicații web de la cap la coadă: pornesc de la problema reală, gândesc fluxurile, apoi dezvolt, lansez și continui să le îmbunătățesc.',
-    highlights: [
-      'Am proiectat și dezvoltat aplicații web, platforme interne și instrumente de automatizare pentru companii din România.',
-      'Am lucrat cu baze de date SQL și NoSQL, API-uri, integrări externe și procese de automatizare.',
-      'Am transformat cerințe operaționale și de business în produse și instrumente software utilizabile.',
-      'Am gestionat simultan prioritizarea produsului, arhitectura soluției, dezvoltarea și relația cu stakeholderii.',
-    ],
-    skills: [
-      'Product Management',
-      'Data & Analytics',
-      'Web Development',
-      'Automation',
-      'SQL',
-      'APIs',
-    ],
-  },
-  {
-    period: '2022',
-    role: 'Product Manager',
-    company: 'Imobiliare.ro',
-    description:
-      'Product Management în zona B2B, cu accent pe analiză de performanță, optimizarea proceselor comerciale și colaborarea dintre business, sales și dezvoltare web.',
-    highlights: [
-      'Am lucrat la îmbunătățirea performanței ofertei B2B, urmărind engagement-ul, costul de achiziție și valoarea clienților.',
-      'Am contribuit la definirea OKR-urilor pentru migrarea tehnologică la nivelul companiei.',
-      'Am colaborat cu echipele de Sales și Technology pentru definirea rapoartelor și workflow-urilor CRM.',
-      'Am folosit date operaționale și indicatori de performanță pentru prioritizarea inițiativelor de produs.',
-    ],
-    skills: [
-      'Data-driven Decisions',
-      'Product Development',
-      'Analytics',
-      'OKRs',
-      'CRM',
-      'Cross-functional Collaboration',
-    ],
-  },
-
-  {
-    period: '2014 — 2021',
-    role: 'COO · Commercial Director',
-    company: 'Seneca Anticafe & Publishing',
-    description:
-      'Responsabilitate transversală asupra strategiei comerciale, bugetării, planificării și operațiunilor, într-o organizație aflată în dezvoltare.',
-    highlights: [
-      'Am fost implicat în proiect încă din etapa inițială și am contribuit la dezvoltarea strategiei, bugetului și structurii operaționale.',
-      'Am coordonat planificarea și monitorizarea operațiunilor, urmărind indicatorii de performanță și îmbunătățirea proceselor.',
-      'Am dezvoltat și ajustat strategia comercială atât pentru Anticafe, cât și pentru editură.',
-      'Am construit și implementat aplicații web de tip CRM/ERP și instrumente interne pentru companii din România, inclusiv proiecte din zona de consultanță și finanțare.',
-      'Am lucrat la automatizarea proceselor, integrări API, procesare de documente și integrarea procesatorilor de plăți.',
-    ],
-    skills: [
-      'Financial Planning',
-      'Budgeting',
-      'Operations',
-      'Reporting',
-      'Process Improvement',
-      'Business Strategy',
-    ],
-  },
-
-  {
-    period: '2012 — 2014',
-    role: 'Account Manager · Sales Team Leader',
-    company: 'Humanitas',
-    description:
-      'Management operațional și comercial, cu responsabilitate asupra vânzărilor corporate, performanței echipei și raportării.',
-    highlights: [
-      'Am gestionat operațiunile și vânzările corporate pentru unul dintre cele mai importante magazine din rețea.',
-      'Am construit un dashboard de vânzări în Excel pentru monitorizarea performanței la nivel de magazin.',
-      'După depășirea țintei de vânzări pentru prima dată în patru ani, sistemul de raportare a fost adoptat în toate locațiile.',
-      'Am automatizat în Google Sheets raportarea KPI-urilor și urmărirea performanței pe funnel și pe fiecare membru al echipei.',
-      'Am negociat și obținut un contract multianual pentru un spațiu expozițional exclusiv în Ateneul Român.',
-    ],
-    skills: [
-      'Financial Analysis',
-      'Reporting',
-      'Excel',
-      'Google Sheets',
-      'KPIs',
-      'Negotiation',
-      'Team Management',
-    ],
-  },
-];
-
-const education = [
-  {
-    period: '2026 — Prezent',
-    title: 'Master - DOFIN (Doctoral School of Finance)',
-    institution: 'Academia de Studii Economice din București',
-  },
-  {
-    period: '2023 — 2026',
-    title: 'Finanțe, Asigurări, Bănci și Burse de Valori',
-    institution: 'Academia de Studii Economice din București',
-  },
-  {
-    period: '2006 — 2009',
-    title: 'Litere · Română și Engleză',
-    institution: 'Universitatea din București',
-  },
-];
-
-const certifications = [
-  'Bayesian Statistics — From Theory to Practice · Columbia University / Coursera',
-  'Agent de Servicii de Investiții financiare · ASF România',
-  'Performance Management',
-  'Gemba Kaizen — Organizational Management',
-  'Fundamentals of Digital Marketing · Google',
-];
+const focusIcons = [IconDatabase, IconChartBar, IconShieldCheck];
 
 const technologies = [
   'Python',
@@ -200,6 +48,7 @@ const technologies = [
 ];
 
 export default function Page() {
+  const t = cvContent[useLocale()];
   const handlePrint = () => {
     window.print();
   };
@@ -212,7 +61,7 @@ export default function Page() {
           Risk Management · Finance · Data
         </p>
         <div className='mt-3 flex flex-col gap-1 text-sm text-muted-foreground'>
-          <span>Bucharest, România</span>
+          <span>{t.location}</span>
           <a href='tel:+40747937967' data-umami-event='cv-phone-header-link'>
             +40747937967
           </a>
@@ -252,7 +101,7 @@ export default function Page() {
             <div className='space-y-2 text-sm text-muted-foreground'>
               <div className='flex items-center gap-2'>
                 <IconMapPin className='h-4 w-4' />
-                Bucharest, România
+                {t.location}
               </div>
 
               <a
@@ -292,31 +141,31 @@ export default function Page() {
                 href='#about'
                 className='block py-1 text-muted-foreground hover:text-foreground'
               >
-                Profil
+                {t.nav.about}
               </a>
               <a
                 href='#portfolio'
                 className='block py-1 text-muted-foreground hover:text-foreground'
               >
-                Portofoliu risc
+                {t.nav.portfolio}
               </a>
               <a
                 href='#experience'
                 className='block py-1 text-muted-foreground hover:text-foreground'
               >
-                Experiență
+                {t.nav.experience}
               </a>
               <a
                 href='#education'
                 className='block py-1 text-muted-foreground hover:text-foreground'
               >
-                Educație
+                {t.nav.education}
               </a>
               <a
                 href='#skills'
                 className='block py-1 text-muted-foreground hover:text-foreground'
               >
-                Competențe
+                {t.nav.skills}
               </a>
             </nav>
           </div>
@@ -328,21 +177,15 @@ export default function Page() {
           <section id='about' className='border-b pb-12 print:py-10'>
             <div className='max-w-4xl'>
               <Badge variant='secondary' className='mb-5 print:hidden'>
-                Banking · Risk Management · Quantitative Analysis
+                {t.hero.badge}
               </Badge>
 
               <h2 className='text-4xl font-semibold tracking-tight sm:text-5xl print:text-2xl'>
-                Construiesc produse și analize bazate pe date, cu accent pe
-                managementul riscului financiar.
+                {t.hero.title}
               </h2>
 
               <p className='mt-6 max-w-3xl text-lg leading-8 text-muted-foreground'>
-                Profesionist cu peste 10 ani de experiență în strategie,
-                analiză, management de produs și dezvoltare de aplicații.
-                Formarea mea academică în Finanțe,Asigurări, Bănci și Burse de
-                Valori, combinată cu experiența în data analysis, reporting și
-                automatizarea proceselor, stă la baza tranziției mele către Risk
-                Management bancar.
+                {t.hero.intro}
               </p>
 
               <div className='mt-7 flex flex-wrap gap-3 print:hidden'>
@@ -352,7 +195,7 @@ export default function Page() {
                     <Link href='/' data-umami-event='cv-portfolio-link' />
                   }
                 >
-                  Vezi portofoliul de risc
+                  {t.hero.portfolioButton}
                   <IconArrowUpRight className='ml-2 h-4 w-4' />
                 </Button>
 
@@ -362,7 +205,7 @@ export default function Page() {
                   render={<a href='mailto:victor.d.alexa@gmail.com' />}
                   data-umami-event='cv-email-btn'
                 >
-                  Contact
+                  {t.hero.contactButton}
                   <IconMail className='ml-2 h-4 w-4' />
                 </Button>
 
@@ -371,7 +214,7 @@ export default function Page() {
                   onClick={handlePrint}
                   data-umami-event='cv-download-btn'
                 >
-                  Descarcă CV-ul
+                  {t.hero.downloadButton}
                   <IconDownload className='ml-2 h-4 w-4' />
                 </Button>
               </div>
@@ -383,16 +226,15 @@ export default function Page() {
             <div className='mb-8 flex items-end justify-between gap-6'>
               <div>
                 <p className='mb-2 text-sm font-medium text-muted-foreground'>
-                  PROIECT PORTOFOLIU
+                  {t.portfolio.eyebrow}
                 </p>
 
                 <h2 className='text-2xl font-semibold tracking-tight'>
-                  Analiză de risc bancar
+                  {t.portfolio.title}
                 </h2>
 
                 <p className='mt-2 max-w-2xl text-sm leading-6 text-muted-foreground'>
-                  Portofoliu tehnic construit în Python și Next.js, orientat
-                  spre aplicarea practică a conceptelor de risk management.
+                  {t.portfolio.description}
                 </p>
               </div>
 
@@ -400,8 +242,8 @@ export default function Page() {
             </div>
 
             <div className='grid gap-4 md:grid-cols-2'>
-              {riskProjects.map((project) => {
-                const Icon = project.icon;
+              {t.portfolio.projects.map((project) => {
+                const Icon = projectIcons[project.href];
 
                 return (
                   <Link
@@ -458,39 +300,21 @@ export default function Page() {
           {/* Technical focus */}
           <section className='py-12 print:hidden'>
             <div className='grid gap-8 md:grid-cols-3'>
-              <div>
-                <IconDatabase className='mb-4 h-5 w-5' />
+              {t.focus.map((item, i) => {
+                const Icon = focusIcons[i];
 
-                <h3 className='font-semibold'>Data & Analytics</h3>
+                return (
+                  <div key={item.title}>
+                    <Icon className='mb-4 h-5 w-5' />
 
-                <p className='mt-2 text-sm leading-6 text-muted-foreground'>
-                  Lucru cu date financiare, modele statistice, indicatori de
-                  risc, reporting și dashboard-uri.
-                </p>
-              </div>
+                    <h3 className='font-semibold'>{item.title}</h3>
 
-              <div>
-                <IconChartBar className='mb-4 h-5 w-5' />
-
-                <h3 className='font-semibold'>Risk Analysis</h3>
-
-                <p className='mt-2 text-sm leading-6 text-muted-foreground'>
-                  Market Risk, Liquidity Risk, Interest Rate Risk și Credit
-                  Risk, cu accent pe măsurare, modelare și interpretarea
-                  rezultatelor.
-                </p>
-              </div>
-
-              <div>
-                <IconShieldCheck className='mb-4 h-5 w-5' />
-
-                <h3 className='font-semibold'>Engineering</h3>
-
-                <p className='mt-2 text-sm leading-6 text-muted-foreground'>
-                  Transformarea analizelor în instrumente interactive și
-                  reproductibile folosind Python, SQL și tehnologii web moderne.
-                </p>
-              </div>
+                    <p className='mt-2 text-sm leading-6 text-muted-foreground'>
+                      {item.description}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
           </section>
 
@@ -504,12 +328,12 @@ export default function Page() {
               </p> */}
 
               <h2 className='text-2xl font-semibold tracking-tight'>
-                Experiență profesională
+                {t.experienceTitle}
               </h2>
             </div>
 
             <div className='space-y-10'>
-              {experience.map((item) => (
+              {t.experience.map((item) => (
                 <article
                   key={`${item.company}-${item.period}`}
                   className='grid gap-3 md:grid-cols-[150px_minmax(0,1fr)]'
@@ -565,11 +389,11 @@ export default function Page() {
               </p> */}
 
               <h2 className='mb-7 text-2xl font-semibold tracking-tight'>
-                Educație
+                {t.educationTitle}
               </h2>
 
               <div className='space-y-7'>
-                {education.map((item) => (
+                {t.education.map((item) => (
                   <div key={item.title}>
                     <p className='text-sm text-muted-foreground'>
                       {item.period}
@@ -591,11 +415,11 @@ export default function Page() {
               </p> */}
 
               <h2 className='mb-7 text-2xl font-semibold tracking-tight'>
-                Cursuri & certificări
+                {t.certificationsTitle}
               </h2>
 
               <div className='space-y-3'>
-                {certifications.map((item) => (
+                {t.certifications.map((item) => (
                   <div
                     key={item}
                     className='rounded-lg border bg-muted/30 p-3 text-sm leading-6'
@@ -617,7 +441,7 @@ export default function Page() {
               </p> */}
 
               <h2 className='text-2xl font-semibold tracking-tight'>
-                Stack tehnic
+                {t.stackTitle}
               </h2>
             </div>
 
@@ -641,7 +465,7 @@ export default function Page() {
             <div>
               <span className='font-medium text-foreground'>Victor Alexa</span>
               <span className='mx-2'>·</span>
-              Risk Management Portfolio
+              {t.footerTagline}
             </div>
 
             <div className='flex items-center gap-4'>

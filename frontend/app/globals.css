@@ -148,3 +148,29 @@
     text-decoration: none;
   }
 }
+/* Language switch crossfade (ViewTransition in app/[lang]/layout.tsx) */
+::view-transition-old(.lang-fade) {
+  animation: 160ms ease-in both lang-fade-out;
+}
+::view-transition-new(.lang-fade) {
+  animation: 240ms ease-out 80ms both lang-fade-in;
+}
+@keyframes lang-fade-out {
+  to {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+@keyframes lang-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}

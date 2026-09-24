@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/chart';
 import { formatUsd } from '@/lib/utils';
 import type { DiversificationResult } from '@/lib/definitions';
+import { useDictionary } from '@/providers/i18n-provider';
 
 const chartConfig: ChartConfig = {
   var: { label: 'VaR', color: 'var(--color-chart-2)' },
@@ -20,13 +21,14 @@ export interface DiversificationChartProps {
 }
 
 export function DiversificationChart({ data }: DiversificationChartProps) {
+  const { charts } = useDictionary().market;
   const rows = [
     ...Object.entries(data.standalone_vars).map(([ticker, value]) => ({
       name: ticker,
       var: value,
       diversified: false,
     })),
-    { name: 'Portofoliu', var: data.portfolio_var, diversified: true },
+    { name: charts.portfolio, var: data.portfolio_var, diversified: true },
   ];
 
   return (

@@ -17,10 +17,7 @@ import {
 } from '@/components/ui/chart';
 import { buildHistogram, formatUsd, nearestBinMid } from '@/lib/utils';
 import type { TimeSeries } from '@/lib/definitions';
-
-const chartConfig: ChartConfig = {
-  count: { label: 'Zile', color: 'var(--color-chart-2)' },
-};
+import { useDictionary } from '@/providers/i18n-provider';
 
 export interface VarHistogramChartProps {
   pnl: TimeSeries;
@@ -33,6 +30,10 @@ export function VarHistogramChart({
   varLevel,
   esLevel,
 }: VarHistogramChartProps) {
+  const { varTable } = useDictionary().market;
+  const chartConfig: ChartConfig = {
+    count: { label: varTable.days, color: 'var(--color-chart-2)' },
+  };
   const bins = buildHistogram(pnl.values, 24);
   const varMid = nearestBinMid(bins, -varLevel);
   const esMid = nearestBinMid(bins, -esLevel);
@@ -56,8 +57,7 @@ export function VarHistogramChart({
             <ChartTooltipContent
               labelFormatter={(_, payload) => {
                 const bin = payload?.[0]?.payload as
-                  | { start: number; end: number }
-                  | undefined;
+                  { start: number; end: number } | undefined;
                 return bin
                   ? `${formatUsd(bin.start, 0)} – ${formatUsd(bin.end, 0)}`
                   : null;

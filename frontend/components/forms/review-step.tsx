@@ -10,62 +10,27 @@ import {
   OffBalanceSheetItem,
   InflowItem,
 } from '@/lib/definitions';
+import { useDictionary, useIntlLocale } from '@/providers/i18n-provider';
 
-export function formatAmount(amount: number) {
-  return `${new Intl.NumberFormat('ro-RO', {
-    maximumFractionDigits: 2,
-  }).format(amount)} mil. RON`;
+// e.g. "1.250,5 mil. RON" (ro) / "1,250.5 RON m" (en)
+export function useFormatAmount() {
+  const intlLocale = useIntlLocale();
+  const { amountUnit } = useDictionary().liquidity;
+  return (amount: number) =>
+    `${new Intl.NumberFormat(intlLocale, {
+      maximumFractionDigits: 2,
+    }).format(amount)} ${amountUnit}`;
 }
 
-// Maps the raw enum values used across issuer_type/rating_band/category
-// fields to their Romanian display labels shown elsewhere in the wizard.
-const RO_LABELS: Record<string, string> = {
-  // issuer types
-  sovereign_own_country: 'Suveran (țara proprie)',
-  central_bank_cash: 'Numerar bancă centrală',
-  sovereign_foreign: 'Suveran (străin)',
-  multilateral_dev_bank: 'Bancă multilaterală de dezvoltare',
-  covered_bond: 'Obligațiune garantată',
-  corporate_bond: 'Obligațiune corporativă',
-  equity_index_listed: 'Acțiuni (index listat)',
-  equity_other: 'Acțiuni (altele)',
-  rmbs: 'RMBS',
-  other: 'Altele',
-  // rating bands
-  AAA_AA: 'AAA până la AA-',
-  A: 'A+ până la A-',
-  BBB: 'BBB+ până la BBB-',
-  below_BBB_minus: 'Sub BBB-',
-  not_rated: 'Fără rating',
-  // retail deposit categories
-  stable_retail: 'Retail stabil',
-  less_stable_retail: 'Retail mai puțin stabil',
-  sme: 'IMM',
-  // wholesale deposit categories
-  operational_deposit: 'Depozit operațional',
-  non_operational_corporate: 'Neoperațional (corporativ)',
-  non_operational_financial_institution:
-    'Neoperațional (instituție financiară)',
-  // off-balance-sheet categories
-  retail_sme_facility: 'Facilitate retail / IMM',
-  corporate_facility: 'Facilitate corporativă',
-  bank_fi_facility: 'Facilitate bancă / instituție financiară',
-  // inflow categories
-  secured_lending_l1_collateral: 'Împrumut garantat (garanție L1)',
-  secured_lending_l2a_collateral: 'Împrumut garantat (garanție L2A)',
-  retail_sme_loan_repayment: 'Rambursare împrumut retail / IMM',
-  corporate_loan_repayment: 'Rambursare împrumut corporativ',
-  bank_fi_loan_repayment: 'Rambursare împrumut bancă / instituție financiară',
-};
-
-function labelize(value: string) {
-  return (
-    RO_LABELS[value] ??
+// Display label for a raw issuer_type/rating_band/category enum value.
+function useLabelize() {
+  const { labels } = useDictionary().liquidity;
+  return (value: string) =>
+    labels[value] ??
     value
       .split('_')
       .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-      .join(' ')
-  );
+      .join(' ');
 }
 
 function SectionShell({
@@ -79,19 +44,20 @@ function SectionShell({
   total: number;
   children: React.ReactNode;
 }) {
+  const { review } = useDictionary().liquidity;
+  const formatAmount = useFormatAmount();
+
   return (
     <div className='space-y-3'>
       <div className='flex items-baseline justify-between'>
         <h3 className='text-base font-semibold'>{title}</h3>
         <span className='text-muted-foreground text-sm'>
-          {itemCount} {itemCount === 1 ? 'element' : 'elemente'} ·{' '}
+          {itemCount} {itemCount === 1 ? review.itemOne : review.itemMany} ·{' '}
           {formatAmount(total)}
         </span>
       </div>
       {itemCount === 0 ? (
-        <p className='text-muted-foreground text-sm italic'>
-          Niciun element adăugat.
-        </p>
+        <p className='text-muted-foreground text-sm italic'>{review.noItems}</p>
       ) : (
         <div className='overflow-hidden rounded-lg border'>
           <table className='w-full text-sm'>{children}</table>
@@ -108,15 +74,20 @@ function SectionShell({
 function CategoryItemsSummary<
   TItem extends { description: string; amount: number; category: string },
 >({ title, items }: { title: string; items: TItem[] }): React.ReactNode {
+  const { fields, review } = useDictionary().liquidity;
+  const formatAmount = useFormatAmount();
+  const labelize = useLabelize();
   const total = items.reduce((sum, item) => sum + item.amount, 0);
 
   return (
     <SectionShell title={title} itemCount={items.length} total={total}>
       <thead className='bg-muted/40 text-muted-foreground'>
         <tr>
-          <th className='px-3 py-2 text-left font-medium'>Descriere</th>
-          <th className='px-3 py-2 text-left font-medium'>Categorie</th>
-          <th className='px-3 py-2 text-right font-medium'>Sumă</th>
+          <th className='px-3 py-2 text-left font-medium'>
+            {fields.description}
+          </th>
+          <th className='px-3 py-2 text-left font-medium'>{fields.category}</th>
+          <th className='px-3 py-2 text-right font-medium'>{fields.amount}</th>
         </tr>
       </thead>
       <tbody>
@@ -125,7 +96,7 @@ function CategoryItemsSummary<
             <td className='px-3 py-2'>
               {item.description || (
                 <span className='text-muted-foreground italic'>
-                  (fără descriere)
+                  {review.noDescription}
                 </span>
               )}
             </td>
@@ -146,16 +117,29 @@ function CategoryItemsSummary<
  * its own component rather than being forced through the generic one.
  */
 function HqlaItemsSummary({ items }: { items: HQLAItem[] }) {
+  const { fields, review } = useDictionary().liquidity;
+  const formatAmount = useFormatAmount();
+  const labelize = useLabelize();
   const total = items.reduce((sum, item) => sum + item.amount, 0);
 
   return (
-    <SectionShell title='Active HQLA' itemCount={items.length} total={total}>
+    <SectionShell
+      title={review.hqlaAssets}
+      itemCount={items.length}
+      total={total}
+    >
       <thead className='bg-muted/40 text-muted-foreground'>
         <tr>
-          <th className='px-3 py-2 text-left font-medium'>Descriere</th>
-          <th className='px-3 py-2 text-left font-medium'>Tip emitent</th>
-          <th className='px-3 py-2 text-left font-medium'>Bandă de rating</th>
-          <th className='px-3 py-2 text-right font-medium'>Sumă</th>
+          <th className='px-3 py-2 text-left font-medium'>
+            {fields.description}
+          </th>
+          <th className='px-3 py-2 text-left font-medium'>
+            {fields.issuerType}
+          </th>
+          <th className='px-3 py-2 text-left font-medium'>
+            {fields.ratingBand}
+          </th>
+          <th className='px-3 py-2 text-right font-medium'>{fields.amount}</th>
         </tr>
       </thead>
       <tbody>
@@ -164,7 +148,7 @@ function HqlaItemsSummary({ items }: { items: HQLAItem[] }) {
             <td className='px-3 py-2'>
               {item.description || (
                 <span className='text-muted-foreground italic'>
-                  (fără descriere)
+                  {review.noDescription}
                 </span>
               )}
             </td>
@@ -207,32 +191,30 @@ export function ReviewStep({
     control: form.control,
     name: 'inflow_items',
   });
+  const { review, steps } = useDictionary().liquidity;
 
   return (
     <div className='space-y-8'>
       <div>
-        <h2 className='text-lg font-semibold'>Rezultat LCR</h2>
-        <p className='text-muted-foreground text-sm'>
-          Mai jos regăsiți tabelele cu datele agregate introduse la pașii
-          anteriori, rezultatul LCR apare într-un card sub aceste tabele.
-        </p>
+        <h2 className='text-lg font-semibold'>{review.title}</h2>
+        <p className='text-muted-foreground text-sm'>{review.description}</p>
       </div>
 
       <HqlaItemsSummary items={hqlaItems} />
       <CategoryItemsSummary<RetailDepositItem>
-        title='Depozite retail'
+        title={steps.retail.title}
         items={retailDeposits}
       />
       <CategoryItemsSummary<WholesaleDepositItem>
-        title='Depozite en-gros'
+        title={steps.wholesale.title}
         items={wholesaleDeposits}
       />
       <CategoryItemsSummary<OffBalanceSheetItem>
-        title='Elemente extrabilanțiere'
+        title={review.offBalanceSheetItems}
         items={offBalanceSheet}
       />
       <CategoryItemsSummary<InflowItem>
-        title='Intrări de numerar'
+        title={steps.inflows.title}
         items={inflowItems}
       />
     </div>

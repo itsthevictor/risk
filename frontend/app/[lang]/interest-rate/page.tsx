@@ -20,11 +20,14 @@ import {
   InterestRateRiskApiError,
 } from '@/lib/api/interest-rate-risk';
 import { formatDateRo } from '@/lib/utils';
-import Link from 'next/link';
+import Link from '@/components/locale-link';
+import { fmt } from '@/lib/i18n/config';
+import { useDictionary } from '@/providers/i18n-provider';
 
 const SHOCK_OPTIONS = [100, 200, 300] as const;
 
 export default function InterestRatePage() {
+  const { interestRate: t, common } = useDictionary();
   const [shockBp, setShockBp] = useState<number>(200);
 
   const niiQuery = useQuery({
@@ -41,18 +44,15 @@ export default function InterestRatePage() {
     <div className='w-full space-y-6 p-6 max-w-6xl mx-auto'>
       <div className='flex flex-wrap items-end justify-between gap-2'>
         <div className='space-y-1'>
-          <h1 className='text-2xl font-bold'>Risc de dobândă — IRRBB</h1>
-          <p className='text-muted-foreground text-sm'>
-            Interest Rate Risk in the Banking Book — Net Interest Income (NII)
-            și sensibilitatea acestuia la un șoc paralel de rată.
-          </p>
+          <h1 className='text-2xl font-bold'>{t.title}</h1>
+          <p className='text-muted-foreground text-sm'>{t.subtitle}</p>
         </div>
         <Link
           href='/interest-rate/data'
           className='text-muted-foreground text-sm hover:underline'
           data-umami-event='interest-rate-data-link'
         >
-          Date și metodologie →
+          {t.dataLink}
         </Link>
       </div>
 
@@ -66,10 +66,13 @@ export default function InterestRatePage() {
           <div className='flex flex-wrap items-center justify-between gap-2 w-full'>
             <p className='text-muted-foreground text-sm'>
               {niiQuery.data &&
-                `Calculat la ${formatDateRo(niiQuery.data.as_of_date)}, orizont de ${niiQuery.data.horizon_days} zile.`}
+                fmt(t.niiComputedAt, {
+                  date: formatDateRo(niiQuery.data.as_of_date),
+                  days: niiQuery.data.horizon_days,
+                })}
             </p>
             <div className='space-y-1'>
-              <label className='text-sm font-medium'>Mărime șoc</label>
+              <label className='text-sm font-medium'>{t.shockSize}</label>
               <Select
                 value={String(shockBp)}
                 onValueChange={(v) => v && setShockBp(Number(v))}
@@ -89,14 +92,16 @@ export default function InterestRatePage() {
           </div>
 
           {niiQuery.isPending && (
-            <p className='text-muted-foreground text-sm'>Se calculează…</p>
+            <p className='text-muted-foreground text-sm'>
+              {common.calculating}
+            </p>
           )}
 
           {niiQuery.isError && (
             <p className='text-destructive text-sm'>
               {niiQuery.error instanceof InterestRateRiskApiError
                 ? niiQuery.error.message
-                : 'A apărut o eroare la calculul NII.'}
+                : t.niiError}
             </p>
           )}
 
@@ -111,18 +116,22 @@ export default function InterestRatePage() {
         <TabsContent value='eve' className='w-full min-w-0 space-y-6 pt-4'>
           <p className='text-muted-foreground text-sm'>
             {eveQuery.data &&
-              `Calculat la ${formatDateRo(eveQuery.data.as_of_date)}, pe baza curbei de randament curente și a 6 scenarii de șoc standard IRRBB.`}
+              fmt(t.eveComputedAt, {
+                date: formatDateRo(eveQuery.data.as_of_date),
+              })}
           </p>
 
           {eveQuery.isPending && (
-            <p className='text-muted-foreground text-sm'>Se calculează…</p>
+            <p className='text-muted-foreground text-sm'>
+              {common.calculating}
+            </p>
           )}
 
           {eveQuery.isError && (
             <p className='text-destructive text-sm'>
               {eveQuery.error instanceof InterestRateRiskApiError
                 ? eveQuery.error.message
-                : 'A apărut o eroare la calculul EVE.'}
+                : t.eveError}
             </p>
           )}
 

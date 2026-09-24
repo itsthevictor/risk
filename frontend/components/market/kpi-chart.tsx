@@ -12,6 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { useDictionary } from '@/providers/i18n-provider';
 
 export interface KpiChartProps {
   title: string;
@@ -26,6 +27,8 @@ function KpiChart({
   children,
   triggerClassName,
 }: KpiChartProps) {
+  const dict = useDictionary();
+
   return (
     <Dialog>
       <DialogTrigger
@@ -42,7 +45,7 @@ function KpiChart({
         }
       >
         <ChartBarIcon />
-        <span className='sr-only'>Vezi grafic</span>
+        <span className='sr-only'>{dict.common.viewChart}</span>
       </DialogTrigger>
       <DialogContent className='sm:max-w-280'>
         <DialogHeader>

@@ -16,6 +16,8 @@ import {
   type ChartConfig,
 } from '@/components/ui/chart';
 import { formatPercent } from '@/lib/utils';
+import { fmt } from '@/lib/i18n/config';
+import { useDictionary } from '@/providers/i18n-provider';
 
 interface CalibrationPoint {
   decile: number;
@@ -23,15 +25,15 @@ interface CalibrationPoint {
   default_actual: number;
 }
 
-const chartConfig: ChartConfig = {
-  default_actual: { label: 'Rată reală', color: 'var(--color-chart-2)' },
-};
-
 export interface CalibrationChartProps {
   data: CalibrationPoint[];
 }
 
 export function CalibrationChart({ data }: CalibrationChartProps) {
+  const { calibration: t } = useDictionary().credit;
+  const chartConfig: ChartConfig = {
+    default_actual: { label: t.actual, color: 'var(--color-chart-2)' },
+  };
   const maxValue = Math.max(
     ...data.map((d) => Math.max(d.pd_predicted, d.default_actual)),
   );
@@ -44,12 +46,12 @@ export function CalibrationChart({ data }: CalibrationChartProps) {
         <XAxis
           type='number'
           dataKey='pd_predicted'
-          name='PD calibrat'
+          name={t.predicted}
           domain={[0, axisMax]}
           tickFormatter={(v) => formatPercent(v, 0)}
           tick={{ fontSize: 10 }}
           label={{
-            value: 'PD calibrat',
+            value: t.predicted,
             position: 'insideBottom',
             offset: -6,
             fontSize: 11,
@@ -58,7 +60,7 @@ export function CalibrationChart({ data }: CalibrationChartProps) {
         <YAxis
           type='number'
           dataKey='default_actual'
-          name='rată reală'
+          name={t.actual}
           domain={[0, axisMax]}
           tickFormatter={(v) => formatPercent(v, 0)}
           tick={{ fontSize: 10 }}
@@ -77,11 +79,11 @@ export function CalibrationChart({ data }: CalibrationChartProps) {
           content={
             <ChartTooltipContent
               labelFormatter={(_, payload) =>
-                `Decila ${payload[0]?.payload.decile}`
+                fmt(t.decile, { n: payload[0]?.payload.decile })
               }
               formatter={(value, name) => [
                 formatPercent(Number(value), 2),
-                name === 'pd_predicted' ? 'PD calibrat' : 'Rată reală',
+                name === 'pd_predicted' ? t.predicted : t.actual,
               ]}
             />
           }

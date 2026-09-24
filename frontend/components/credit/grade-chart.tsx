@@ -1,6 +1,14 @@
 'use client';
 
-import { Bar, BarChart, CartesianGrid, Cell, ReferenceLine, XAxis, YAxis } from 'recharts';
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  ReferenceLine,
+  XAxis,
+  YAxis,
+} from 'recharts';
 
 import {
   ChartContainer,
@@ -10,6 +18,8 @@ import {
 } from '@/components/ui/chart';
 import { formatPercent, formatUsd } from '@/lib/utils';
 import type { TrafficLight } from '@/lib/definitions';
+import { fmt } from '@/lib/i18n/config';
+import { useDictionary, useIntlLocale } from '@/providers/i18n-provider';
 
 interface GradeRow {
   grade: string;
@@ -27,10 +37,6 @@ const TRAFFIC_LIGHT_COLORS: Record<TrafficLight, string> = {
   red: '#A6402F',
 };
 
-const chartConfig: ChartConfig = {
-  densitate_capital: { label: 'Densitate capital' },
-};
-
 export function densityStatus(densitateCapital: number): TrafficLight {
   if (densitateCapital < 0.6) return 'green';
   if (densitateCapital < 1.0) return 'yellow';
@@ -42,9 +48,17 @@ export interface GradeChartProps {
 }
 
 export function GradeChart({ data }: GradeChartProps) {
+  const { gradeChart: t } = useDictionary().credit;
+  const intlLocale = useIntlLocale();
+  const chartConfig: ChartConfig = {
+    densitate_capital: { label: t.density },
+  };
   return (
     <ChartContainer config={chartConfig} className='aspect-auto h-64 w-full'>
-      <BarChart data={data} margin={{ top: 12, right: 12, left: 12, bottom: 0 }}>
+      <BarChart
+        data={data}
+        margin={{ top: 12, right: 12, left: 12, bottom: 0 }}
+      >
         <CartesianGrid vertical={false} strokeDasharray='3 3' />
         <XAxis dataKey='grade' tick={{ fontSize: 10 }} />
         <YAxis
@@ -56,18 +70,30 @@ export function GradeChart({ data }: GradeChartProps) {
         <ChartTooltip
           content={
             <ChartTooltipContent
-              labelFormatter={(_, payload) => `Grad ${payload[0]?.payload.grade}`}
+              labelFormatter={(_, payload) =>
+                fmt(t.grade, { grade: payload[0]?.payload.grade })
+              }
               formatter={(value, name, item) => {
                 if (name !== 'densitate_capital') return [value, name];
                 const row = item.payload as GradeRow;
                 return [
                   <div key='details' className='flex flex-col gap-0.5'>
-                    <span>Densitate: {formatPercent(row.densitate_capital, 1)}</span>
-                    <span>PD mediu: {formatPercent(row.PD_mediu, 2)}</span>
+                    <span>
+                      {fmt(t.tooltipDensity, {
+                        value: formatPercent(row.densitate_capital, 1),
+                      })}
+                    </span>
+                    <span>
+                      {fmt(t.tooltipPd, {
+                        value: formatPercent(row.PD_mediu, 2),
+                      })}
+                    </span>
                     <span>LGD: {formatPercent(row.LGD_grade, 1)}</span>
                     <span>
-                      {row.n_credite.toLocaleString('ro-RO')} credite · EAD{' '}
-                      {formatUsd(row.EAD_total)}
+                      {fmt(t.tooltipLoans, {
+                        count: row.n_credite.toLocaleString(intlLocale),
+                        ead: formatUsd(row.EAD_total),
+                      })}
                     </span>
                   </div>,
                   '',

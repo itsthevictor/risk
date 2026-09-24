@@ -8,8 +8,8 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from '@/components/ui/chart';
-import { formatRon } from '@/lib/utils';
 import type { NIIAnalysisResponse } from '@/lib/definitions';
+import { useFormatRon } from '@/providers/i18n-provider';
 
 const chartConfig: ChartConfig = {
   delta_nii: { label: 'Delta NII', color: 'var(--color-chart-2)' },
@@ -20,6 +20,7 @@ export interface DeltaNiiChartProps {
 }
 
 export function DeltaNiiChart({ data }: DeltaNiiChartProps) {
+  const ron = useFormatRon();
   const rows = [
     { name: `+${data.shock_bp} bps`, delta_nii: data.shock_up.delta_nii },
     { name: `-${data.shock_bp} bps`, delta_nii: data.shock_down.delta_nii },
@@ -34,14 +35,14 @@ export function DeltaNiiChart({ data }: DeltaNiiChartProps) {
         <CartesianGrid vertical={false} strokeDasharray='3 3' />
         <XAxis dataKey='name' tick={{ fontSize: 10 }} />
         <YAxis
-          tickFormatter={(v) => formatRon(v, 0)}
+          tickFormatter={(v) => ron(v, 0)}
           tick={{ fontSize: 10 }}
           width={64}
         />
         <ChartTooltip
           content={
             <ChartTooltipContent
-              formatter={(value) => [formatRon(Number(value)), 'Delta NII']}
+              formatter={(value) => [ron(Number(value)), 'Delta NII']}
             />
           }
         />

@@ -22,37 +22,33 @@ import { OffBalanceSheetStep } from './off-balance-sheet-step';
 import { WholesaleDepositsStep } from './wholesale-deposit-step';
 import { InflowsStep } from './inflows-step';
 import { cn } from '@/lib/utils';
-import { ReviewStep, formatAmount } from './review-step';
+import { ReviewStep, useFormatAmount } from './review-step';
+import { useDictionary, useIntlLocale } from '@/providers/i18n-provider';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import InfoDrawer from '@/components/custom/info-drawer';
 import { IconInfoCircle } from '@tabler/icons-react';
 
-const LCR_STATUS = {
+// Label/meaning text lives in dict.liquidity.status.
+const LCR_STATUS_STYLES = {
   below_minimum: {
-    label: 'Sub minim',
-    meaning: 'Non-conformitate reglementară',
     textStyles: 'text-red-600 dark:text-red-400',
     badgeStyles: 'bg-red-500/15 text-red-600 dark:text-red-400',
   },
   marginal: {
-    label: 'Marginal / buffer redus',
-    meaning: 'Conform, dar buffer de siguranță redus',
     textStyles: 'text-amber-600 dark:text-amber-400',
     badgeStyles: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
   },
   comfortable: {
-    label: 'Confortabil',
-    meaning: 'Conform, cu marjă solidă',
     textStyles: 'text-emerald-600 dark:text-emerald-400',
     badgeStyles: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
   },
 } as const;
 
-function getLcrStatus(lcrRatio: number) {
-  if (lcrRatio < 100) return LCR_STATUS.below_minimum;
-  if (lcrRatio < 120) return LCR_STATUS.marginal;
-  return LCR_STATUS.comfortable;
+function getLcrStatus(lcrRatio: number): keyof typeof LCR_STATUS_STYLES {
+  if (lcrRatio < 100) return 'below_minimum';
+  if (lcrRatio < 120) return 'marginal';
+  return 'comfortable';
 }
 const STEPS = [
   'hqla',
@@ -63,15 +59,6 @@ const STEPS = [
   'review',
 ] as const;
 
-const STEP_LABELS: Record<(typeof STEPS)[number], string> = {
-  hqla: 'Active lichide',
-  retail: 'Depozite retail',
-  wholesale: 'Depozite en-gros',
-  'off-balance-sheet': 'Extrabilanțiere',
-  inflows: 'Intrări',
-  review: 'Rezultat LCR',
-};
-
 const emptyDefaults: LCRCalculationRequest = {
   hqla_items: [],
   retail_deposits: [],
@@ -81,6 +68,9 @@ const emptyDefaults: LCRCalculationRequest = {
 };
 
 export default function CalculateLcrForm() {
+  const { liquidity: t, common } = useDictionary();
+  const intlLocale = useIntlLocale();
+  const formatAmount = useFormatAmount();
   const [currentStep, setCurrentStep] = useState(0);
 
   const form = useForm<LCRCalculationRequest>({
@@ -176,30 +166,18 @@ export default function CalculateLcrForm() {
         className='flex min-h-screen flex-col justify-between'
       >
         <div className='flex items-center gap-1 mb-4'>
-          <h1 className='text-2xl font-bold'>
-            Indicatorul de acoperire a lichidității (LCR)
-          </h1>
+          <h1 className='text-2xl font-bold'>{t.title}</h1>
           <InfoDrawer
-            title='Metodologie LCR'
-            definition='Liquidity Coverage Ratio: raportul dintre activele lichide de calitate ridicată (HQLA) și ieșirile nete de numerar estimate pe un orizont de stres de 30 de zile calendaristice. Un LCR ≥ 100% arată că banca deține suficiente active lichide pentru a acoperi ieșirile nete într-un scenariu de criză de o lună.'
-            equation='LCR = \frac{HQLA}{\text{Iesiri nete}} \times 100\%, \quad \text{Iesiri nete} = \text{Iesiri totale} - \min(\text{Intrari}, 0{,}75 \times \text{Iesiri totale})'
-            implementation={[
-              'HQLA — activele sunt clasificate L1/L2A/L2B în funcție de tipul emitentului și banda de rating, apoi li se aplică un haircut (0% / 15% / 25%).',
-              'Plafoane L2 — L2B este plafonat la 15% din (L1 + L2A), iar L2A + L2B combinat este plafonat la 40% din HQLA total, aplicate în această ordine.',
-              'Ieșiri — se aplică o rată de run-off pe fiecare categorie de depozit retail, en-gros și extrabilanțier (ex. 5% retail stabil, 100% neoperațional interbancar).',
-              'Intrări — se aplică o rată de intrare pe fiecare categorie (ex. 50% rambursări retail/corporate, 100% interbancar), iar totalul este plafonat la 75% din ieșirile totale.',
-            ]}
+            title={t.methodology.title}
+            definition={t.methodology.definition}
+            equation={t.methodology.equation}
+            implementation={t.methodology.steps}
           />
         </div>
 
         <div className='text-foreground bg-accent mx-auto mb-6 flex w-full flex-row items-start gap-3 rounded-lg p-4 text-sm'>
           <IconInfoCircle className='shrink-0 mt-0.5' />
-          <p>
-            Completează pe rând activele lichide (HQLA) deținute, apoi sursele
-            de finanțare care pot ieși din bancă (depozite retail, en-gros și
-            angajamente extrabilanțiere) și, în final, intrările de numerar
-            așteptate.
-          </p>
+          <p>{t.intro}</p>
         </div>
 
         {/* step indicator — stays pinned to the top as the form scrolls */}
@@ -218,7 +196,7 @@ export default function CalculateLcrForm() {
                       : 'text-muted-foreground border-border',
                 )}
               >
-                {i + 1}. <span>{STEP_LABELS[step]}</span>
+                {i + 1}. <span>{t.stepLabels[step]}</span>
               </li>
             ))}
           </ol>
@@ -234,22 +212,24 @@ export default function CalculateLcrForm() {
 
           {error && (
             <p className='text-destructive mt-6 text-sm'>
-              {error instanceof Error
-                ? error.message
-                : 'Calculul a eșuat. Vă rugăm încercați din nou.'}
+              {error instanceof Error ? error.message : t.result.error}
             </p>
           )}
 
           {data &&
             (() => {
-              const status = getLcrStatus(data.lcr_ratio);
+              const statusKey = getLcrStatus(data.lcr_ratio);
+              const status = {
+                ...LCR_STATUS_STYLES[statusKey],
+                ...t.status[statusKey],
+              };
               return (
                 <Card
                   ref={resultCardRef}
                   className='mt-6 scroll-mt-20 bg-muted/40'
                 >
                   <CardHeader>
-                    <CardTitle>Rezultat calcul LCR</CardTitle>
+                    <CardTitle>{t.result.title}</CardTitle>
                     <CardAction>
                       <Badge
                         variant='outline'
@@ -269,7 +249,7 @@ export default function CalculateLcrForm() {
                         status.textStyles,
                       )}
                     >
-                      {new Intl.NumberFormat('ro-RO', {
+                      {new Intl.NumberFormat(intlLocale, {
                         maximumFractionDigits: 1,
                       }).format(data.lcr_ratio)}
                       %
@@ -279,21 +259,27 @@ export default function CalculateLcrForm() {
                     </p>
                     <dl className='grid grid-cols-2 gap-x-4 gap-y-2 text-sm'>
                       <div>
-                        <dt className='text-muted-foreground'>HQLA total</dt>
+                        <dt className='text-muted-foreground'>
+                          {t.result.hqlaTotal}
+                        </dt>
                         <dd>{formatAmount(data.hqla_total)}</dd>
                       </div>
                       <div>
                         <dt className='text-muted-foreground'>
-                          Intrări plafonate (75%)
+                          {t.result.inflowsCapped}
                         </dt>
                         <dd>{formatAmount(data.total_inflows_capped)}</dd>
                       </div>
                       <div>
-                        <dt className='text-muted-foreground'>Ieșiri totale</dt>
+                        <dt className='text-muted-foreground'>
+                          {t.result.totalOutflows}
+                        </dt>
                         <dd>{formatAmount(data.total_outflows)}</dd>
                       </div>
                       <div>
-                        <dt className='text-muted-foreground'>Ieșiri nete</dt>
+                        <dt className='text-muted-foreground'>
+                          {t.result.netOutflows}
+                        </dt>
                         <dd>{formatAmount(data.net_outflows)}</dd>
                       </div>
                     </dl>
@@ -311,7 +297,7 @@ export default function CalculateLcrForm() {
             onClick={handleStartOver}
             disabled={isPending}
           >
-            Reia de la început
+            {t.actions.startOver}
           </Button>
 
           <div className='flex gap-2'>
@@ -322,7 +308,7 @@ export default function CalculateLcrForm() {
               disabled={isFirstStep || isPending}
               data-umami-event={'calculate-lcr-back-click'}
             >
-              Înapoi
+              {t.actions.back}
             </Button>
 
             {isReviewStep ? (
@@ -331,7 +317,7 @@ export default function CalculateLcrForm() {
                 disabled={isPending || !!data}
                 data-umami-event='calculate-lcr-submit-click'
               >
-                {isPending ? 'Se calculează…' : 'Calculează'}
+                {isPending ? common.calculating : t.actions.calculate}
               </Button>
             ) : (
               <Button
@@ -340,7 +326,7 @@ export default function CalculateLcrForm() {
                 disabled={isPending}
                 data-umami-event='calculate-lcr-next-click'
               >
-                Următorul
+                {t.actions.next}
               </Button>
             )}
           </div>

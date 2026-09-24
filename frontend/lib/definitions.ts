@@ -34,7 +34,8 @@ export const HQLAItemSchema = z
       RATING_EXEMPT_ISSUER_TYPES_SET.has(data.issuer_type) ||
       data.rating_band !== undefined,
     {
-      message: 'banda de rating este obligatorie pentru acest tip de emitent',
+      // Key into dict.validation, translated by <FormMessage>.
+      message: 'ratingBandRequired',
       path: ['rating_band'],
     },
   );
@@ -211,10 +212,10 @@ export const MarketRiskAnalyzeRequestSchema = z
   .object({
     tickers: z
       .array(tickerSchema)
-      .min(2, 'Select at least 2 tickers')
-      .max(10, 'Select at most 10 tickers')
+      .min(2, 'minTickers')
+      .max(10, 'maxTickers')
       .refine((tickers) => new Set(tickers).size === tickers.length, {
-        message: 'Duplicate tickers in portfolio',
+        message: 'duplicateTickers',
       }),
     portfolio_value: z.number().positive().default(1_000_000),
     crisis_window: CrisisWindowPresetSchema.nullable().optional(),

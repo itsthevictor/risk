@@ -14,6 +14,7 @@ import {
 
 import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
+import { useDictionary } from '@/providers/i18n-provider';
 
 const Form = FormProvider;
 
@@ -137,7 +138,10 @@ function FormDescription({ className, ...props }: React.ComponentProps<'p'>) {
 
 function FormMessage({ className, ...props }: React.ComponentProps<'p'>) {
   const { error, formMessageId } = useFormField();
-  const body = error ? String(error?.message ?? '') : props.children;
+  const { validation } = useDictionary();
+  // Schema messages can be dictionary keys (e.g. 'minTickers'); anything else shows as-is.
+  const message = String(error?.message ?? '');
+  const body = error ? (validation[message] ?? message) : props.children;
 
   if (!body) {
     return null;

@@ -13,16 +13,15 @@ import {
 import { cn } from '@/lib/utils';
 import type { MethodBacktest } from '@/lib/definitions';
 import { TrafficLightBadge } from './traffic-light-badge';
+import { useDictionary } from '@/providers/i18n-provider';
 
-const METHOD_LABELS: Record<keyof MethodBacktest, string> = {
-  historical: 'Simulare Istorică',
-  parametric: 'Parametric',
-  ewma: 'Parametric (EWMA)',
-  garch: 'Parametric (GARCH)',
-  monte_carlo: 'Monte Carlo',
-};
-
-const METHOD_ORDER = Object.keys(METHOD_LABELS) as (keyof MethodBacktest)[];
+const METHOD_ORDER: (keyof MethodBacktest)[] = [
+  'historical',
+  'parametric',
+  'ewma',
+  'garch',
+  'monte_carlo',
+];
 
 function formatLr(value: number): string {
   return value.toFixed(2);
@@ -43,13 +42,16 @@ export function BacktestScorecardTable({
   activeMethod,
   onSelectMethod,
 }: BacktestScorecardTableProps) {
+  const { market } = useDictionary();
   return (
     <div className='overflow-x-auto'>
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Metodă</TableHead>
-            <TableHead className='text-right'>Depășiri</TableHead>
+            <TableHead>{market.backtest.method}</TableHead>
+            <TableHead className='text-right'>
+              {market.backtest.breaches}
+            </TableHead>
             {/* <TableHead className='text-right'>Observații</TableHead> */}
             <TableHead className='text-right'>Kupiec LR</TableHead>
             <TableHead className='text-right'>Kupiec p</TableHead>
@@ -57,7 +59,7 @@ export function BacktestScorecardTable({
             <TableHead className='text-right'>Christoffersen p</TableHead>
             <TableHead className='text-right'>CC LR</TableHead>
             <TableHead className='text-right'>CC p</TableHead>
-            <TableHead>Semafor</TableHead>
+            <TableHead>{market.backtest.trafficLight}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -86,7 +88,7 @@ export function BacktestScorecardTable({
                         weight={isActive ? 'fill' : 'regular'}
                       />
                     )}
-                    {METHOD_LABELS[method]}
+                    {market.methods[method]}
                   </span>
                 </TableCell>
                 <TableCell className='text-right tabular-nums'>

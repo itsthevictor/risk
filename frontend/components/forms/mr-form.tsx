@@ -17,6 +17,7 @@ import {
   type MarketRiskAnalyzeRequestParsed,
 } from '@/lib/definitions';
 import { IconReload } from '@tabler/icons-react';
+import { useDictionary } from '@/providers/i18n-provider';
 
 export interface MarketRiskFormProps {
   tickerOptions: MultiSelectOption[];
@@ -33,6 +34,7 @@ export function MarketRiskForm({
   onSubmit,
   onReset,
 }: MarketRiskFormProps) {
+  const { form: t } = useDictionary().market;
   const form = useForm<MarketRiskAnalyzeRequest>({
     resolver: zodResolver(MarketRiskAnalyzeRequestSchema),
     defaultValues: {
@@ -68,7 +70,7 @@ export function MarketRiskForm({
               name='tickers'
               control={form.control}
               options={tickerOptions}
-              labelText='Tickere'
+              labelText={t.tickers}
               min={2}
               max={10}
             />
@@ -77,13 +79,13 @@ export function MarketRiskForm({
           <CustomNumberField
             name='portfolio_value'
             control={form.control}
-            labelText='Valoarea portofoliului'
+            labelText={t.portfolioValue}
             currency='USD'
           />
           <CustomIncrementalFormField
             name='estimation_window_days'
             control={form.control}
-            labelText='Fereastra de estimare (zile)'
+            labelText={t.estimationWindow}
             step={21}
             min={30}
             max={756}
@@ -105,7 +107,7 @@ export function MarketRiskForm({
               data-umami-event='mr-form-click'
               className='w-40'
             >
-              {isSubmitting ? 'Se analizează…' : 'Analizează'}
+              {isSubmitting ? t.submitting : t.submit}
             </Button>
           </div>
         </form>

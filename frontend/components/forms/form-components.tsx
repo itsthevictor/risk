@@ -27,7 +27,14 @@ import { IconCalendar as CalendarIcon } from '@tabler/icons-react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 
-import { ro } from 'date-fns/locale/ro'; // Romanian locale
+import { enGB } from 'date-fns/locale/en-GB';
+import { ro } from 'date-fns/locale/ro';
+import {
+  useDictionary,
+  useIntlLocale,
+  useLocale,
+} from '@/providers/i18n-provider';
+import { fmt } from '@/lib/i18n/config';
 import {
   Popover,
   PopoverContent,
@@ -206,6 +213,7 @@ export function CustomFormSelectLabel<T extends FieldValues>({
   infoComponent,
   disabled,
 }: CustomFormSelectLabelProps<T>) {
+  const dict = useDictionary();
   return (
     <FormField
       control={control}
@@ -223,7 +231,7 @@ export function CustomFormSelectLabel<T extends FieldValues>({
           >
             <FormControl className='w-full'>
               <SelectTrigger className='bg-background'>
-                <SelectValue placeholder='Alege'>
+                <SelectValue placeholder={dict.common.choose}>
                   {(value: string) =>
                     items.find((item) => item.value === value)?.label ?? value
                   }
@@ -289,6 +297,8 @@ export function CustomDatePicker<T extends FieldValues>({
   control,
   disabled,
 }: CustomFormInputProps<T>) {
+  const dict = useDictionary();
+  const locale = useLocale();
   const [open, setOpen] = useState(false);
 
   return (
@@ -315,9 +325,11 @@ export function CustomDatePicker<T extends FieldValues>({
                     onClick={() => setOpen(true)} // open popover on button click
                   >
                     {field.value ? (
-                      format(field.value, 'PPP', { locale: ro })
+                      format(field.value, 'PPP', {
+                        locale: locale === 'en' ? enGB : ro,
+                      })
                     ) : (
-                      <span>Alege data</span>
+                      <span>{dict.common.chooseDate}</span>
                     )}
                     <CalendarIcon className='ml-auto h-4 w-4 opacity-50' />
                   </Button>
@@ -746,6 +758,8 @@ export function DatePickerPopover({
   onDateChange,
   disabled,
 }: DatePickerPopoverProps) {
+  const dict = useDictionary();
+  const intlLocale = useIntlLocale();
   const [open, setOpen] = React.useState(false);
 
   return (
@@ -758,9 +772,9 @@ export function DatePickerPopover({
         disabled={disabled}
       >
         {date ? (
-          date.toLocaleDateString('ro-RO')
+          date.toLocaleDateString(intlLocale)
         ) : (
-          <span>Selectați o dată</span>
+          <span>{dict.common.selectDate}</span>
         )}
       </PopoverTrigger>
       <PopoverContent className='w-auto p-0' align='start'>
@@ -790,6 +804,8 @@ export function DatePickerPopoverFuture({
   onDateChange,
   disabled,
 }: DatePickerPopoverFutureProps) {
+  const dict = useDictionary();
+  const intlLocale = useIntlLocale();
   const [open, setOpen] = React.useState(false);
 
   return (
@@ -802,9 +818,9 @@ export function DatePickerPopoverFuture({
         disabled={disabled}
       >
         {date ? (
-          date.toLocaleDateString('ro-RO')
+          date.toLocaleDateString(intlLocale)
         ) : (
-          <span>Selectați o dată</span>
+          <span>{dict.common.selectDate}</span>
         )}
       </PopoverTrigger>
       <PopoverContent className='w-auto p-0' align='start'>
@@ -897,11 +913,12 @@ export function CustomMultiSelectField<T extends FieldValues>({
   control,
   options,
   labelText,
-  placeholder = 'Selectează...',
+  placeholder,
   min,
   max,
   disabled,
 }: CustomMultiSelectFieldProps<T>) {
+  const dict = useDictionary();
   const [open, setOpen] = React.useState(false);
 
   return (
@@ -950,7 +967,9 @@ export function CustomMultiSelectField<T extends FieldValues>({
                     >
                       <div className='flex flex-1 flex-wrap gap-1'>
                         {selected.length === 0 ? (
-                          <span>{placeholder}</span>
+                          <span>
+                            {placeholder ?? dict.common.selectPlaceholder}
+                          </span>
                         ) : (
                           selected.map((value) => {
                             const opt = options.find((o) => o.value === value);
@@ -967,7 +986,9 @@ export function CustomMultiSelectField<T extends FieldValues>({
                                 <span
                                   role='button'
                                   tabIndex={0}
-                                  aria-label={`Remove ${opt?.label ?? value}`}
+                                  aria-label={fmt(dict.common.remove, {
+                                    item: opt?.label ?? value,
+                                  })}
                                   className='hover:bg-muted-foreground/20 rounded-sm'
                                   onClick={(e: React.MouseEvent) => {
                                     e.stopPropagation();
@@ -998,9 +1019,9 @@ export function CustomMultiSelectField<T extends FieldValues>({
                 align='start'
               >
                 <Command>
-                  <CommandInput placeholder='Caută ticker...' />
+                  <CommandInput placeholder={dict.common.searchTicker} />
                   <CommandList>
-                    <CommandEmpty>Niciun rezultat.</CommandEmpty>
+                    <CommandEmpty>{dict.common.noResults}</CommandEmpty>
                     <CommandGroup>
                       {options.map((option) => {
                         const isSelected = selected.includes(option.value);
