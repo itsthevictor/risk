@@ -53,7 +53,7 @@ const Header = () => {
             render={
               <Button
                 variant='outline'
-                className='min-w-32 flex justify-between'
+                className='min-w-31 flex justify-between'
               />
             }
           >
