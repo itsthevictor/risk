@@ -52,6 +52,7 @@ export function LanguageSwitcher() {
         RO
       </span>
       <Switch
+        size='sm'
         checked={isEnglish}
         onCheckedChange={switchTo}
         aria-label={dict.nav.language}
