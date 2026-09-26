@@ -1,6 +1,5 @@
 """
 
-Reproduce logica din notebook-ul IRRBB (Interest Rate Risk in the Banking Book):
 - regenerare sintetica a datelor de repricing/maturitate per categorie de pozitie
   (datele din mockaroo nu respecta un profil de scadenta coerent)
 - calculul NII (Net Interest Income) pe orizont de 12 luni si delta NII sub soc
@@ -17,7 +16,7 @@ import pandas as pd
 
 RANDOM_SEED = 42  # fixat pentru ca regenerarea sintetica a datelor sa fie reproductibila
 AS_OF_DATE = pd.Timestamp("2026-08-19")  # data de referinta a portofoliului mock
-NII_HORIZON_DAYS = 365
+NII_HORIZON_DAYS = 365 # NII pe fereastra standard 1 an
 
 # Intervale de offset (zile) folosite la regenerarea datelor de repricing per categorie
 _CASH_LIKE_OFFSET_DAYS = (0, 31)  # CASH_RESERVES, DEMAND_DEPOSIT
@@ -28,6 +27,12 @@ _ISSUED_BOND_OFFSET_DAYS = (365 * 2, 365 * 10)
 _VARIABLE_LOAN_REPRICING_OFFSET_DAYS = (90, 180)
 _VARIABLE_LOAN_MATURITY_OFFSET_DAYS = (365 * 3, 365 * 20)
 
+
+# ---------------------------------------------------------------------------
+# NII (Net Interest Income)
+# ---------------------------------------------------------------------------
+
+### PREGATIRE DATE
 
 def load_raw_positions(path: str) -> pd.DataFrame:
     df = pd.read_csv(path)
@@ -112,6 +117,8 @@ def prepare_irrbb_positions(
 
     return df
 
+
+# NII
 
 def calculate_nii(
     df: pd.DataFrame,
